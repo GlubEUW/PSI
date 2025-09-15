@@ -27,3 +27,9 @@ Game data will be collected and stored in a database for each game (games played
 
 - **Leaderboard**  
 A leaderboard ranking users with the most wins (or highest winrate percentage), updated live.
+
+- **Spectating**  
+Users have the ability to spectate other people's matches when sent an invite link.
+
+- **Chat system**  
+Users can chat with one another while in the same game session. An option to disable chat might be implemented later on.
