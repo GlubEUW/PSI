@@ -23,7 +23,7 @@ The user isn't required to make an account in order to play games, a username is
 The user can set up an account which will store and track their game data (match history, win/loss ratio in certain games, longest win/lose streak). They will also be able to view their stats, change their name or password.
 
 - **Game data**  
-Game data will be collected and stored in a database for each game (games played, play time, games won / lost/ winrate). Tournament sessions will require more data to be stored (participants, number of rounds played, play time, tournament placements, game data for each separate round).
+Game data will be collected and stored in a database for each game (games played, play time, games won/lost/winrate). Tournament sessions will require more data to be stored (participants, number of rounds played, play time, tournament placements, game data for each separate round). Data about each turn played during a match will be saved to be able to watch match replay.
 
 - **Leaderboard**  
 A leaderboard ranking users with the most wins (or highest winrate percentage), updated live.
