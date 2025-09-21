@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 function App() {
   const [data, setData] = useState(null);
 
-  useEffect(() => {
-    fetch("https://localhost:5001/WeatherForecast") // .NET endpoint
-      .then((res) => res.json())
-      .then((result) => setData(result));
-  }, []);
+useEffect(() => {
+  fetch("http://localhost:5243/WeatherForecast")
+    .then((res) => res.json())
+    .then((result) => setData(result))
+    .catch((err) => console.error("Fetch error:", err));
+}, []);
 
   return (
     <div>
