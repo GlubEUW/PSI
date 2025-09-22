@@ -1,0 +1,42 @@
+# =========================
+# Root-level ignores
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# .NET / C# / Visual Studio
+# =========================
+Api/bin/
+Api/obj/
+Api/*.user
+Api/*.suo
+Api/*.userosscache
+Api/*.sln.docstates
+Api/.vs/
+Api/.vscode/
+
+# NuGet packages
+Api/packages/
+Api/*.nupkg
+Api/*.snupkg
+Api/.nuget/
+
+# Rider
+Api/.idea/
+
+# =========================
+# Node / Vite / React (frontend)
+# =========================
+ClientApp/node_modules/
+ClientApp/dist/
+ClientApp/.vite/
+ClientApp/npm-debug.log*
+ClientApp/yarn-debug.log*
+ClientApp/yarn-error.log*
+ClientApp/pnpm-debug.log*
+
+# Environment files
+ClientApp/.env
+CliClientAppent/.env.local
+ClientApp/.env.*.local
