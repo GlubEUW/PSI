@@ -7,7 +7,7 @@ Thumbs.db
 # =========================
 # .NET / C# / Visual Studio
 # =========================
-Api/bin
+Api/bin/
 Api/obj/
 Api/*.user
 Api/*.suo
