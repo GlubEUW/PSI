@@ -1,5 +1,32 @@
-# PSI Team Project
+# PSI Team Project  
 
+## How to set up web app in localhost
+### 1. Have the following dependencies installed:
+   - .NET SDK (Version 9)
+   - Node.Js (Installing Node.js will automatically install npm)
+   - npm
+   - Vite (Will be installed locally in next step)  
+
+### 2. Start backend API.  
+   From the **/PSI** directory:  
+   ```
+   cd Api 
+   dotnet run
+   ```
+
+### 3. Start frontend.  
+   From the **PSI/** directory:  
+   **If you don't have Vite installed, run** 
+   ```
+   cd ClientApp
+   npm install vite --save-dev
+   npm install @vitejs/plugin-react --save-dev
+   ```
+   **After installing Vite inside /ClientApp run**
+   ```
+   npm run dev    
+   ```
+   <br>
 
 ## Funtionality list:
 - **Turn-based games**  
