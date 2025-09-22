@@ -7,7 +7,7 @@ Thumbs.db
 # =========================
 # .NET / C# / Visual Studio
 # =========================
-Api/bin/
+Api/bin
 Api/obj/
 Api/*.user
 Api/*.suo
@@ -28,15 +28,33 @@ Api/.idea/
 # =========================
 # Node / Vite / React (frontend)
 # =========================
-ClientApp/node_modules/
-ClientApp/dist/
-ClientApp/.vite/
+
+# Logs
+ClientApp/logs
+ClientApp/*.log
 ClientApp/npm-debug.log*
 ClientApp/yarn-debug.log*
 ClientApp/yarn-error.log*
 ClientApp/pnpm-debug.log*
+ClientApp/lerna-debug.log*
+
+ClientApp/node_modules
+ClientApp/dist
+ClientApp/dist-ssr
+ClientApp/*.local
+ClientApp/.vite/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Environment files
 ClientApp/.env
-CliClientAppent/.env.local
+ClientApp/.env.local
 ClientApp/.env.*.local
