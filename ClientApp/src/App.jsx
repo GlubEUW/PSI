@@ -12,6 +12,7 @@ function App() {
         <Route path="/" element={<Start />} />
         <Route path="/home" element={<Home />} />
         <Route path="/queue" element={<Queue />} />
+        <Route path="/game/:code" element={<LobbyPage />} />
       </Routes>
     </Router>
   );
