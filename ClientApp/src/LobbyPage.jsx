@@ -45,19 +45,19 @@ function LobbyPage() {
   };
 
   const joinLobby = async () => {
-    if (!connection || !playerName) return;
-    try {
-      const success = await connection.invoke("JoinGame", code, playerName);
-      if (success) {
-        setPlayers((prev) => [...prev, playerName]);
-        setMessage(`Joined lobby ${code}`);
-      } else {
-        setMessage("Lobby not found");
-      }
-    } catch (err) {
-      console.error(err);
+  if (!connection || !playerName) return;
+
+  try {
+    const success = await connection.invoke("JoinGame", code, playerName);
+    if (success) {
+      setMessage(`Joined lobby ${code}`);
+    } else {
+      setMessage("Lobby not found");
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const startGame = async () => {
     if (!connection) return;
