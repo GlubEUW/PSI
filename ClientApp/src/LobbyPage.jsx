@@ -11,89 +11,91 @@ function LobbyPage() {
 
     useEffect(() => {
         const connect = async () => {
-        const conn = new HubConnectionBuilder()
-        .withUrl("http://localhost:5243/matchmakinghub")
-        .withAutomaticReconnect()
-        .build();
+            const conn = new HubConnectionBuilder()
+                .withUrl("http://localhost:5243/matchmakinghub")
+                .withAutomaticReconnect()
+                .build();
 
-        conn.on("PlayerJoined", ({ name, connectionId }) => {
-        setPlayers((prev) => {
-        if (prev.some((p) => p.connectionId === connectionId)) return prev;
-        return [...prev, { name, connectionId }];
-    });
-  setMessage(`${name} joined the lobby`);
-});
+            conn.on("PlayerJoined", ({ name, connectionId }) => {
+                setPlayers((prev) => {
+                    if (prev.some((p) => p.connectionId === connectionId)) return prev;
+                    return [...prev, { name, connectionId }];
+                });
+                setMessage(`${name} joined the lobby`);
+            });
 
-      conn.on("GameStarted", () => setMessage("Game started!"));
+            conn.on("GameStarted", () => setMessage("Game started!"));
 
-      await conn.start();
-      console.log("Connected to hub:", conn.connectionId);
-      setConnection(conn);
+            await conn.start();
+            console.log("Connected to hub:", conn.connectionId);
+            setConnection(conn);
+        };
+
+        connect();
+    }, []);
+
+    const createLobby = async () => {
+        if (!connection || !playerName) return;
+        try {
+            await connection.invoke("CreateGame", playerName, code);
+            setPlayers([{ name: playerName, connectionId: connection.connectionId }]);
+            setMessage(`Lobby created with code ${code}`);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
-    connect();
-  }, []);
+    const joinLobby = async () => {
+        if (!connection || !playerName) return;
+        if (players.some((p) => p.connectionId === connection.connectionId)) {
+            setMessage("You are already in this lobby!");
+            return;
+        }
+        try {
+            const success = await connection.invoke("JoinGame", code, playerName);
+            if (success) {
+                setMessage(`Joined lobby ${code}`);
+            } else {
+                setMessage("Failed to join Lobby");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
-const createLobby = async () => {
-    if (!connection || !playerName) return;
-    try {
-      await connection.invoke("CreateGame", playerName, code);
-      setPlayers([playerName]);
-      setMessage(`Lobby created with code ${code}`);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    const startGame = async () => {
+        if (!connection) return;
+        try {
+            await connection.invoke("StartGame", code);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
-const joinLobby = async () => {
-  if (!connection || !playerName) return;
-  if (players.some((p) => p.connectionId === connection.connectionId)) {
-    setMessage("You are already in this lobby!");
-    return;
-  }
-  try {
-    const success = await connection.invoke("JoinGame", code, playerName);
-    if (success) {
-      setMessage(`Joined lobby ${code}`);
-    } else {
-      setMessage("Failed to join Lobby");
-    }
-  } catch (err) {
-    console.error(err);
-  }
-};
+    return (
+        <div>
+            <h2>Lobby {code}</h2>
+            <input
+                type="text"
+                placeholder="Enter your name"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+            />
+            <br /><br />
+            <button onClick={createLobby}>Create Lobby</button>
+            <button onClick={joinLobby}>Join Lobby</button>
+            <button onClick={startGame}>Start Game</button>
 
-const startGame = async () => {
-    if (!connection) return;
-    try {
-      await connection.invoke("StartGame", code);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+            <p>{message}</p>
 
-return (
-    <div>
-      <h2>Lobby {code}</h2>
-      <input
-        type="text"
-        placeholder="Enter your name"
-        value={playerName}
-        onChange={(e) => setPlayerName(e.target.value)}
-      />
-      <br /><br />
-      <button onClick={createLobby}>Create Lobby</button>
-      <button onClick={joinLobby}>Join Lobby</button>
-      <button onClick={startGame}>Start Game</button>
-
-      <p>{message}</p>
-
-      <h3>Players in Lobby:</h3>
-      <ul>
-        {players.map((p, idx) => <li key={idx}>{p}</li>)}
-      </ul>
-    </div>
-  );
+            <h3>Players in Lobby:</h3>
+            <ul>
+                {players.map((p, idx) => (
+                    <li key={p.id ?? idx}>{p.name}</li>
+                ))}
+            </ul>
+        </div>
+    );
 }
 
 export default LobbyPage;
