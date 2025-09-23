@@ -5,7 +5,7 @@ public class MatchmakingHub : Hub
 {
     private static ConcurrentDictionary<string, GameSession> _sessions = new();
     private static int _maxPlayersPerSession = 2;
-    public async Task<string> CreateGame(string hostName,string code)
+    public async Task<string> CreateGame(string hostName, string code)
     {
         _sessions[code] = new GameSession
         {
@@ -33,7 +33,7 @@ public class MatchmakingHub : Hub
 
     public async Task StartGame(string code)
     {
-        if (_sessions.ContainsKey(code) &&  _sessions[code].Players.Count == 2)
+        if (_sessions.ContainsKey(code) && _sessions[code].Players.Count == 2)
         {
             await Clients.Group(code).SendAsync("GameStarted");
         }
