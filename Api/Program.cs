@@ -9,13 +9,15 @@ using PSI.Api.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 builder.Services.AddCors(options =>
 {
-   options.AddPolicy("AllowClient", policy =>
-       policy.WithOrigins("http://localhost:5173") // React dev server
-             .AllowAnyHeader()
-             .AllowAnyMethod());
+    options.AddPolicy("AllowClient", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -41,12 +43,12 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 var app = builder.Build();
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowClient");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<MatchmakingHub>("/matchmakinghub");
 
 app.Run();

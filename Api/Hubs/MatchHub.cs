@@ -33,7 +33,7 @@ public class MatchmakingHub : Hub
 
     public async Task StartGame(string code)
     {
-        if (_sessions.ContainsKey(code))
+        if (_sessions.ContainsKey(code) &&  _sessions[code].Players.Count == 2)
         {
             await Clients.Group(code).SendAsync("GameStarted");
         }
