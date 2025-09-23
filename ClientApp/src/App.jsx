@@ -14,14 +14,14 @@ function Home() {
     const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     navigate(`/game/${randomCode}`);
   };
-  
+
 
   return (
     <div>
       <h1>Main page</h1>
       <button onClick={goToQueue} className="linkButton">Queue</button>
       <button onClick={goToLobbyPage} className="linkButton">Create Game Lobby</button>
-      
+
     </div>
   );
 }
