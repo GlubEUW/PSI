@@ -1,28 +1,42 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 
-function App() {
-  const [data, setData] = useState(null);
+function Home() {
+  const navigate = useNavigate();
 
-useEffect(() => {
-  fetch("http://localhost:5243/WeatherForecast")
-    .then((res) => res.json())
-    .then((result) => setData(result))
-    .catch((err) => console.error("Fetch error:", err));
-}, []);
+
+  const goToQueue = () => {
+    navigate("/queue");
+  };
 
   return (
     <div>
-      <h1>React + .NET</h1>
-      {data ? (
-        <ul>
-          {data.map((item, idx) => (
-            <li key={idx}>{item.summary} - {item.temperatureC}°C</li>
-          ))}
-        </ul>
-      ) : (
-        <p>Loading...</p>
-      )}
+      <h1>Main page</h1>
+      <button onClick={goToQueue} className="linkButton">Queue</button>
+
+      
     </div>
+  );
+}
+
+function Queue() {
+  return (
+    <div>
+      <h1>Queue Page</h1>
+      <p>This is the queue page.</p>
+      <Link to="/">Back to Home</Link>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/queue" element={<Queue />} />
+      </Routes>
+    </Router>
   );
 }
 
