@@ -10,6 +10,7 @@ function LobbyPage() {
     const [message, setMessage] = useState("");
 
     useEffect(() => {
+        document.title = 'Lobby: ' + code;
         const connect = async () => {
             const conn = new HubConnectionBuilder()
                 .withUrl("http://localhost:5243/matchmakinghub")
@@ -24,7 +25,7 @@ function LobbyPage() {
                 setMessage(`${name} joined the lobby`);
             });
 
-            conn.on("GameStarted", () => setMessage("Game started!"));
+            conn.on("MatchStarted", () => setMessage("Match started!"));
 
             await conn.start();
             console.log("Connected to hub:", conn.connectionId);
@@ -37,7 +38,7 @@ function LobbyPage() {
     const createLobby = async () => {
         if (!connection || !playerName) return;
         try {
-            await connection.invoke("CreateGame", playerName, code);
+            await connection.invoke("CreateMatch", playerName, code);
             setPlayers([{ name: playerName, connectionId: connection.connectionId }]);
             setMessage(`Lobby created with code ${code}`);
         } catch (err) {
@@ -52,7 +53,7 @@ function LobbyPage() {
             return;
         }
         try {
-            const success = await connection.invoke("JoinGame", code, playerName);
+            const success = await connection.invoke("JoinMatch", code, playerName);
             if (success) {
                 setMessage(`Joined lobby ${code}`);
             } else {
@@ -63,10 +64,10 @@ function LobbyPage() {
         }
     };
 
-    const startGame = async () => {
+    const startMatch = async () => {
         if (!connection) return;
         try {
-            await connection.invoke("StartGame", code);
+            await connection.invoke("StartMatch", code);
         } catch (err) {
             console.error(err);
         }
@@ -84,7 +85,7 @@ function LobbyPage() {
             <br /><br />
             <button onClick={createLobby}>Create Lobby</button>
             <button onClick={joinLobby}>Join Lobby</button>
-            <button onClick={startGame}>Start Game</button>
+            <button onClick={startMatch}>Start Match</button>
 
             <p>{message}</p>
 

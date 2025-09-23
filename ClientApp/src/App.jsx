@@ -23,12 +23,11 @@ function Home() {
     <div>
       <h1>Main page</h1>
       <button onClick={goToQueue} className="linkButton">Queue</button>
-      <button onClick={goToLobbyPage} className="linkButton">Create Game Lobby</button>
+      <button onClick={goToLobbyPage} className="linkButton">Create Match Lobby</button>
 
     </div>
   );
 }
-
 
 
 function App() {
@@ -38,7 +37,7 @@ function App() {
         <Route path="/" element={<Start />} />
         <Route path="/home" element={<Home />} />
         <Route path="/queue" element={<Queue />} />
-        <Route path="/game/:code" element={<LobbyPage />} />
+        <Route path="/match/:code" element={<LobbyPage />} />
       </Routes>
     </Router>
   );

@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 
 public class MatchmakingHub : Hub
 {
-    private static ConcurrentDictionary<string, GameSession> _sessions = new();
+    private static ConcurrentDictionary<string, MatchSession> _sessions = new();
     private static int _maxPlayersPerSession = 2;
-    public async Task<string> CreateGame(string hostName, string code)
+    public async Task<string> CreateMatch(string hostName, string code)
     {
-        _sessions[code] = new GameSession
+        _sessions[code] = new MatchSession
         {
             Code = code,
             HostConnectionId = Context.ConnectionId,
@@ -18,7 +18,7 @@ public class MatchmakingHub : Hub
         return code;
     }
 
-    public async Task<bool> JoinGame(string code, string playerName)
+    public async Task<bool> JoinMatch(string code, string playerName)
     {
         if (_sessions.TryGetValue(code, out var session) && session.Players.Count < _maxPlayersPerSession)
         {
@@ -31,11 +31,11 @@ public class MatchmakingHub : Hub
         return false;
     }
 
-    public async Task StartGame(string code)
+    public async Task StartMatch(string code)
     {
         if (_sessions.ContainsKey(code) && _sessions[code].Players.Count == 2)
         {
-            await Clients.Group(code).SendAsync("GameStarted");
+            await Clients.Group(code).SendAsync("MatchStarted");
         }
     }
 
