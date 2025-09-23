@@ -3,26 +3,27 @@ import { useParams } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
 function LobbyPage() {
-  const { code } = useParams(); // get the code from URL
-  const [connection, setConnection] = useState(null);
-  const [playerName, setPlayerName] = useState("");
-  const [players, setPlayers] = useState([]);
-  const [message, setMessage] = useState("");
+    const { code } = useParams();
+    const [connection, setConnection] = useState(null);
+    const [playerName, setPlayerName] = useState("");
+    const [players, setPlayers] = useState([]);
+    const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    const connect = async () => {
-      const conn = new HubConnectionBuilder()
+    useEffect(() => {
+        const connect = async () => {
+        const conn = new HubConnectionBuilder()
         .withUrl("http://localhost:5243/matchmakinghub")
         .withAutomaticReconnect()
         .build();
 
-      // Listen for new players
-      conn.on("PlayerJoined", (name) => {
-        setPlayers((prev) => [...prev, name]);
-        setMessage(`${name} joined the lobby`);
-      });
+        conn.on("PlayerJoined", ({ name, connectionId }) => {
+        setPlayers((prev) => {
+        if (prev.some((p) => p.connectionId === connectionId)) return prev;
+        return [...prev, { name, connectionId }];
+    });
+  setMessage(`${name} joined the lobby`);
+});
 
-      // Listen for game start
       conn.on("GameStarted", () => setMessage("Game started!"));
 
       await conn.start();
@@ -33,7 +34,7 @@ function LobbyPage() {
     connect();
   }, []);
 
-  const createLobby = async () => {
+const createLobby = async () => {
     if (!connection || !playerName) return;
     try {
       await connection.invoke("CreateGame", playerName, code);
@@ -44,22 +45,25 @@ function LobbyPage() {
     }
   };
 
-  const joinLobby = async () => {
+const joinLobby = async () => {
   if (!connection || !playerName) return;
-
+  if (players.some((p) => p.connectionId === connection.connectionId)) {
+    setMessage("You are already in this lobby!");
+    return;
+  }
   try {
     const success = await connection.invoke("JoinGame", code, playerName);
     if (success) {
       setMessage(`Joined lobby ${code}`);
     } else {
-      setMessage("Lobby not found");
+      setMessage("Failed to join Lobby");
     }
   } catch (err) {
     console.error(err);
   }
 };
 
-  const startGame = async () => {
+const startGame = async () => {
     if (!connection) return;
     try {
       await connection.invoke("StartGame", code);
@@ -68,7 +72,7 @@ function LobbyPage() {
     }
   };
 
-  return (
+return (
     <div>
       <h2>Lobby {code}</h2>
       <input
