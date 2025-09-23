@@ -70,3 +70,15 @@ Games/*.userosscache
 Games/*.sln.docstates
 Games/.vs/
 Games/.vscode/
+
+# =========================
+# Tests
+# =========================
+Tests/bin/
+Tests/obj/
+Tests/*.user
+Tests/*.suo
+Tests/*.userosscache
+Tests/*.sln.docstates
+Tests/.vs/
+Tests/.vscode/
