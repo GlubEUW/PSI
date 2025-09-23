@@ -1,33 +1,32 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
-
+import Queue from "./Queue";
+import LobbyPage from "./LobbyPage";
 function Home() {
   const navigate = useNavigate();
 
 
   const goToQueue = () => {
+    // FIXME: enter the player into queue logic here
     navigate("/queue");
   };
+  const goToLobbyPage = () => {
+    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    navigate(`/game/${randomCode}`);
+  };
+  
 
   return (
     <div>
       <h1>Main page</h1>
       <button onClick={goToQueue} className="linkButton">Queue</button>
-
+      <button onClick={goToLobbyPage} className="linkButton">Create Game Lobby</button>
       
     </div>
   );
 }
 
-function Queue() {
-  return (
-    <div>
-      <h1>Queue Page</h1>
-      <p>This is the queue page.</p>
-      <Link to="/">Back to Home</Link>
-    </div>
-  );
-}
+
 
 function App() {
   return (
@@ -35,6 +34,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/queue" element={<Queue />} />
+        <Route path="/game/:code" element={<LobbyPage />} />
       </Routes>
     </Router>
   );
