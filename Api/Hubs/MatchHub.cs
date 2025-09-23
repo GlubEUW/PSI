@@ -25,7 +25,7 @@ public class MatchmakingHub : Hub
             session.Players.Add(playerName);
             await Groups.AddToGroupAsync(Context.ConnectionId, code);
 
-            await Clients.Group(code).SendAsync("PlayerJoined", playerName);
+            await Clients.Group(code).SendAsync("PlayerJoined", new { name = playerName, connectionId = Context.ConnectionId });
             return true;
         }
         return false;
