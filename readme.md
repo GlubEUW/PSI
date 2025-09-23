@@ -1,5 +1,31 @@
-# PSI Team Project
+# PSI Team Project  
 
+## How to set up web app in localhost
+### 1. Have the following dependencies installed:
+   - .NET SDK (Version 9)
+   - Node.Js (Installing Node.js will automatically install npm)
+   - npm
+   
+### 2. Start backend API.  
+   From the **/PSI** directory:  
+   ```
+   cd Api 
+   dotnet run
+   ```
+
+### 3. Start frontend.  
+   From the **PSI/** directory:  
+   **If you don't have dependencies installed, run** 
+   ```
+   cd ClientApp
+   npm install
+   ```
+   
+   ```
+   cd ClientApp
+   npm run dev    
+   ```
+   <br>
 
 ## Funtionality list:
 - **Turn-based games**  
