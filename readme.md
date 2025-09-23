@@ -5,8 +5,7 @@
    - .NET SDK (Version 9)
    - Node.Js (Installing Node.js will automatically install npm)
    - npm
-   - Vite (Will be installed locally in next step)  
-
+   
 ### 2. Start backend API.  
    From the **/PSI** directory:  
    ```
@@ -16,14 +15,13 @@
 
 ### 3. Start frontend.  
    From the **PSI/** directory:  
-   **If you don't have Vite installed, run** 
+   **If you don't have dependencies installed, run** 
+   ```
+   npm install --dev
+   ```
+   
    ```
    cd ClientApp
-   npm install vite --save-dev
-   npm install @vitejs/plugin-react --save-dev
-   ```
-   **After installing Vite inside /ClientApp run**
-   ```
    npm run dev    
    ```
    <br>
