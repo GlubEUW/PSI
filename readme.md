@@ -17,7 +17,8 @@
    From the **PSI/** directory:  
    **If you don't have dependencies installed, run** 
    ```
-   npm install --dev
+   cd ClientApp
+   npm install
    ```
    
    ```
