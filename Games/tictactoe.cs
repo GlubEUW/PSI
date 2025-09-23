@@ -74,5 +74,14 @@ namespace Games
                 $"-+-+-\n" +
                 $"{board[2, 0]}|{board[2, 1]}|{board[2, 2]}";
         }
+
+        public char[,] GetBoardCopy()
+        {
+            var copy = new char[3, 3];
+            for (int r = 0; r < 3; r++)
+                for (int c = 0; c < 3; c++)
+                    copy[r, c] = board[r, c];
+            return copy;
+        }
     }
 }

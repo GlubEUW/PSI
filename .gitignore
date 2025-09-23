@@ -58,3 +58,15 @@ ClientApp/.vite/
 ClientApp/.env
 ClientApp/.env.local
 ClientApp/.env.*.local
+
+# =========================
+# Games
+# =========================
+Games/bin/
+Games/obj/
+Games/*.user
+Games/*.suo
+Games/*.userosscache
+Games/*.sln.docstates
+Games/.vs/
+Games/.vscode/
