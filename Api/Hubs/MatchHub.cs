@@ -1,17 +1,21 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 
-public class MatchmakingHub : Hub
+public class MatchHub : Hub
 {
     private static ConcurrentDictionary<string, MatchSession> _sessions = new();
     private static int _maxPlayersPerSession = 2;
-    public async Task<string> CreateMatch(string hostName, string code)
+    public async Task<string> CreateMatch(string code)
     {
+        if (_sessions.ContainsKey(code))
+        {
+            return null;
+        }
         _sessions[code] = new MatchSession
         {
             Code = code,
             HostConnectionId = Context.ConnectionId,
-            Players = new List<string> { hostName }
+            Players = new List<string>()
         };
 
         await Groups.AddToGroupAsync(Context.ConnectionId, code);
@@ -25,7 +29,6 @@ public class MatchmakingHub : Hub
             session.Players.Add(playerName);
             await Groups.AddToGroupAsync(Context.ConnectionId, code);
 
-            await Clients.Group(code).SendAsync("PlayerJoined", new { name = playerName, connectionId = Context.ConnectionId });
             return true;
         }
         return false;
@@ -39,6 +42,14 @@ public class MatchmakingHub : Hub
         }
     }
 
+    public List<string> GetPlayers(string code)
+    {
+        if (_sessions.TryGetValue(code, out var session))
+        {
+            return session.Players;
+        }
+        return new List<string>();
+    }
 }
 
 

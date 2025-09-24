@@ -49,6 +49,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<MatchmakingHub>("/matchmakinghub");
+app.MapHub<MatchHub>("/matchHub");
 
 app.Run();

@@ -15,7 +15,7 @@ function Home() {
   };
   const goToLobbyPage = () => {
     const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    navigate(`/game/${randomCode}`);
+    navigate(`/match/${randomCode}`);
   };
 
 
