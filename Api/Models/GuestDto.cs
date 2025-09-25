@@ -2,6 +2,6 @@ namespace PSI.Api.Models
 {
    public class GuestDto
    {
-      public string Username { get; set; } = string.Empty;
+      public string Name { get; set; } = string.Empty;
    }
 }
