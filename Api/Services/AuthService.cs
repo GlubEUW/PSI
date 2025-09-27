@@ -1,36 +1,31 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 using PSI.Api.Entities;
 using PSI.Api.Models;
-using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
-namespace PSI.Api.Controllers
+namespace PSI.Api.Services
 {
-   [Route("api/[controller]")]
-   [ApiController]
-   public class AuthController(IConfiguration configuration) : ControllerBase
+   public class AuthService(IConfiguration configuration) : IAuthService
    {
-      public static Guest guest = new();
-
-      [HttpPost("guestLogin")]
-      public ActionResult<Guest> GuestLogin(GuestDto request)
+      public string? GuestLogin(GuestDto request)
       {
+         var guest = new Guest();
          if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest("Name is required.");
+            return null;
 
-         var guest = new Guest {Name = request.Name};
-         string token = CreateToken(guest);
+         guest.Name = request.Name;
 
-         return Ok(new {Token = token, GuestName = guest.Name});
+         return CreateToken(guest);
       }
+
       private string CreateToken(Guest guest)
       {
          var claims = new List<Claim>
          {
-            new Claim(ClaimTypes.Name, guest.Name)
+            new Claim(ClaimTypes.Name, guest.Name),
+            new Claim(ClaimTypes.NameIdentifier, guest.Id.ToString())
          };
 
          var privateKey = new SymmetricSecurityKey(
