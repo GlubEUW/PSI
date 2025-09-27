@@ -5,13 +5,32 @@ function Start() {
    const [username, setUsername] = useState("");
    const navigate = useNavigate();
 
-   const handleGuestLogin= () => {
+   const handleGuestLogin= async () => {
       if(!username.trim()) {
          alert("Please enter a username.");
          return;
       }
-      console.log("Guest username:", username);
-      navigate("/home");
+
+      try {
+         const response = await fetch("http://localhost:5243/api/auth/guestLogin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name:username })
+         });
+
+         if(!response.ok) {
+            const errorText = await response.text();
+            alert("Login failed: " + errorText);
+            return;
+         }
+
+         const token = await response.text();
+         localStorage.setItem("guestToken", token);
+         navigate("/home");
+      } catch (error) {
+         console.error("Error during guest login: ", error);
+         alert("Something went wrong. Check console.");
+      }
    };
 
    return (
