@@ -4,6 +4,6 @@ namespace PSI.Api.Services
 {
    public interface IAuthService
    {
-      string GuestLogin(GuestDto request);
+      string? GuestLogin(GuestDto request);
    }
 }
