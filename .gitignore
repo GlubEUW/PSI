@@ -15,6 +15,7 @@ Api/*.userosscache
 Api/*.sln.docstates
 Api/.vs/
 Api/.vscode/
+Api/appsettings.Development.json
 
 # NuGet packages
 Api/packages/
@@ -55,6 +56,6 @@ ClientApp/.vite/
 *.sw?
 
 # Environment files
-ClientApp/.env
-ClientApp/.env.local
-ClientApp/.env.*.local
+*/.env
+*/.env.local
+*/.env.*.local
