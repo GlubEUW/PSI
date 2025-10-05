@@ -9,7 +9,7 @@ namespace PSI.Api.Services
 {
    public class AuthService(IConfiguration configuration) : IAuthService
    {
-      public string? GuestLogin(GuestDto request)
+      public string? GuestCreate(GuestDto request)
       {
          var guest = new Guest();
          if (string.IsNullOrWhiteSpace(request.Name))
