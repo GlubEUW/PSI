@@ -27,7 +27,7 @@ public class MatchHub : Hub
         {
             session.Players.Add(playerName);
             await Groups.AddToGroupAsync(Context.ConnectionId, code);
-
+            await Clients.Group(code).SendAsync("PlayersUpdated", session.Players);
             return true;
         }
         return false;
