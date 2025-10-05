@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 public class MatchHub : Hub
 {
     private static ConcurrentDictionary<string, MatchSession> _sessions = new();
-    private static int _maxPlayersPerSession = 2;
     public async Task<string> CreateMatch(string code)
     {
         if (_sessions.ContainsKey(code))
@@ -15,7 +14,7 @@ public class MatchHub : Hub
         {
             Code = code,
             HostConnectionId = Context.ConnectionId,
-            Players = new List<string>()
+            Players = new List<string>(2)
         };
 
         await Groups.AddToGroupAsync(Context.ConnectionId, code);
@@ -24,7 +23,7 @@ public class MatchHub : Hub
 
     public async Task<bool> JoinMatch(string code, string playerName)
     {
-        if (_sessions.TryGetValue(code, out var session) && session.Players.Count < _maxPlayersPerSession)
+        if (_sessions.TryGetValue(code, out var session) && session.Players.Count < session.Players.Capacity)
         {
             session.Players.Add(playerName);
             await Groups.AddToGroupAsync(Context.ConnectionId, code);
