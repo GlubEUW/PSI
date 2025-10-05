@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 public class MatchHub : Hub
 {
     private static ConcurrentDictionary<string, MatchSession> _sessions = new();
-    public async Task<string> CreateMatch(string code)
+    public async Task<string?> CreateMatch(string code)
     {
         if (_sessions.ContainsKey(code))
         {
