@@ -21,11 +21,11 @@ public class MatchHub : Hub
         return code;
     }
 
-    public async Task<bool> JoinMatch(string code, string playerName)
+    public async Task<bool> JoinMatch(string code, string playerToken)
     {
         if (_sessions.TryGetValue(code, out var session) && session.Players.Count < session.Players.Capacity)
         {
-            session.Players.Add(playerName);
+            session.Players.Add(playerToken);
             await Groups.AddToGroupAsync(Context.ConnectionId, code);
             await Clients.Group(code).SendAsync("PlayersUpdated", session.Players);
             return true;
@@ -45,7 +45,17 @@ public class MatchHub : Hub
     {
         if (_sessions.TryGetValue(code, out var session))
         {
-            return session.Players;
+            //extract names from tokens
+            var names = new List<string>();
+            foreach (var token in session.Players)
+            {
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+                var nameClaim = jwt.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name);
+                if (nameClaim != null)
+                    names.Add(nameClaim.Value);
+            }
+            return names;
         }
         return new List<string>();
     }

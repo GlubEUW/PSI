@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { GetGuestUser } from "./api/user";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
 function LobbyPage() {
     const token = localStorage.getItem("guestToken");
     const { code } = useParams();
-    const [user, setUser] = useState({ Name: "Loading..." });
+    const navigate = useNavigate();
+    const [user, setUser] = useState({ name: "Loading..." });
     const [connection, setConnection] = useState(null);
     const [players, setPlayers] = useState([]);
     const [message, setMessage] = useState("");
+
     useEffect(() => {
         document.title = "Lobby: " + code;
 
@@ -36,29 +38,42 @@ function LobbyPage() {
 
             conn.on("MatchStarted", () => setMessage("Match started!"));
 
-            conn.on("PlayersUpdated", (playersList) => {
-                setPlayers(playersList);
-                console.log("Players updated:", players);
+            conn.on("PlayersUpdated", async () => {
+                try {
+                    const names = await conn.invoke("GetPlayers", code);
+                    setPlayers(names);
+                } catch (err) {
+                    setPlayers([]);
+                }
             });
-                
+
             try {
                 await conn.start();
-                console.log("Connected to hub:", conn.connectionId);
                 setConnection(conn);
 
-                const success = await conn.invoke("JoinMatch", code, user.name);
+                const success = await conn.invoke("JoinMatch", code, token);
                 if (success) {
                     setMessage(`Joined lobby ${code}`);
                 } else {
                     await conn.invoke("CreateMatch", code);
                     setMessage(`Lobby created with code ${code}`);
+                    //await conn.invoke("JoinMatch", code, token);
                 }
+
+                const names = await conn.invoke("GetPlayers", code);
+                setPlayers(names);
             } catch (err) {
+                setMessage("Connection failed.");
                 console.error("Connection failed:", err);
             }
         };
 
         connect();
+
+        return () => {
+
+            if (connection) connection.stop();
+        };
     }, [code]);
 
     const startMatch = async () => {
@@ -78,7 +93,11 @@ function LobbyPage() {
             <button onClick={startMatch}>Start Match</button>
 
             <h3>Players in Lobby:</h3>
-            <ul>{players}</ul>
+            <ul>
+                {players.map((name, idx) => (
+                    <li key={idx}>{name}</li>
+                ))}
+            </ul>
         </div>
     );
 }
