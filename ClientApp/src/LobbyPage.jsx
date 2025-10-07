@@ -2,111 +2,141 @@ import { useState, useEffect, useRef } from "react";
 import { GetGuestUser } from "./api/user";
 import { useParams, useNavigate } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
+import TicTacToe from "./TicTacToe.jsx";
+
+const gameComponents = {
+   TicTacToe: TicTacToe
+   // Future games can be added here
+};
 
 function LobbyPage() {
-    const token = localStorage.getItem("guestToken");
-    const { code } = useParams();
-    const navigate = useNavigate();
-    const [user, setUser] = useState({ name: "Loading..." });
-    const [connection, setConnection] = useState(null);
-    const [players, setPlayers] = useState([]);
-    const [message, setMessage] = useState("");
+   const token = localStorage.getItem("guestToken");
+   const { code } = useParams();
+   const navigate = useNavigate();
+   const [user, setUser] = useState({ name: "Loading..." });
+   const [connection, setConnection] = useState(null);
+   const [players, setPlayers] = useState([]);
+   const [message, setMessage] = useState("");
 
-    const connectedRef = useRef(false);
+   const connectedRef = useRef(false);
+   const [phase, setPhase] = useState("lobby"); // "lobby" or "game"
+   const [gameType, setGameType] = useState("TicTacToe"); // Default game type
 
-    useEffect(() => {
-        if (connectedRef.current) return;
-        connectedRef.current = true;
+   useEffect(() => {
+      if (connectedRef.current) return;
+      connectedRef.current = true;
 
-        document.title = "Lobby: " + code;
-        let conn = null;
+      document.title = "Lobby: " + code;
+      let conn = null;
 
-        const connect = async () => {
-            if (!token) {
-                setMessage("You must be logged in to access the lobby.");
-                setTimeout(() => navigate("/"), 3000);
-                return;
-            }
+      const connect = async () => {
+         if (!token) {
+            setMessage("You must be logged in to access the lobby.");
+            setTimeout(() => navigate("/start"), 3000);
+            return;
+         }
 
-            const response = await GetGuestUser(token);
-            if (!response.ok) {
-                setMessage("Failed to fetch user info. Redirecting to home page...");
-                setUser({ name: "Failed." });
-                setTimeout(() => navigate("/home"), 3000);
-                return;
-            }
+         const response = await GetGuestUser(token);
+         if (!response.ok) {
+            setMessage("Failed to fetch user info. Redirecting to home page...");
+            setUser({ name: "Failed." });
+            setTimeout(() => navigate("/home"), 3000);
+            return;
+         }
 
-            const userData = await response.json();
-            setUser(userData);
+         const userData = await response.json();
+         setUser(userData);
 
-            conn = new HubConnectionBuilder()
-                .withUrl("http://localhost:5243/matchHub")
-                .withAutomaticReconnect()
-                .build();
+         const conn = new HubConnectionBuilder()
+            .withUrl("http://localhost:5243/matchHub")
+            .withAutomaticReconnect()
+            .build();
 
-            conn.on("MatchStarted", () => setMessage("Match started!"));
+         conn.on("MatchStarted", ({ gameType }) => {
+            setGameType(gameType);
+            setPhase("game");
+         });
 
-            conn.on("PlayersUpdated", async () => {
-                try {
-                    const names = await conn.invoke("GetPlayers", code);
-                    setPlayers(names);
-                } catch {
-                    setPlayers([]);
-                }
-            });
 
+         conn.on("PlayersUpdated", async () => {
             try {
-                await conn.start();
-                setConnection(conn);
-
-                const success = await conn.invoke("JoinMatch", code, userData.name);
-                if (success) {
-                    setMessage(`Joined lobby ${code}`);
-                }
-                else {
-                    setMessage("Failed to join the lobby. Name might be taken.");
-                }
-
-                const names = await conn.invoke("GetPlayers", code);
-                setPlayers(names);
+               const names = await conn.invoke("GetPlayers", code);
+               setPlayers(names);
             } catch (err) {
-                setMessage("Connection failed.");
-                console.error("Connection failed:", err);
+               setPlayers([]);
             }
-        };
+         });
 
-        connect();
+         try {
+            await conn.start();
+            setConnection(conn);
 
-        return () => {
-            if (conn) conn.stop();
-        };
-    }, [code]);
+            const success = await conn.invoke("JoinMatch", code, userData.name);
+            if (success) {
+               setMessage(`Joined lobby ${code}`);
+            }
+            else {
+               setMessage("Failed to join the lobby. Name might be taken.");
+            }
+
+            const names = await conn.invoke("GetPlayers", code);
+            setPlayers(names);
+         } catch (err) {
+            setMessage("Connection failed.");
+            console.error("Connection failed:", err);
+         }
+      };
+
+      connect();
+
+      return () => {
+         if (conn) conn.stop();
+      };
+   }, [code]);
 
 
-    const startMatch = async () => {
-        if (!connection) return;
-        try {
-            await connection.invoke("StartMatch", code);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+   const startMatch = async (selectedGameType) => {
+      if (!connection) return;
 
-    return (
-        <div>
-            <h2>Lobby {code}</h2>
-            <p>Your name is: {user.name}</p>
-            <p>{message}</p>
-            <button onClick={startMatch}>Start Match</button>
+      try {
+         await connection.invoke("StartMatch", selectedGameType, code);
+      } catch (err) {
+         console.error(err);
+      }
+   };
 
-            <h3>Players in Lobby:</h3>
-            <ul>
-                {players.map((name, idx) => (
-                    <li key={idx}>{name}</li>
-                ))}
-            </ul>
-        </div>
-    );
+   if (phase === "game" && gameType) {
+      const GameComponent = gameComponents[gameType];
+      return <GameComponent gameID={code} isPlayerX={true} />;
+   }
+
+   return (
+      <div>
+         <h2>Lobby {code}</h2>
+         <p>Your name is: {user.name}</p>
+         <p>{message}</p>
+
+         <label>
+            Game Type:
+            <select
+               value={gameType}
+               onChange={(e) => setGameType(e.target.value)}
+            >
+               <option value="" disabled>Select a game</option>
+               <option value="TicTacToe">Tic Tac Toe</option>
+            </select>
+         </label>
+
+         <button onClick={() => startMatch(gameType)}>Start Match</button>
+
+         <h3>Players in Lobby:</h3>
+         <ul>
+            {players.map((name, idx) => (
+               <li key={idx}>{name}</li>
+            ))}
+         </ul>
+      </div>
+   );
 }
 
 export default LobbyPage;
