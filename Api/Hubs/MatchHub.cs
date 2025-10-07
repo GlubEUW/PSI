@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 
+[Authorize]
 public class MatchHub : Hub
 {
     private static ConcurrentDictionary<string, MatchSession> _sessions = new();
@@ -17,7 +18,7 @@ public class MatchHub : Hub
         return _sessions[code];
     }
 
-    [Authorize]
+
     public async Task<bool> JoinMatch(string code, string playerToken)
     {
         Context.Items["Code"] = code;
@@ -54,7 +55,8 @@ public class MatchHub : Hub
         {
             if (_sessions.TryGetValue(code, out var session))
             {
-                session.Players.RemoveAll(p => p == Context.ConnectionId);
+                var accessToken = Context.GetHttpContext().Request.Query["access_token"];
+                session.Players.RemoveAll(p => p == accessToken);
                 if (session.Players.Count == 0)
                 {
                     _sessions.TryRemove(code, out _);

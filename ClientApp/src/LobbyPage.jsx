@@ -32,7 +32,7 @@ function LobbyPage() {
             setUser(await response.json());
 
             conn = new HubConnectionBuilder()
-                .withUrl("http://localhost:5243/matchHub")
+                .withUrl("http://localhost:5243/matchHub", { accessTokenFactory: () => token })
                 .withAutomaticReconnect()
                 .build();
 
