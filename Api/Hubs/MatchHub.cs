@@ -45,15 +45,26 @@ public class MatchHub : Hub
         return false;
     }
 
-    public async Task StartMatch(string code)
+    public async Task StartMatch(string selectedGameType, string code)
     {
-        if (_sessions.TryGetValue(code, out var session) && session.Players.Count == 2)
+        Console.WriteLine($"StartMatch called with GameType={selectedGameType}, Code={code}");
+
+        if (_sessions.ContainsKey(code))
         {
-            await Clients.Group(code).SendAsync("MatchStarted");
-            Console.WriteLine($"Match {code} started.");
+            Console.WriteLine($"Found session for code {code} with {_sessions[code].Players.Count} players");
+        }
+
+        if (_sessions.ContainsKey(code) /*&& _sessions[code].Players.Count == 2*/)
+        {
+            _sessions[code].GameType = selectedGameType; // Set the game type
+            Console.WriteLine($"Starting match for {code}...");
+            await Clients.Group(code).SendAsync("MatchStarted", new { gameType = selectedGameType });
+        }
+        else
+        {
+            Console.WriteLine($"Cannot start match: session missing or not enough players.");
         }
     }
-
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         if (Context.Items.TryGetValue("Code", out var codeObj) && codeObj is string code)
