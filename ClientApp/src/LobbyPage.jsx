@@ -14,7 +14,7 @@ function LobbyPage() {
 
     useEffect(() => {
         document.title = "Lobby: " + code;
-
+        var conn = null;
         const connect = async () => {
             if (!token) {
                 setMessage("You must be logged in to access the lobby.");
@@ -31,7 +31,7 @@ function LobbyPage() {
             }
             setUser(await response.json());
 
-            const conn = new HubConnectionBuilder()
+            conn = new HubConnectionBuilder()
                 .withUrl("http://localhost:5243/matchHub")
                 .withAutomaticReconnect()
                 .build();
@@ -54,10 +54,6 @@ function LobbyPage() {
                 const success = await conn.invoke("JoinMatch", code, token);
                 if (success) {
                     setMessage(`Joined lobby ${code}`);
-                } else {
-                    await conn.invoke("CreateMatch", code);
-                    setMessage(`Lobby created with code ${code}`);
-                    //await conn.invoke("JoinMatch", code, token);
                 }
 
                 const names = await conn.invoke("GetPlayers", code);
@@ -71,8 +67,7 @@ function LobbyPage() {
         connect();
 
         return () => {
-
-            if (connection) connection.stop();
+            if (conn) conn.stop();
         };
     }, [code]);
 
