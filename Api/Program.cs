@@ -81,6 +81,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<MatchHub>("/matchHub");
+app.MapHub<TicTacToeHub>("/tictactoeHub");
 
 if (app.Environment.IsDevelopment())
 {
