@@ -25,10 +25,10 @@ function TicTacToe({ gameID, isPlayerX }) {
          .withAutomaticReconnect()
          .build();
 
-      gameConn.on("GameUpdate", (game) => { // FIXME: game board dissapears after a split second
-         setBoard(game.Board);
-         setIsXTurn(game.IsXTurn);
-         setWinner(game.Winner);
+      gameConn.on("GameUpdate", (game) => {
+         if (game?.Board) setBoard(game.Board); 
+         if (typeof game?.IsXTurn === "boolean") setIsXTurn(game.IsXTurn);
+         if (game?.Winner) setWinner(game.Winner);
       });
 
       gameConn.start()
