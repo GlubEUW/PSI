@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { GetGuestUser } from "./api/user";
 import { useParams, useNavigate } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
@@ -12,9 +12,15 @@ function LobbyPage() {
     const [players, setPlayers] = useState([]);
     const [message, setMessage] = useState("");
 
+    const connectedRef = useRef(false);
+
     useEffect(() => {
+        if (connectedRef.current) return;
+        connectedRef.current = true;
+
         document.title = "Lobby: " + code;
-        var conn = null;
+        let conn = null;
+
         const connect = async () => {
             if (!token) {
                 setMessage("You must be logged in to access the lobby.");
@@ -29,10 +35,12 @@ function LobbyPage() {
                 setTimeout(() => navigate("/home"), 3000);
                 return;
             }
-            setUser(await response.json());
+
+            const userData = await response.json();
+            setUser(userData);
 
             conn = new HubConnectionBuilder()
-                .withUrl("http://localhost:5243/matchHub", { accessTokenFactory: () => token })
+                .withUrl("http://localhost:5243/matchHub")
                 .withAutomaticReconnect()
                 .build();
 
@@ -42,7 +50,7 @@ function LobbyPage() {
                 try {
                     const names = await conn.invoke("GetPlayers", code);
                     setPlayers(names);
-                } catch (err) {
+                } catch {
                     setPlayers([]);
                 }
             });
@@ -51,9 +59,12 @@ function LobbyPage() {
                 await conn.start();
                 setConnection(conn);
 
-                const success = await conn.invoke("JoinMatch", code, token);
+                const success = await conn.invoke("JoinMatch", code, userData.name);
                 if (success) {
                     setMessage(`Joined lobby ${code}`);
+                }
+                else {
+                    setMessage("Failed to join the lobby. Name might be taken.");
                 }
 
                 const names = await conn.invoke("GetPlayers", code);
@@ -70,6 +81,7 @@ function LobbyPage() {
             if (conn) conn.stop();
         };
     }, [code]);
+
 
     const startMatch = async () => {
         if (!connection) return;
