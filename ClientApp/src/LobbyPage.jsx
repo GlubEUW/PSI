@@ -3,9 +3,11 @@ import { GetGuestUser } from "./api/user";
 import { useParams, useNavigate } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import TicTacToe from "./TicTacToe.jsx";
+import Rps from "./Rps.jsx";
 
 const gameComponents = {
-   TicTacToe: TicTacToe
+   TicTacToe: TicTacToe,
+   RockPaperScissors: Rps
    // Future games can be added here
 };
 
@@ -124,6 +126,7 @@ function LobbyPage() {
             >
                <option value="" disabled>Select a game</option>
                <option value="TicTacToe">Tic Tac Toe</option>
+               <option value="RockPaperScissors">Rock Paper Scissors</option>
             </select>
          </label>
 

@@ -21,7 +21,7 @@ function TicTacToe({ gameID, isPlayerX }) {
       }
 
       const gameConn = new HubConnectionBuilder()
-         .withUrl("http://localhost:5243/tictactoeHub")
+         .withUrl("http://localhost:5243/gameHub")
          .withAutomaticReconnect()
          .build();
 
