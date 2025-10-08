@@ -1,4 +1,5 @@
 using System.Text;
+using Api.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -81,7 +82,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<MatchHub>("/matchHub");
-app.MapHub<TicTacToeHub>("/tictactoeHub");
+app.MapHub<GameHub>("/gameHub");
 
 if (app.Environment.IsDevelopment())
 {
