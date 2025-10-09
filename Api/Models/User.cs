@@ -1,11 +1,14 @@
-public class User
+namespace PSI.Api.Models
 {
-    public string Id { get; set; }
-    public string ConnectionId { get; set; }
+   public class User
+   {
+      public string Id { get; set; }
+      public string ConnectionId { get; set; }
 
-    public User(string id, string connectionId)
-    {
-        Id = id;
-        ConnectionId = connectionId;
-    }
+      public User(string id, string connectionId)
+      {
+         Id = id;
+         ConnectionId = connectionId;
+      }
+   }
 }
