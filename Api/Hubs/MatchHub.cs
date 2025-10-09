@@ -5,7 +5,7 @@ using PSI.Api.Models;
 
 public class MatchHub : Hub
 {
-    private static ConcurrentDictionary<string, MatchSession> _sessions = new();
+    public static ConcurrentDictionary<string, MatchSession> _sessions = new(); // Public so LobbyControllers could access it
     public MatchSession CreateMatch(string code)
     {
         _sessions[code] = new MatchSession

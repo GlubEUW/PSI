@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { GetLobbyInfo } from "./api/lobby";
 
 function Home() {
    const navigate = useNavigate();
@@ -49,6 +50,28 @@ function Home() {
       if (!lobbyID) {
          alert("Please enter a valid lobby ID.");
          return;
+      }
+
+      try {
+         const lobbyInfoResponse = await GetLobbyInfo(token, lobbyID);
+         if (!lobbyInfoResponse.ok) {
+            alert("Could not authenticate user. Retry login.")
+            navigate("/");
+            return;
+         }
+
+         const data = await lobbyInfoResponse.json();
+         if (data.isLobbyFull) {
+            alert("Failed to join lobby. Lobby full.");
+            return;
+         }
+         if (data.isNameTakenInLobby) {
+            alert("Failed to join lobby. A user with the same name is currently in the lobby.");
+            return;
+         }
+      } catch (err) {
+         console.error("Error fetching lobby info:", err);
+         alert("Something went wrong. Please try again.");
       }
       navigate(`/match/${lobbyID}`);
    }
