@@ -10,11 +10,12 @@ function Home() {
 
       if (!token) {
          alert("You must be logged in to access the queue.");
+         navigate("/");
          return;
       }
 
       try {
-         const response = await fetch("http://localhost:5243/api/queue", {
+         const response = await fetch("http://localhost:5243/api/queue", { // FIXME: Refactor to separate file in ./api/
             method: "POST",
             headers: {
                "Authorization": "Bearer " + token,
@@ -24,9 +25,7 @@ function Home() {
 
          if (!response.ok) {
             console.log("Status: ", response.status);
-            const errorText = await response.text();
-            console.log("Error text: ", errorText)
-            alert("Failed to join queue: " + (errorText || "Status " + response.status));
+            alert("Failed to join queue: " + "Status " + response.status);
             return;
          }
          console.log("Successfully joined queue.");
@@ -39,6 +38,14 @@ function Home() {
    };
 
    const handleLobbyCreation = async () => {
+      const token = localStorage.getItem("guestToken");
+
+      if (!token) {
+         alert("You must be logged in to access the lobby.");
+         navigate("/");
+         return;
+      }
+
       if (!lobbyID) {
          alert("Please enter a valid lobby ID.");
          return;
@@ -51,10 +58,11 @@ function Home() {
          <button onClick={handleQueueJoin} className="linkButton">Queue</button>
          <div>
             <input
-               type="number"
+               type="text"
+               inputMode="numeric"
                placeholder="Lobby Code"
                value={lobbyID}
-               onChange={(e) => setlobbyID(e.target.value)}
+               onChange={e => setlobbyID(e.target.value.replace(/[^0-9]/g, ""))}
             />
             <button onClick={handleLobbyCreation} className="linkButton">Lobby</button>
          </div>
