@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace PSI.Api.Entities
 {
    public class Guest

@@ -1,24 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PutGuestUser } from "./api/user";
 
 function Start() {
    const [username, setUsername] = useState("");
    const navigate = useNavigate();
 
-   const handleGuestLogin= async () => {
-      if(!username.trim()) {
+   const handleGuestLogin = async () => {
+      if (!username.trim()) {
          alert("Please enter a username.");
          return;
       }
 
       try {
-         const response = await fetch("http://localhost:5243/api/auth/guestLogin", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name:username })
-         });
+         const response = await PutGuestUser(username);
 
-         if(!response.ok) {
+         if (!response.ok) {
             const errorText = await response.text();
             alert("Login failed: " + errorText);
             return;

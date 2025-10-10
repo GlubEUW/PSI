@@ -4,6 +4,7 @@ import "./App.css";
 import Start from "./Start";
 import Home from "./Home";
 import Queue from "./Queue";
+import LobbyPage from "./LobbyPage";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<Start />} />
         <Route path="/home" element={<Home />} />
         <Route path="/queue" element={<Queue />} />
+        <Route path="/match/:code" element={<LobbyPage />} />
       </Routes>
     </Router>
   );
