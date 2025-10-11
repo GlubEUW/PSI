@@ -36,7 +36,7 @@ function Rps({ gameID, playerName }) {
     startConnection();
 
     return () => conn.stop();
-  }, [gameID, playerName]);
+  }, [gameID]);
 
   const makeMove = (choice) => {
     if (!connection) return;
