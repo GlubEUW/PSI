@@ -85,7 +85,7 @@ function LobbyPage() {
             setPlayers(names);
          } catch (err) {
             setMessage("Connection failed.");
-            console.error("Connection failed:", err);
+            console.error(`Connection failed:, ${err}`);
          }
       };
 
@@ -99,7 +99,6 @@ function LobbyPage() {
 
    const startMatch = async (selectedGameType) => {
       if (!connection) return;
-
       try {
          await connection.invoke("StartMatch", selectedGameType, code);
       } catch (err) {
@@ -109,7 +108,7 @@ function LobbyPage() {
 
    if (phase === "game" && gameType) {
       const GameComponent = gameComponents[gameType];
-      return <GameComponent gameID={code} isPlayerX={true} />;
+      return <GameComponent gameID={code} playerName={user.name} />;
    }
 
    return (

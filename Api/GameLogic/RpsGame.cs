@@ -11,19 +11,24 @@ public enum RpsChoice
 public class RpsGame : IGame
 {
     public string GameType => "RockPaperScissors";
-    
-    public Dictionary<string, RpsChoice> Players { get; set; } = new()
-    {
-        { "Player1", RpsChoice.None },
-        { "Player2", RpsChoice.None }
-    };
+
+   public Dictionary<string, RpsChoice> Players { get; set; } = new();
+   //  {
+   //      { "Player1", RpsChoice.None },
+   //      { "Player2", RpsChoice.None }
+   //  };
     
     public string? Result { get; set; }
 
-    public object GetState()
-    {
-        return new { Players, Result };
-    }
+   public RpsGame(List<string> players)
+   {
+      Players[players[0]] = RpsChoice.None;
+      Players[players[1]] = RpsChoice.None;
+   }
+   public object GetState()
+   {
+      return new { Players, Result };
+   }
 
     public bool MakeMove(string playerID, object moveData)
     {

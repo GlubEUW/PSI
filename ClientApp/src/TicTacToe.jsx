@@ -1,39 +1,41 @@
 import { useState, useEffect } from "react";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
-function TicTacToe({ gameID, isPlayerX }) {
+function TicTacToe({ gameID, playerName }) {
    const [connection, setConnection] = useState(null);
    const [board, setBoard] = useState([
       [0, 0, 0],
       [0, 0, 0],
       [0, 0, 0]
    ]);
-   const [isXTurn, setIsXTurn] = useState(true);
+   const [playerTurn, setPlayerTurn] = useState(null);
    const [winner, setWinner] = useState(null);
 
-
    useEffect(() => {
-
+      
       if (!gameID) {
          console.error("No game ID provided.");
          alert("No game ID provided.");
          return;
       }
-
+      
       const gameConn = new HubConnectionBuilder()
          .withUrl("http://localhost:5243/gameHub")
          .withAutomaticReconnect()
          .build();
 
       gameConn.on("GameUpdate", (game) => {
-         if (game?.Board) setBoard(game.Board); 
-         if (typeof game?.IsXTurn === "boolean") setIsXTurn(game.IsXTurn);
-         if (game?.Winner) setWinner(game.Winner);
+         console.log(game);
+         if (game.board) {
+            setBoard(game.board); 
+            setPlayerTurn(game.playerTurn);
+            setWinner(game.winner);
+         }
       });
 
       gameConn.start()
          .then(() => {
-            gameConn.invoke("StartGame", gameID, isPlayerX);
+            gameConn.invoke("StartGame", gameID, "TicTacToe");
          })
          .catch(err => console.error('Failed to connect to game hub:', err));
 
@@ -42,19 +44,19 @@ function TicTacToe({ gameID, isPlayerX }) {
       return () => {
          if (gameConn) gameConn.stop();
       };
-   }, [gameID, isPlayerX]);
+   }, [gameID]);
 
    const handleClick = (x, y) => {
       if (!connection || board[x][y] || winner) return;
-
-      connection.invoke("MakeMove", gameID, x, y, isPlayerX)
+      connection.invoke("MakeTicTacToeMove", gameID, x, y, playerName)
          .catch(err => console.error("Move failed:", err));
+
    };
 
    return (
       <div>
          <h2>Tic Tac Toe</h2>
-         {winner ? <h3>Winner: {winner}</h3> : <h3>Current turn: {isXTurn ? 'X' : 'O'}</h3>}
+         {winner ? <h3>Winner: {winner}</h3> : <h3>Current turn: {playerTurn}</h3>}
          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 60px)", gap: "5px" }}>
             {board.map((row, i) =>
                row.map((cell, j) => (
@@ -70,7 +72,8 @@ function TicTacToe({ gameID, isPlayerX }) {
                         fontSize: "24px",
                         border: "1px solid black",
                         cursor: cell || winner ? "default" : "pointer",
-                        backgroundColor: cell ? "#eee" : "#fff"
+                        backgroundColor: cell ? "#eee" : "#fff",
+                        color: cell === 1 ? "blue" : cell === 2 ? "red" : "black"
                      }}
                   >
                      {cell === 1 ? "X" : cell === 2 ? "O" : ""}
