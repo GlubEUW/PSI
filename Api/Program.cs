@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using PSI.Api.Services;
+using Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
