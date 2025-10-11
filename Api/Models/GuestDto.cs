@@ -1,7 +1,6 @@
-namespace PSI.Api.Models
+namespace Api.Models;
+
+public class GuestDto
 {
-   public class GuestDto
-   {
-      public string Name { get; set; } = string.Empty;
-   }
+   public string Name { get; set; } = string.Empty;
 }

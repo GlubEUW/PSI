@@ -1,9 +1,8 @@
-using PSI.Api.Models;
+using Api.Models;
 
-namespace PSI.Api.Services
+namespace Api.Services;
+
+public interface IAuthService
 {
-   public interface IAuthService
-   {
-      string? GuestCreate(GuestDto request);
-   }
+   string? GuestCreate(GuestDto request);
 }

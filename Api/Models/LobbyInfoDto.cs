@@ -1,8 +1,7 @@
-namespace PSI.Api.Models
+namespace Api.Models;
+
+public class LobbyInfoDto
 {
-   public class LobbyInfoDto
-   {
-      public bool IsLobbyFull { get; set; } = false;
-      public bool IsNameTakenInLobby { get; set; } = false;
-   }
+   public bool IsLobbyFull { get; set; } = false;
+   public bool IsNameTakenInLobby { get; set; } = false;
 }

@@ -1,17 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace PSI.Api.Controllers
+namespace Api.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class AuthController() : ControllerBase
 {
-   [Route("api/[controller]")]
-   [ApiController]
-   public class AuthController() : ControllerBase
+   [Authorize]
+   [HttpGet]
+   public IActionResult AuthenticatedOnlyEndPoint()
    {
-      [Authorize]
-      [HttpGet]
-      public IActionResult AuthenticatedOnlyEndPoint()
-      {
-         return Ok("You are authenticated.");
-      }
+      return Ok("You are authenticated.");
    }
 }
