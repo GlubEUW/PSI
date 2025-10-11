@@ -7,7 +7,7 @@ namespace Api.Hubs;
 
 public class MatchHub : Hub
 {
-   public static ConcurrentDictionary<string, MatchSession> _sessions = new(); // Public so LobbyControllers could access it
+   private static ConcurrentDictionary<string, MatchSession> _sessions = new();
    public MatchSession CreateMatch(string code)
    {
       _sessions[code] = new MatchSession
@@ -81,7 +81,7 @@ public class MatchHub : Hub
 
             if (playerName != null)
             {
-               session.Players.RemoveAll(p => p == playerName);
+               session.Players.RemoveAll(p => p == playerName); // Might be better to use SynchronizedCollection<T> Class insetead of List<T> if we are conducting asynchronous operations
                Console.WriteLine($"{playerName} disconnected from match {code}.");
             }
             else
@@ -92,11 +92,19 @@ public class MatchHub : Hub
             if (session.Players.Count == 0)
             {
                _sessions.TryRemove(code, out _);
+               GameHub.RemoveGame(code);
                Console.WriteLine($"Match with code {code} removed due to no players.");
             }
             else
             {
-               await Clients.Group(code).SendAsync("PlayersUpdated", session.Players);
+               try
+               {
+                  await Clients.Group(code).SendAsync("PlayersUpdated", session.Players);
+               }
+               catch (Exception e)
+               {
+                  Console.WriteLine($"Error notifying players in match {code}: {e.Message}");
+               }
             }
          }
       }
@@ -107,10 +115,21 @@ public class MatchHub : Hub
    public List<string> GetPlayers(string code)
    {
       if (_sessions.TryGetValue(code, out var session))
-      {
          return new List<string>(session.Players);
-      }
 
       return new List<string>();
+   }
+
+   public static List<string> GetPlayersForGame(string code)
+   {
+      if (_sessions.TryGetValue(code, out var session))
+         return new List<string>(session.Players);
+
+      return new List<string>();
+   }
+
+   public static bool TryGetSession(string code, out MatchSession? session)
+   {
+      return _sessions.TryGetValue(code, out session);
    }
 }

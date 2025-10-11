@@ -17,7 +17,7 @@ public class LobbyController() : ControllerBase
       var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
       if (name is null || idClaim is null || !Guid.TryParse(idClaim.Value, out var id))
          return Unauthorized();
-      if (MatchHub._sessions.TryGetValue(code, out var session))
+      if (MatchHub.TryGetSession(code, out var session) && session != null)
       {
          if (session.Players.Count >= session.Players.Capacity)
          {
@@ -29,15 +29,17 @@ public class LobbyController() : ControllerBase
             });
          }
 
-         if ((session.Players.Count > 0 && session.Players[0] == name) ||
-            (session.Players.Count > 1 && session.Players[1] == name))
+         foreach (var player in session.Players)
          {
-            Console.WriteLine($"{name} failed to join match {code} — duplicate names.");
-            return Ok(new LobbyInfoDto
+            if (player == name) 
             {
-               IsLobbyFull = false,
-               IsNameTakenInLobby = true
-            });
+               Console.WriteLine($"{name} failed to join match {code} — duplicate names.");
+               return Ok(new LobbyInfoDto
+               {
+                  IsLobbyFull = false,
+                  IsNameTakenInLobby = true
+               });
+            }
          }
       }
 
