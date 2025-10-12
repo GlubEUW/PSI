@@ -3,13 +3,13 @@ import { HubConnectionBuilder, HttpTransportType } from "@microsoft/signalr";
 
 const choices = ["Rock", "Paper", "Scissors"];
 
-function Rps({ gameID, playerName }) {
+function Rps({ gameId, playerName }) {
   const [connection, setConnection] = useState(null);
   const [game, setGame] = useState({ Players: {}, Result: null });
   const [choice, setChoice] = useState(null);
 
   useEffect(() => {
-    if (!gameID || !playerName) return;
+    if (!gameId || !playerName) return;
 
     const conn = new HubConnectionBuilder()
       .withUrl("http://localhost:5243/gameHub", {  // CHANGED: rpsHub -> gameHub
@@ -26,7 +26,7 @@ function Rps({ gameID, playerName }) {
     const startConnection = async () => {
       try {
         await conn.start();
-        await conn.invoke("StartGame", gameID, "RockPaperScissors");  // CHANGED: Added game type
+        await conn.invoke("StartGame", gameId, "RockPaperScissors");  // CHANGED: Added game type
         setConnection(conn);
       } catch (err) {
         console.error("Failed to connect to game hub:", err);
@@ -36,12 +36,12 @@ function Rps({ gameID, playerName }) {
     startConnection();
 
     return () => conn.stop();
-  }, [gameID]);
+  }, [gameId]);
 
   const makeMove = (choice) => {
     if (!connection) return;
     setChoice(choice);
-    connection.invoke("MakeRpsMove", gameID, playerName, choice)  // CHANGED: MakeMove -> MakeRpsMove
+    connection.invoke("MakeRpsMove", gameId, playerName, choice)  // CHANGED: MakeMove -> MakeRpsMove
       .catch(console.error);
   };
 

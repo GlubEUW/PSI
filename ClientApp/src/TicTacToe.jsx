@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
-function TicTacToe({ gameID, playerName }) {
+function TicTacToe({ gameId, playerName }) {
    const [connection, setConnection] = useState(null);
    const [board, setBoard] = useState([
       [0, 0, 0],
@@ -13,7 +13,7 @@ function TicTacToe({ gameID, playerName }) {
 
    useEffect(() => {
       
-      if (!gameID) {
+      if (!gameId) {
          console.error("No game ID provided.");
          alert("No game ID provided.");
          return;
@@ -35,7 +35,7 @@ function TicTacToe({ gameID, playerName }) {
 
       gameConn.start()
          .then(() => {
-            gameConn.invoke("StartGame", gameID, "TicTacToe");
+            gameConn.invoke("StartGame", gameId, "TicTacToe");
          })
          .catch(err => console.error('Failed to connect to game hub:', err));
 
@@ -44,11 +44,11 @@ function TicTacToe({ gameID, playerName }) {
       return () => {
          if (gameConn) gameConn.stop();
       };
-   }, [gameID]);
+   }, [gameId]);
 
    const handleClick = (x, y) => {
       if (!connection || board[x][y] || winner) return;
-      connection.invoke("MakeTicTacToeMove", gameID, x, y, playerName)
+      connection.invoke("MakeTicTacToeMove", gameId, x, y, playerName)
          .catch(err => console.error("Move failed:", err));
 
    };
