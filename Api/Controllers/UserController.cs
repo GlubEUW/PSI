@@ -10,7 +10,7 @@ namespace Api.Controllers;
 public class UserController(IAuthService authService) : ControllerBase
 {
    [HttpPut("guest")]
-   public ActionResult<string> GuestCreate(GuestDto request)
+   public ActionResult<string> GuestCreate(UserDto request)
    {
       var token = authService.GuestCreate(request);
 
@@ -22,18 +22,15 @@ public class UserController(IAuthService authService) : ControllerBase
 
    [Authorize]
    [HttpGet("guest")]
-   public ActionResult<GuestDto> GetGuestInfo()
+   public ActionResult<UserDto> GetGuestInfo()
    {
       var name = User.Identity?.Name;
       var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
       if (name is null || idClaim is null || !Guid.TryParse(idClaim.Value, out var id))
          return Unauthorized();
 
-      var guest = new GuestDto
-      {
-         Name = name
-      };
+      var user = new UserDto(name);
 
-      return Ok(guest);
+      return Ok(user);
    }
 }
