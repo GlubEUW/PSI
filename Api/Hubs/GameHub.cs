@@ -2,18 +2,25 @@ using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using Api.GameLogic;
 using Api.Models;
-
+using Api.Services;
 namespace Api.Hubs;
 
 public class GameHub : Hub
 {
    private static ConcurrentDictionary<string, IGame> _games = new();
 
+   private readonly ILobbyService _lobbyService;
+
+   public GameHub(ILobbyService lobbyService)
+   {
+      _lobbyService = lobbyService;
+   }
+
    public async Task StartGame(string gameId, string gameType)
    {
       if (!_games.ContainsKey(gameId))
       {
-         _games[gameId] = GameFactory.CreateGame(gameType, MatchHub.GetPlayersForGame(gameId));
+         _games[gameId] = GameFactory.CreateGame(gameType, _lobbyService.GetPlayersInLobby(gameId));
       }
 
       await Groups.AddToGroupAsync(Context.ConnectionId, gameId);

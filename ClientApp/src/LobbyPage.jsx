@@ -29,7 +29,7 @@ function LobbyPage() {
       connectedRef.current = true;
 
       document.title = "Lobby: " + code;
-      let conn = null;
+      let conn;
 
       const connect = async () => {
          if (!token) {
@@ -40,8 +40,7 @@ function LobbyPage() {
 
          const response = await GetGuestUser(token);
          if (!response.ok) {
-            setMessage("Failed to fetch user info. Redirecting to home page...");
-            setUser({ name: "Failed." });
+            setMessage("Failed to fetch user info. Redirecting...");
             setTimeout(() => navigate("/home"), 3000);
             return;
          }
@@ -49,43 +48,33 @@ function LobbyPage() {
          const userData = await response.json();
          setUser(userData);
 
-         const conn = new HubConnectionBuilder()
-            .withUrl("http://localhost:5243/matchHub")
+         conn = new HubConnectionBuilder()
+            .withUrl(`http://localhost:5243/matchHub?code=${code}&playerName=${userData.name}`, {
+               accessTokenFactory: () => token
+            })
             .withAutomaticReconnect()
             .build();
-
-         conn.on("MatchStarted", ({ gameType }) => {
-            setGameType(gameType);
-            setPhase("game");
-         });
-
 
          conn.on("PlayersUpdated", async () => {
             try {
                const names = await conn.invoke("GetPlayers", code);
                setPlayers(names);
-            } catch (err) {
+            } catch {
                setPlayers([]);
             }
          });
 
+
          try {
             await conn.start();
             setConnection(conn);
-
-            const success = await conn.invoke("JoinMatch", code, userData.name);
-            if (success) {
-               setMessage(`Joined lobby ${code}`);
-            }
-            else {
-               setMessage("Failed to join the lobby. Name might be taken.");
-            }
+            setMessage(`Connected to lobby ${code}`);
 
             const names = await conn.invoke("GetPlayers", code);
             setPlayers(names);
          } catch (err) {
+            console.error("Connection failed:", err);
             setMessage("Connection failed.");
-            console.error(`Connection failed:, ${err}`);
          }
       };
 
@@ -95,6 +84,7 @@ function LobbyPage() {
          if (conn) conn.stop();
       };
    }, [code]);
+
 
 
    const startMatch = async (selectedGameType) => {

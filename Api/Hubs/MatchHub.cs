@@ -1,135 +1,80 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
 using Api.Models;
+using Api.Services;
 
 namespace Api.Hubs;
 
 public class MatchHub : Hub
 {
-   private static ConcurrentDictionary<string, MatchSession> _sessions = new();
-   public MatchSession CreateMatch(string code)
+   private readonly ILobbyService _lobbyService;
+
+   public MatchHub(ILobbyService lobbyService)
    {
-      _sessions[code] = new MatchSession
-      {
-         Code = code,
-         Players = new List<string>(2),
-         inGame = false
-      };
-      Console.WriteLine($"Match created with code: {code}");
-      return _sessions[code];
+      _lobbyService = lobbyService;
    }
 
-   public async Task<bool> JoinMatch(string code, string playerName)
+   public override async Task OnConnectedAsync()
    {
-      Context.Items["Code"] = code;
-      Context.Items["PlayerName"] = playerName;
-      if (!_sessions.TryGetValue(code, out var session))
+      var httpContext = Context.GetHttpContext();
+      if (httpContext is null)
       {
-         session = CreateMatch(code);
+         Context.Abort();
+         return;
       }
 
-      if (session.Players.Contains(playerName))
+      var code = httpContext.Request.Query["code"].ToString();
+      var playerName = httpContext.Request.Query["playerName"].ToString();
+
+      if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(playerName))
       {
-         return false; // Player name already taken in this match
+         await Clients.Caller.SendAsync("Error", "Invalid connection parameters.");
+         Context.Abort();
+         return;
       }
 
-      if (session.Players.Count < session.Players.Capacity)
+      var joined = _lobbyService.JoinMatch(code, playerName);
+      if (!joined)
       {
-         session.Players.Add(playerName);
-         await Groups.AddToGroupAsync(Context.ConnectionId, code);
-         await Clients.Group(code).SendAsync("PlayersUpdated", session.Players);
-         Console.WriteLine($"{playerName} joined match {code}");
-         return true;
+         await Clients.Caller.SendAsync("Error", "Could not join the match.");
+         Context.Abort();
+         return;
       }
 
-      Console.WriteLine($"{playerName} failed to join match {code} — match full.");
-      return false;
+      await Groups.AddToGroupAsync(Context.ConnectionId, code);
+      await Clients.Group(code).SendAsync("PlayersUpdated", playerName);
+      Console.WriteLine($"Player {playerName} connected to lobby {code}");
+      await base.OnConnectedAsync();
    }
 
-   public async Task StartMatch(string selectedGameType, string code)
-   {
-      Console.WriteLine($"StartMatch called with GameType={selectedGameType}, Code={code}");
-
-      if (_sessions.ContainsKey(code))
-      {
-         Console.WriteLine($"Found session for code {code} with {_sessions[code].Players.Count} players");
-      }
-
-      if (_sessions.ContainsKey(code) /*&& _sessions[code].Players.Count == 2*/)
-      {
-         _sessions[code].GameType = selectedGameType; // Set the game type
-         Console.WriteLine($"Starting match for {code}...");
-         await Clients.Group(code).SendAsync("MatchStarted", new { gameType = selectedGameType });
-      }
-      else
-      {
-         Console.WriteLine($"Cannot start match: session missing or not enough players.");
-      }
-   }
    public override async Task OnDisconnectedAsync(Exception? exception)
    {
-      if (Context.Items.TryGetValue("Code", out var codeObj) && codeObj is string code)
+      var httpContext = Context.GetHttpContext();
+      if (httpContext is null)
       {
-         if (_sessions.TryGetValue(code, out var session))
-         {
-            string? playerName = null;
-            if (Context.Items.TryGetValue("PlayerName", out var playerObj) && playerObj is string p)
-            {
-               playerName = p;
-            }
+         await base.OnDisconnectedAsync(exception);
+         return;
+      }
 
-            if (playerName != null)
-            {
-               session.Players.RemoveAll(p => p == playerName); // Might be better to use SynchronizedCollection<T> Class insetead of List<T> if we are conducting asynchronous operations
-               Console.WriteLine($"{playerName} disconnected from match {code}.");
-            }
-            else
-            {
-               Console.WriteLine($"Unknown player disconnected from match {code}.");
-            }
+      var code = httpContext.Request.Query["code"].ToString();
+      var playerName = httpContext.Request.Query["playerName"].ToString();
 
-            if (session.Players.Count == 0)
-            {
-               _sessions.TryRemove(code, out _);
-               GameHub.RemoveGame(code);
-               Console.WriteLine($"Match with code {code} removed due to no players.");
-            }
-            else
-            {
-               try
-               {
-                  await Clients.Group(code).SendAsync("PlayersUpdated", session.Players);
-               }
-               catch (Exception e)
-               {
-                  Console.WriteLine($"Error notifying players in match {code}: {e.Message}");
-               }
-            }
-         }
+      Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
+
+      if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(playerName))
+      {
+         _lobbyService.LeaveMatch(code, playerName);
+         await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
+         await Clients.Group(code).SendAsync("PlayersUpdated", playerName);
       }
 
       await base.OnDisconnectedAsync(exception);
    }
-
    public List<string> GetPlayers(string code)
    {
-      if (_sessions.TryGetValue(code, out var session))
-         return new List<string>(session.Players);
-
-      return new List<string>();
+      return _lobbyService.GetPlayersInLobby(code);
    }
-
-   public static List<string> GetPlayersForGame(string code)
+   public async Task StartMatch(string selectedGameType, string code)
    {
-      if (_sessions.TryGetValue(code, out var session))
-         return new List<string>(session.Players);
-
-      return new List<string>();
-   }
-
-   public static bool TryGetSession(string code, out MatchSession? session)
-   {
-      return _sessions.TryGetValue(code, out session);
+      //_lobbyService.StartMatch(code, selectedGameType);
    }
 }
