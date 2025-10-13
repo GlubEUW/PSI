@@ -1,10 +1,11 @@
 using System.Text;
+using Api.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using PSI.Api.Services;
+using Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +82,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<MatchHub>("/matchHub");
+app.MapHub<GameHub>("/gameHub");
 
 if (app.Environment.IsDevelopment())
 {
