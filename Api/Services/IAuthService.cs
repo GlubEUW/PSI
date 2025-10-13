@@ -4,5 +4,5 @@ namespace Api.Services;
 
 public interface IAuthService
 {
-   string? GuestCreate(GuestDto request);
+   string? GuestCreate(UserDto request);
 }

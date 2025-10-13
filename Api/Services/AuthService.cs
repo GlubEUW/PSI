@@ -9,7 +9,7 @@ namespace Api.Services;
 
 public class AuthService(IConfiguration configuration) : IAuthService
 {
-   public string? GuestCreate(GuestDto request)
+   public string? GuestCreate(UserDto request)
    {
       var guest = new Guest();
       if (string.IsNullOrWhiteSpace(request.Name))
