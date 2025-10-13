@@ -3,7 +3,7 @@ import { HubConnectionBuilder, HttpTransportType } from "@microsoft/signalr";
 
 const choices = ["Rock", "Paper", "Scissors"];
 
-function Rps({ gameId, playerName }) {
+function Rps({ gameId, playerName, onReturnToLobby }) {
   const [connection, setConnection] = useState(null);
   const [game, setGame] = useState({ Players: {}, Result: null });
   const [choice, setChoice] = useState(null);
@@ -44,6 +44,8 @@ function Rps({ gameId, playerName }) {
     connection.invoke("MakeRpsMove", gameId, playerName, choice)  // CHANGED: MakeMove -> MakeRpsMove
       .catch(console.error);
   };
+
+  // TODO: Add functionality to leave the game and return to lobby
 
   return (
     <div>

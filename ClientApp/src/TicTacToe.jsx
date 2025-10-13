@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
-function TicTacToe({ gameId, playerName }) {
+function TicTacToe({ gameId, playerName, onReturnToLobby }) {
    const [connection, setConnection] = useState(null);
    const [board, setBoard] = useState([
       [0, 0, 0],
@@ -53,6 +53,16 @@ function TicTacToe({ gameId, playerName }) {
 
    };
 
+   const returnToLobby = () => {
+      if (connection) {
+         connection.invoke("EndGame", gameId)
+            .catch(err => console.error("Failed to end game:", err));
+         connection.stop();
+         setConnection(null);
+      }
+      onReturnToLobby();
+   }
+
    return (
       <div>
          <h2>Tic Tac Toe</h2>
@@ -81,6 +91,7 @@ function TicTacToe({ gameId, playerName }) {
                ))
             )}
          </div>
+         {winner ? <button onClick={returnToLobby} className="linkButton">Back To Lobby</button> : null}
       </div>
    );
 }

@@ -108,7 +108,7 @@ function LobbyPage() {
 
    if (phase === "game" && gameType) {
       const GameComponent = gameComponents[gameType];
-      return <GameComponent gameId={code} playerName={user.name} />;
+      return <GameComponent gameId={code} playerName={user.name} onReturnToLobby={() => setPhase("lobby")} />;
    }
 
    return (

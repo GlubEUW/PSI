@@ -23,6 +23,13 @@ public class GameHub : Hub
    public static void RemoveGame(string gameId)
    {
       _games.TryRemove(gameId, out _);
+      Console.WriteLine($"Game {gameId} removed.");
+   }
+
+   public async Task EndGame(string gameId)
+   {
+      RemoveGame(gameId);
+      await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
    }
 
    public async Task MakeTicTacToeMove(string gameId, int x, int y, string playerName)
