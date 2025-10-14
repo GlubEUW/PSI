@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Api.Models;
+using Api.Entities;
 
 
 namespace Api.Services;

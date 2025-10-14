@@ -1,6 +1,6 @@
-namespace Api.Models;
+namespace Api.Entities;
 
-public class MatchSession // FIXME: refactor to Entities group
+public class MatchSession
 {
    public required string Code { get; set; }
    public List<string> Players { get; set; } = new();
