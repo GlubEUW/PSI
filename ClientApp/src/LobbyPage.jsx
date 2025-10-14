@@ -63,6 +63,11 @@ function LobbyPage() {
                setPlayers([]);
             }
          });
+         conn.on("MatchStarted", (data) => {
+            console.log("Match started!", data);
+            setGameType(data.gameType);
+            setPhase("game");
+         });
 
 
          try {
@@ -98,7 +103,12 @@ function LobbyPage() {
 
    if (phase === "game" && gameType) {
       const GameComponent = gameComponents[gameType];
-      return <GameComponent gameId={code} playerName={user.name} onReturnToLobby={() => setPhase("lobby")} />;
+      return <GameComponent
+         gameId={code}
+         playerName={user.name}
+         connection={connection}  // Pass the existing connection!
+         onReturnToLobby={() => setPhase("lobby")}
+      />;
    }
 
    return (

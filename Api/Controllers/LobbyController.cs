@@ -33,7 +33,7 @@ namespace Api.Controllers
       [HttpPost("{code}/create")]
       public async Task<ActionResult> CreateMatch(string code)
       {
-         var success = _lobbyService.CreateMatch(code);
+         var success = await _lobbyService.CreateMatch(code);
          if (success)
             return Ok(new { Message = $"Match {code} created." });
 
@@ -47,7 +47,7 @@ namespace Api.Controllers
          var name = User.Identity?.Name;
          if (name is null) return Unauthorized();
 
-         var success = _lobbyService.JoinMatch(code, name);
+         var success = await _lobbyService.JoinMatch(code, name);
          if (!success)
          {
             var lobbyInfo = _lobbyService.GetLobbyInfo(code, name);
@@ -71,7 +71,7 @@ namespace Api.Controllers
          var name = User.Identity?.Name;
          if (name is null) return Unauthorized();
 
-         var success = _lobbyService.LeaveMatch(code, name);
+         var success = await _lobbyService.LeaveMatch(code, name);
          if (!success)
             return BadRequest(new { Message = "Unable to leave match or match does not exist." });
 

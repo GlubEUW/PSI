@@ -1,16 +1,19 @@
 using Microsoft.AspNetCore.SignalR;
 using Api.Models;
 using Api.Services;
+using Api.GameLogic;
 
 namespace Api.Hubs;
 
 public class MatchHub : Hub
 {
    private readonly ILobbyService _lobbyService;
+   private readonly IGameService _gameService;
 
-   public MatchHub(ILobbyService lobbyService)
+   public MatchHub(ILobbyService lobbyService, IGameService gameService)
    {
       _lobbyService = lobbyService;
+      _gameService = gameService;
    }
 
    public override async Task OnConnectedAsync()
@@ -32,7 +35,7 @@ public class MatchHub : Hub
          return;
       }
 
-      var joined = _lobbyService.JoinMatch(code, playerName);
+      var joined = await _lobbyService.JoinMatch(code, playerName);
       if (!joined)
       {
          await Clients.Caller.SendAsync("Error", "Could not join the match.");
@@ -62,19 +65,62 @@ public class MatchHub : Hub
 
       if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(playerName))
       {
-         _lobbyService.LeaveMatch(code, playerName);
+         await _lobbyService.LeaveMatch(code, playerName);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
          await Clients.Group(code).SendAsync("PlayersUpdated", playerName);
       }
 
       await base.OnDisconnectedAsync(exception);
    }
-   public List<string> GetPlayers(string code)
+
+   public Task<List<string>> GetPlayers(string code)
    {
-      return _lobbyService.GetPlayersInLobby(code);
+      return Task.FromResult(_lobbyService.GetPlayersInLobby(code));
    }
+
    public async Task StartMatch(string selectedGameType, string code)
    {
-      //_lobbyService.StartMatch(code, selectedGameType);
+      var players = _lobbyService.GetPlayersInLobby(code);
+
+      if (!_gameService.StartGame(code, selectedGameType, players))
+      {
+         await Clients.Caller.SendAsync("Error", "Failed to start the game.");
+         return;
+      }
+
+      await Clients.Group(code).SendAsync("MatchStarted", new
+      {
+         gameType = selectedGameType,
+         gameId = code,
+         players,
+         initialState = _gameService.GetGameState(code)
+      });
+   }
+
+   public async Task MakeTicTacToeMove(string gameId, int x, int y, string playerName)
+   {
+      if (_gameService.MakeTicTacToeMove(gameId, playerName, x, y, out var newState))
+      {
+         await Clients.Group(gameId).SendAsync("GameUpdate", newState);
+      }
+   }
+
+   public async Task MakeRpsMove(string gameId, string playerName, RpsChoice choice)
+   {
+      if (_gameService.MakeRpsMove(gameId, playerName, choice, out var newState))
+      {
+         await Clients.Group(gameId).SendAsync("GameUpdate", newState);
+      }
+   }
+
+   public async Task EndGame(string gameId)
+   {
+      _gameService.RemoveGame(gameId);
+      await Clients.Group(gameId).SendAsync("GameEnded");
+   }
+
+   public Task<object?> GetGameState(string gameId)
+   {
+      return Task.FromResult(_gameService.GetGameState(gameId));
    }
 }

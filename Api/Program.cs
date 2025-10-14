@@ -71,7 +71,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
    });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<ILobbyService, LobbyService>();
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
@@ -82,7 +84,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<MatchHub>("/matchHub");
-app.MapHub<GameHub>("/gameHub");
+
 
 if (app.Environment.IsDevelopment())
 {

@@ -10,17 +10,15 @@ public interface ILobbyService
     public bool IsNameTakenInLobby(string code, string name);
     public List<string> GetPlayersInLobby(string code);
     public LobbyInfoDto GetLobbyInfo(string code, string name);
-    public bool CreateMatch(string code);
-    public bool JoinMatch(string code, string playerName);
-    public bool LeaveMatch(string code, string playerName);
+    public Task<bool> CreateMatch(string code);
+    public Task<bool> JoinMatch(string code, string playerName);
+    public Task<bool> LeaveMatch(string code, string playerName);
 }
-
 
 
 public class LobbyService() : ILobbyService
 {
     private static ConcurrentDictionary<string, MatchSession> _sessions = new();
-
     public bool IsLobbyFull(string code)
     {
         if (_sessions.TryGetValue(code, out var session) && session != null)
@@ -56,7 +54,7 @@ public class LobbyService() : ILobbyService
         };
     }
 
-    public bool CreateMatch(string code)
+    public Task<bool> CreateMatch(string code)
     {
         if (!_sessions.ContainsKey(code))
         {
@@ -66,11 +64,11 @@ public class LobbyService() : ILobbyService
                 Players = new List<string>(2),
                 inGame = false
             };
-            return true;
+            return Task.FromResult(true);
         }
-        return false;
+        return Task.FromResult(false);
     }
-    public bool JoinMatch(string code, string playerName)
+    public Task<bool> JoinMatch(string code, string playerName)
     {
         if (!_sessions.TryGetValue(code, out var session))
         {
@@ -80,19 +78,19 @@ public class LobbyService() : ILobbyService
 
         if (session.Players.Contains(playerName))
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         if (session.Players.Count < session.Players.Capacity)
         {
             session.Players.Add(playerName);
-            return true;
+            return Task.FromResult(true);
         }
 
-        return false;
+        return Task.FromResult(false);
     }
 
-    public bool LeaveMatch(string code, string playerName)
+    public Task<bool> LeaveMatch(string code, string playerName)
     {
         if (_sessions.TryGetValue(code, out var session))
         {
@@ -100,10 +98,10 @@ public class LobbyService() : ILobbyService
             if (session.Players.Count == 0)
             {
                 _sessions.TryRemove(code, out _);
-                return true;
+                return Task.FromResult(true);
             }
-            return true;
+            return Task.FromResult(true);
         }
-        return false;
+        return Task.FromResult(false);
     }
 }
