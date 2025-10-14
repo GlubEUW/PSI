@@ -1,6 +1,6 @@
 namespace Api.Models;
 
-public record class LobbyInfoDto
+public record class JoinLobbyResponseDto
 {
    public bool IsLobbyFull { get; set; }
    public bool IsNameTakenInLobby { get; set; }

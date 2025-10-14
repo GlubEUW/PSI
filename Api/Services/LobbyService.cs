@@ -9,7 +9,7 @@ public interface ILobbyService
     public bool IsLobbyFull(string code);
     public bool IsNameTakenInLobby(string code, string name);
     public List<string> GetPlayersInLobby(string code);
-    public LobbyInfoDto GetLobbyInfo(string code, string name);
+    public JoinLobbyResponseDto GetJoinLobbyInfo(string code, string name);
     public Task<bool> CreateMatch(string code);
     public Task<bool> JoinMatch(string code, string playerName);
     public Task<bool> LeaveMatch(string code, string playerName);
@@ -45,9 +45,9 @@ public class LobbyService() : ILobbyService
         }
         return false;
     }
-    public LobbyInfoDto GetLobbyInfo(string code, string name)
+    public JoinLobbyResponseDto GetJoinLobbyInfo(string code, string name)
     {
-        return new LobbyInfoDto
+        return new JoinLobbyResponseDto
         {
             IsLobbyFull = IsLobbyFull(code),
             IsNameTakenInLobby = IsNameTakenInLobby(code, name)
