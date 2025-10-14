@@ -2,33 +2,37 @@ namespace Api.GameLogic;
 
 public enum RpsChoice
 {
-    None,
-    Rock,
-    Paper,
-    Scissors
+    None = 0,
+    Rock = 1,
+    Paper = 2,
+    Scissors = 3
 }
 
 public class RpsGame : IGame
 {
     public string GameType => "RockPaperScissors";
 
-   public Dictionary<string, RpsChoice> Players { get; set; } = new();
-   //  {
-   //      { "Player1", RpsChoice.None },
-   //      { "Player2", RpsChoice.None }
-   //  };
-    
+    public Dictionary<string, RpsChoice> Players { get; set; } = new();
     public string? Result { get; set; }
 
-   public RpsGame(List<string> players)
-   {
-      Players[players[0]] = RpsChoice.None;
-      Players[players[1]] = RpsChoice.None;
-   }
-   public object GetState()
-   {
-      return new { Players, Result };
-   }
+    public RpsGame(List<string> players)
+    {
+        if (players == null || players.Count < 2)
+        {
+            Players["Player1"] = RpsChoice.None;
+            Players["Player2"] = RpsChoice.None;
+        }
+        else
+        {
+            Players[players[0]] = RpsChoice.None;
+            Players[players[1]] = RpsChoice.None;
+        }
+    }
+
+    public object GetState()
+    {
+        return new { Players, Result };
+    }
 
     public bool MakeMove(string playerID, object moveData)
     {
@@ -54,7 +58,7 @@ public class RpsGame : IGame
         var c1 = Players[p1]; 
         var c2 = Players[p2];
 
-        if (c1 == c2) return "Draw";
+        if (c1 == c2) return "Draw!";
         
         if ((c1 == RpsChoice.Rock && c2 == RpsChoice.Scissors) ||
             (c1 == RpsChoice.Paper && c2 == RpsChoice.Rock) ||
