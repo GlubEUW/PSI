@@ -7,11 +7,6 @@ using Api.Models;
 
 namespace Api.Services;
 
-public interface IAuthService
-{
-   string? GuestCreate(UserDto request);
-}
-
 public class AuthService(IConfiguration configuration) : IAuthService
 {
    public string? GuestCreate(UserDto request)
