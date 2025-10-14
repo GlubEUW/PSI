@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.SignalR;
-using Api.Models;
 using Api.Services;
 using Api.GameLogic;
 
