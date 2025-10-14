@@ -79,7 +79,7 @@ function TicTacToe({ gameId, playerName, connection, onReturnToLobby }) {
                         border: "1px solid black",
                         cursor: cell || winner ? "default" : "pointer",
                         backgroundColor: cell ? "#eee" : "#fff",
-                        color: cell === 1 ? "blue" : cell === 2 ? "O" : "black"
+                        color: cell === 1 ? "blue" : cell === 2 ? "red" : "black"
                      }}
                   >
                      {cell === 1 ? "X" : cell === 2 ? "O" : ""}
