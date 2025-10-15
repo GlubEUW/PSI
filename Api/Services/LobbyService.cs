@@ -24,20 +24,19 @@ public class LobbyService() : ILobbyService
         return new List<string>();
     }
 
-    public bool IsNameTakenInLobby(string code, string name)
+    public bool IsNameTakenInLobby(string code, string playerName)
     {
         if (_sessions.TryGetValue(code, out var session) && session != null)
         {
-            return session.Players.Contains(name);
+            return session.Players.Contains(playerName);
         }
         return false;
     }
-    public LobbyInfoDto GetLobbyInfo(string code, string name)
+    public LobbyInfoDto GetLobbyInfo(string code)
     {
         return new LobbyInfoDto
         {
-            IsLobbyFull = IsLobbyFull(code),
-            IsNameTakenInLobby = IsNameTakenInLobby(code, name)
+            Players = GetPlayersInLobby(code)
         };
     }
 
