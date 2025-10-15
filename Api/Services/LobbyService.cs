@@ -2,9 +2,7 @@ using System.Collections.Concurrent;
 using Api.Models;
 using Api.Entities;
 
-
 namespace Api.Services;
-
 public class LobbyService() : ILobbyService
 {
     private static ConcurrentDictionary<string, MatchSession> _sessions = new();
@@ -34,9 +32,9 @@ public class LobbyService() : ILobbyService
         }
         return false;
     }
-    public JoinLobbyResponseDto GetJoinLobbyInfo(string code, string name)
+    public LobbyInfoDto GetLobbyInfo(string code, string name)
     {
-        return new JoinLobbyResponseDto
+        return new LobbyInfoDto
         {
             IsLobbyFull = IsLobbyFull(code),
             IsNameTakenInLobby = IsNameTakenInLobby(code, name)

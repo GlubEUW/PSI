@@ -18,15 +18,15 @@ namespace Api.Controllers
 
       [Authorize]
       [HttpGet("{code}")]
-      public ActionResult<JoinLobbyResponseDto> GetJoinLobbyInfo(string code)
+      public ActionResult<LobbyInfoDto> GetLobbyInfo(string code)
       {
          var name = User.Identity?.Name;
          var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
          if (name is null || idClaim is null || !Guid.TryParse(idClaim.Value, out _))
             return Unauthorized();
 
-         var joinLobbyResponse = _lobbyService.GetJoinLobbyInfo(code, name);
-         return Ok(joinLobbyResponse);
+         var lobbyInfo = _lobbyService.GetLobbyInfo(code, name);
+         return Ok(lobbyInfo);
       }
 
       [Authorize]
@@ -50,7 +50,7 @@ namespace Api.Controllers
          var success = await _lobbyService.JoinMatch(code, name);
          if (!success)
          {
-            var lobbyInfo = _lobbyService.GetJoinLobbyInfo(code, name);
+            var lobbyInfo = _lobbyService.GetLobbyInfo(code, name);
             if (lobbyInfo.IsLobbyFull)
                return Conflict(new { Message = "Match is full." });
 
