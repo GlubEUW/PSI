@@ -21,8 +21,8 @@ function LobbyPage() {
    const [message, setMessage] = useState("");
 
    const connectedRef = useRef(false);
-   const [phase, setPhase] = useState("lobby"); // "lobby" or "game"
-   const [gameType, setGameType] = useState("TicTacToe"); // Default game type
+   const [phase, setPhase] = useState("lobby");
+   const [gameType, setGameType] = useState("TicTacToe");
 
    useEffect(() => {
       if (connectedRef.current) return;
@@ -106,7 +106,7 @@ function LobbyPage() {
       return <GameComponent
          gameId={code}
          playerName={user.name}
-         connection={connection}  // Pass the existing connection!
+         connection={connection}
          onReturnToLobby={() => setPhase("lobby")}
       />;
    }
