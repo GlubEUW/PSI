@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { HubConnectionBuilder } from "@microsoft/signalr";
 
-function TicTacToe({ gameId, playerName, onReturnToLobby }) {
-   const [connection, setConnection] = useState(null);
+function TicTacToe({ gameId, playerName, connection, onReturnToLobby }) {
    const [board, setBoard] = useState([
       [0, 0, 0],
       [0, 0, 0],
@@ -12,56 +10,54 @@ function TicTacToe({ gameId, playerName, onReturnToLobby }) {
    const [winner, setWinner] = useState(null);
 
    useEffect(() => {
-      
-      if (!gameId) {
-         console.error("No game ID provided.");
-         alert("No game ID provided.");
+      if (!connection) {
+         console.error("No connection provided.");
          return;
       }
-      
-      const gameConn = new HubConnectionBuilder()
-         .withUrl("http://localhost:5243/gameHub")
-         .withAutomaticReconnect()
-         .build();
 
-      gameConn.on("GameUpdate", (game) => {
-         console.log(game);
+      // Listen for game updates
+      const handleGameUpdate = (game) => {
+         console.log("Game update received:", game);
          if (game.board) {
-            setBoard(game.board); 
+            setBoard(game.board);
             setPlayerTurn(game.playerTurn);
             setWinner(game.winner);
          }
-      });
-
-      gameConn.start()
-         .then(() => {
-            gameConn.invoke("StartGame", gameId, "TicTacToe");
-         })
-         .catch(err => console.error('Failed to connect to game hub:', err));
-
-      setConnection(gameConn);
-
-      return () => {
-         if (gameConn) gameConn.stop();
       };
-   }, [gameId]);
+
+      connection.on("GameUpdate", handleGameUpdate);
+
+      // Request initial game state
+      connection.invoke("GetGameState", gameId)
+         .then(state => {
+            if (state) {
+               setBoard(state.board);
+               setPlayerTurn(state.playerTurn);
+               setWinner(state.winner);
+            }
+         })
+         .catch(err => console.error("Failed to get game state:", err));
+
+      // Cleanup listener on unmount
+      return () => {
+         connection.off("GameUpdate", handleGameUpdate);
+      };
+   }, [connection, gameId]);
 
    const handleClick = (x, y) => {
-      if (!connection || board[x][y] || winner) return;
+      if (!connection || board[x][y] !== 0 || winner) return;
+
       connection.invoke("MakeTicTacToeMove", gameId, x, y, playerName)
          .catch(err => console.error("Move failed:", err));
-
    };
 
    const returnToLobby = () => {
       if (connection) {
          connection.invoke("EndGame", gameId)
             .catch(err => console.error("Failed to end game:", err));
-         connection.stop();
-         setConnection(null);
       }
       onReturnToLobby();
-   }
+   };
 
    return (
       <div>
