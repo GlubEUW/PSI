@@ -42,7 +42,7 @@ public class MatchHub : Hub
       }
 
       var joined = await _lobbyService.JoinMatch(code, playerName);
-      if (!joined)
+      if (joined is not null)
       {
          await Clients.Caller.SendAsync("Error", "Could not join the match.");
          Context.Abort();

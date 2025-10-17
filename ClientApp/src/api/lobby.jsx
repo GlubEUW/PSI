@@ -9,8 +9,8 @@ export async function GetLobbyInfo(token, code) {
    return response;
 }
 
-export async function JoinLobby(token, code) {
-   const response = await fetch(`http://localhost:5243/api/lobby/${code}/join`, {
+export async function CanJoinLobby(token, code) {
+   const response = await fetch(`http://localhost:5243/api/lobby/${code}/canjoin`, {
       method: "POST",
       headers: {
          "Content-Type": "application/json",

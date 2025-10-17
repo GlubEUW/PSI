@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Api.Models;
 using Api.Services;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Api.Controllers
 {
@@ -27,25 +28,16 @@ namespace Api.Controllers
          return Conflict(new { Message = $"Match {code} already exists." });
       }
 
-      [HttpPost("{code}/join")]
-      public async Task<ActionResult> JoinMatch(string code)
+      [HttpPost("{code}/canjoin")]
+      public async Task<ActionResult> CanJoinMatch(string code)
       {
          var name = User.Identity?.Name;
          if (name is null) return Unauthorized();
 
-         var success = await _lobbyService.JoinMatch(code, name);
-         if (!success)
-         {
-            if (_lobbyService.IsLobbyFull(code))
-               return Conflict(new { Message = "Match is full." });
-
-            if (_lobbyService.IsNameTakenInLobby(code, name))
-               return Conflict(new { Message = "Name already taken in match." });
-
-            return BadRequest(new { Message = "Unable to join match." });
-         }
-
-         return Ok(new { Message = $"Joined match {code} successfully." });
+         var result = _lobbyService.CanJoinLobby(code, name);
+         if (result is null)
+            return Ok(new { Message = "Can join match." });
+         return BadRequest(new { Message = result });
       }
 
       [HttpPost("{code}/leave")]
