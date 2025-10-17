@@ -95,7 +95,7 @@ function LobbyPage() {
    const startMatch = async (selectedGameType) => {
       if (!connection) return;
       try {
-         await connection.invoke("StartMatch", selectedGameType, code);
+         await connection.invoke("StartMatch", selectedGameType);
       } catch (err) {
          console.error(err);
       }
