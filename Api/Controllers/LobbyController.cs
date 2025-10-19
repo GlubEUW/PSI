@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Api.Models;
 using Api.Services;
 using System.Reflection.Metadata.Ecma335;
 
@@ -32,7 +31,8 @@ namespace Api.Controllers
       public async Task<ActionResult> CanJoinMatch(string code)
       {
          var name = User.Identity?.Name;
-         if (name is null) return Unauthorized();
+         if (name is null)
+            return Unauthorized();
 
          var error = _lobbyService.CanJoinLobby(code, name);
          if (error is null)
@@ -44,7 +44,8 @@ namespace Api.Controllers
       public async Task<ActionResult> LeaveMatch(string code)
       {
          var name = User.Identity?.Name;
-         if (name is null) return Unauthorized();
+         if (name is null)
+            return Unauthorized();
 
          var success = await _lobbyService.LeaveMatch(code, name);
          if (!success)
