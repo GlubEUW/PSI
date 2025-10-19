@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Api.GameLogic;
 
 public enum State
@@ -34,20 +36,24 @@ public class TicTacToeGame : IGame
       return new { Board, PlayerTurn, Winner };
    }
 
-   public bool MakeMove(string playerID, object moveData)
+   public bool MakeMove(JsonElement moveData)
    {
-      // moveData will be { x, y, playerName }
-      var move = moveData as TicTacToeMove;
-      if (move == null) return false;
+      // moveData will be { playerName, x, y }
+      var move = moveData.Deserialize<TicTacToeMove>();
+      if (move == null) 
+         return false;
 
-      return ApplyMove(move.X, move.Y, move.PlayerName);
+      return ApplyMove(move.PlayerName, move.X, move.Y);
    }
 
-   private bool ApplyMove(int x, int y, string playerName)
+   private bool ApplyMove(string playerName, int x, int y)
    {
-      if (Winner != null) return false;
-      if (Board[x][y] != (int)State.Empty) return false;
-      if (playerName != PlayerTurn) return false;
+      if (Winner != null) 
+         return false;
+      if (Board[x][y] != (int)State.Empty) 
+         return false;
+      if (playerName != PlayerTurn) 
+         return false;
 
       Board[x][y] = (int)Players[playerName];
       
@@ -124,9 +130,9 @@ public class TicTacToeGame : IGame
 }
 
 // Helper class for move data
-public class TicTacToeMove
+public class TicTacToeMove 
 {
+   required public string PlayerName { get; set; }
    public int X { get; set; }
    public int Y { get; set; }
-   required public string PlayerName { get; set; }
 }

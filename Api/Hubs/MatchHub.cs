@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Api.Services;
-using Api.GameLogic;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
+using System.Text.Json;
 
 namespace Api.Hubs;
 
@@ -40,7 +38,7 @@ public class MatchHub : Hub
          Context.Abort();
          return;
       }
-
+      
       var joined = await _lobbyService.JoinMatch(code, playerName);
       if (joined is not null)
       {
@@ -102,17 +100,9 @@ public class MatchHub : Hub
       });
    }
 
-   public async Task MakeTicTacToeMove(string gameId, int x, int y, string playerName)
+   public async Task MakeMove(string gameId, JsonElement moveData)
    {
-      if (_gameService.MakeTicTacToeMove(gameId, playerName, x, y, out var newState))
-      {
-         await Clients.Group(gameId).SendAsync("GameUpdate", newState);
-      }
-   }
-
-   public async Task MakeRpsMove(string gameId, string playerName, RpsChoice choice)
-   {
-      if (_gameService.MakeRpsMove(gameId, playerName, choice, out var newState))
+      if(_gameService.MakeMove(gameId, moveData, out var newState))
       {
          await Clients.Group(gameId).SendAsync("GameUpdate", newState);
       }

@@ -1,5 +1,6 @@
 using Api.GameLogic;
 using System.Collections.Concurrent;
+using System.Text.Json;
 namespace Api.Services;
 
 
@@ -36,40 +37,19 @@ public class GameService : IGameService
         return removed;
     }
 
-    public bool MakeTicTacToeMove(string gameId, string playerName, int x, int y, out object? newState)
-    {
-        newState = null;
-        if (!_games.TryGetValue(gameId, out var game))
-            return false;
+   public bool MakeMove(string gameId, JsonElement moveData, out object? newState)
+   {
+      newState = null;
 
-        var move = new TicTacToeMove { X = x, Y = y, PlayerName = playerName };
-
-        if (game.MakeMove(playerName, move))
-        {
-            newState = game.GetState();
-            return true;
-        }
-
-        return false;
-    }
-
-    public bool MakeRpsMove(string gameId, string playerName, RpsChoice choice, out object? newState)
-    {
-        newState = null;
-        if (!_games.TryGetValue(gameId, out var game))
-            return false;
-
-        var move = new RpsMove { PlayerName = playerName, Choice = choice };
-
-        if (game.MakeMove(playerName, move))
-        {
-            newState = game.GetState();
-            return true;
-        }
-
-        return false;
-    }
-
+      if (_games.TryGetValue(gameId, out var game) && game.MakeMove(moveData))
+      {
+         newState = game.GetState();
+         return true;
+      }
+      
+      return false;
+   }
+   
     public object? GetGameState(string gameId)
     {
         return _games.TryGetValue(gameId, out var game) ? game.GetState() : null;
