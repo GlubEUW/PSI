@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 namespace Api.Entities;
 
 public class Guest
