@@ -38,12 +38,16 @@ public class TicTacToeGame : IGame
 
    public bool MakeMove(JsonElement moveData)
    {
-      // moveData will be { playerName, x, y }
-      var move = moveData.Deserialize<TicTacToeMove>();
-      if (move == null) 
+      try
+      {
+         // moveData will be { playerName, x, y }
+         var move = moveData.Deserialize<TicTacToeMove>();
+         return ApplyMove(move.PlayerName, move.X, move.Y);
+      }
+      catch (JsonException)
+      {
          return false;
-
-      return ApplyMove(move.PlayerName, move.X, move.Y);
+      }
    }
 
    private bool ApplyMove(string playerName, int x, int y)
@@ -129,8 +133,8 @@ public class TicTacToeGame : IGame
    public string? GetWinner() => Winner;
 }
 
-// Helper class for move data
-public class TicTacToeMove 
+// Helper struct for move data
+public struct TicTacToeMove 
 {
    required public string PlayerName { get; set; }
    public int X { get; set; }

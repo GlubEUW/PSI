@@ -38,18 +38,22 @@ public class RpsGame : IGame
 
    public bool MakeMove(JsonElement moveData)
    {
-      // moveData will be { playerName, choice }
-      var move = moveData.Deserialize<RpsMove>();
-      if (move == null)
+      try
+      {
+         // moveData will be { playerName, choice }
+         var move = moveData.Deserialize<RpsMove>();
+         Players[move.PlayerName] = move.Choice;
+
+         // Check if both players made a choice
+         if (Players.Count == 2 && !Players.ContainsValue(RpsChoice.None)) // Suggestion: refactor to foreach
+            Result = DetermineWinner();
+
+         return true;
+      }
+      catch (JsonException)
+      {
          return false;
-
-      Players[move.PlayerName] = move.Choice;
-
-      // Check if both players made a choice
-      if (Players.Count == 2 && !Players.ContainsValue(RpsChoice.None)) // Suggestion: refactor to foreach
-         Result = DetermineWinner();
-
-      return true;
+      }
    }
 
    private string DetermineWinner()
@@ -74,8 +78,8 @@ public class RpsGame : IGame
    public string? GetWinner() => Result;
 }
 
-// Helper class for move data
-public class RpsMove
+// Helper struct for move data
+public struct RpsMove
 {
    public required string PlayerName { get; set; }
    public RpsChoice Choice { get; set; }
