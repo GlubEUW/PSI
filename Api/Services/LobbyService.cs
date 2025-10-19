@@ -53,7 +53,7 @@ public class LobbyService() : ILobbyService
          {
             Code = code,
             Players = new List<string>(2),
-            inGame = false
+            InGame = false
          };
          return Task.FromResult(true);
       }
