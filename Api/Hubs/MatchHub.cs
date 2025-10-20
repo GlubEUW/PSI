@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Api.Services;
-using Api.GameLogic;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
+using System.Text.Json;
 
 namespace Api.Hubs;
 
@@ -40,11 +38,18 @@ public class MatchHub : Hub
          Context.Abort();
          return;
       }
-
+      
       var joined = await _lobbyService.JoinMatch(code, playerName);
       if (joined is not null)
       {
          await Clients.Caller.SendAsync("Error", "Could not join the match.");
+         Context.Abort();
+         return;
+      }
+
+      if(!_lobbyService.AddGameId(code, playerName))
+      {
+         await Clients.Caller.SendAsync("Error", "Could not add gameId.");
          Context.Abort();
          return;
       }
@@ -61,7 +66,9 @@ public class MatchHub : Hub
    {
       var code = Context.Items[ContextKeys.Code] as string;
       var playerName = Context.Items[ContextKeys.PlayerName] as string;
-      
+
+      Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
+
       if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(playerName))
       {
          Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
@@ -73,6 +80,9 @@ public class MatchHub : Hub
       {
          Console.WriteLine("Could not retrieve lobby code or player name on disconnect.");
       }
+
+      if (!_lobbyService.RemoveGameId(code, playerName))
+         Console.WriteLine($"Failed to remove gameId for player {playerName}");
 
       await base.OnDisconnectedAsync(exception);
    }
@@ -102,19 +112,16 @@ public class MatchHub : Hub
       });
    }
 
-   public async Task MakeTicTacToeMove(string gameId, int x, int y, string playerName)
+   public async Task MakeMove(JsonElement moveData)
    {
-      if (_gameService.MakeTicTacToeMove(gameId, playerName, x, y, out var newState))
+      var code = Context.Items[ContextKeys.Code] as string;
+      var playerName = Context.Items[ContextKeys.PlayerName] as string;
+      if(_lobbyService.TryGetGameId(code, playerName, out var gameId) && gameId is not null)
       {
-         await Clients.Group(gameId).SendAsync("GameUpdate", newState);
-      }
-   }
-
-   public async Task MakeRpsMove(string gameId, string playerName, RpsChoice choice)
-   {
-      if (_gameService.MakeRpsMove(gameId, playerName, choice, out var newState))
-      {
-         await Clients.Group(gameId).SendAsync("GameUpdate", newState);
+         if(_gameService.MakeMove(gameId, moveData, out var newState))
+         {
+            await Clients.Group(gameId).SendAsync("GameUpdate", newState);
+         }
       }
    }
 

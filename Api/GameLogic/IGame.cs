@@ -1,9 +1,11 @@
+using System.Text.Json;
+
 namespace Api.GameLogic;
 
 public interface IGame
 {
     string GameType { get; }
     object GetState();
-    bool MakeMove(string playerId, object moveData);
+    bool MakeMove(JsonElement moveData);
     string? GetWinner();
 }

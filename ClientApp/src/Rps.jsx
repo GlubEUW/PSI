@@ -38,7 +38,7 @@ function Rps({ gameId, playerName, connection, onReturnToLobby }) {
     setMyChoice(selectedChoice);
     const choiceValue = { "Rock": 1, "Paper": 2, "Scissors": 3 }[selectedChoice];
 
-    connection.invoke("MakeRpsMove", gameId, playerName, choiceValue)
+    connection.invoke("MakeMove", { PlayerName: playerName, Choice: choiceValue })
       .catch(err => console.error("Move failed:", err));
   };
 
