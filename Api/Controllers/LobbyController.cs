@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Api.Services;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Api.Controllers
 {

@@ -32,7 +32,6 @@ public class MatchHub : Hub
       var code = httpContext.Request.Query["code"].ToString();
       var playerName = httpContext.Request.Query["playerName"].ToString();
 
-
       if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(playerName))
       {
          await Clients.Caller.SendAsync("Error", "Invalid connection parameters.");
@@ -48,7 +47,7 @@ public class MatchHub : Hub
          return;
       }
 
-      if(!_lobbyService.AddGameId(code, playerName)) // Later add gameId as argument to this 
+      if(!_lobbyService.AddGameId(code, playerName))
       {
          await Clients.Caller.SendAsync("Error", "Could not add gameId.");
          Context.Abort();
@@ -67,7 +66,6 @@ public class MatchHub : Hub
    {
       var code = Context.Items[ContextKeys.Code] as string;
       var playerName = Context.Items[ContextKeys.PlayerName] as string;
-
 
       Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
 

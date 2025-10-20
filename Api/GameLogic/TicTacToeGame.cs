@@ -40,7 +40,6 @@ public class TicTacToeGame : IGame
    {
       try
       {
-         // moveData will be { playerName, x, y }
          var move = moveData.Deserialize<TicTacToeMove>();
          return ApplyMove(move.PlayerName, move.X, move.Y);
       }
@@ -133,7 +132,6 @@ public class TicTacToeGame : IGame
    public string? GetWinner() => Winner;
 }
 
-// Helper struct for move data
 public struct TicTacToeMove 
 {
    required public string PlayerName { get; set; }

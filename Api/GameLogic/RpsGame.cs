@@ -40,7 +40,6 @@ public class RpsGame : IGame
    {
       try
       {
-         // moveData will be { playerName, choice }
          var move = moveData.Deserialize<RpsMove>();
          Players[move.PlayerName] = move.Choice;
 
@@ -78,7 +77,6 @@ public class RpsGame : IGame
    public string? GetWinner() => Result;
 }
 
-// Helper struct for move data
 public struct RpsMove
 {
    public required string PlayerName { get; set; }
