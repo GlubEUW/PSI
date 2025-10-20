@@ -43,16 +43,13 @@ namespace Api.Controllers
          return Ok(new { Message = $"Left match {code} successfully." });
       }
       [HttpPost("create")]
-      public async Task<ActionResult> CreateLobbyWithSettings([FromBody] CreateLobbyRequest request)
+      public async Task<ActionResult> CreateLobbyWithSettings([FromBody] CreateLobbyDto request)
       {
          if (request.NumberOfRounds < 1)
             return BadRequest(new { Message = "Number of rounds must be at least 1." });
 
          if (request.GamesList == null || request.GamesList.Count == 0)
             return BadRequest(new { Message = "Games list cannot be empty." });
-
-         if (request.GamesList.Count != request.NumberOfRounds)
-            return BadRequest(new { Message = "Games list length must match number of rounds." });
 
          if (request.MaxPlayers < 2)
             return BadRequest(new { Message = "Max players must be at least 2." });

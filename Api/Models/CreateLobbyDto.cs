@@ -1,6 +1,6 @@
 namespace Api.Models;
 
-public class CreateLobbyRequest
+public class CreateLobbyDto
 {
    public int NumberOfRounds { get; set; } = 1;
    public List<string> GamesList { get; set; } = new();
