@@ -234,7 +234,7 @@ function Home() {
                inputMode="numeric"
                placeholder="Lobby Code"
                value={lobbyID}
-               onChange={e => setLobbyID(e.target.value.replace(/[^0-9]/g, ""))}
+               onChange={e => setlobbyID(e.target.value.replace(/[^0-9]/g, ""))}
                style={{ marginRight: "10px" }}
             />
             <button onClick={handleLobbyJoin} className="linkButton">Join Lobby</button>

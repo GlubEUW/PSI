@@ -17,7 +17,7 @@ namespace Api.Controllers
       }
 
       [HttpPost("{code}/canjoin")]
-      public async Task<ActionResult> CanJoinMatch(string code)
+      public ActionResult CanJoinMatch(string code)
       {
          var name = User.Identity?.Name;
          if (name is null)
