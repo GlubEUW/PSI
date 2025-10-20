@@ -5,6 +5,9 @@ import { CanJoinLobby } from "./api/lobby";
 function Home() {
    const navigate = useNavigate();
    const [lobbyID, setlobbyID] = useState("");
+   const [numberOfRounds, setNumberOfRounds] = useState(1);
+   const [maxPlayers, setMaxPlayers] = useState(2);
+   const [gamesInput, setGamesInput] = useState("TicTacToe");
 
    const handleQueueJoin = async () => {
       const token = localStorage.getItem("guestToken");
@@ -38,7 +41,7 @@ function Home() {
       navigate("/queue");
    };
 
-   const handleLobbyCreation = async () => {
+   const handleLobbyJoin = async () => {
       const token = localStorage.getItem("guestToken");
 
       if (!token) {
@@ -65,19 +68,158 @@ function Home() {
       }
       navigate(`/match/${lobbyID}`);
    }
+   const handleCreateLobby = async () => {
+      const token = localStorage.getItem("guestToken");
+
+      if (!token) {
+         alert("You must be logged in to create a lobby.");
+         navigate("/");
+         return;
+      }
+
+      const gamesList = gamesInput.split(",").map(g => g.trim()).filter(g => g.length > 0);
+
+      if (gamesList.length !== numberOfRounds) {
+         alert(`Number of games (${gamesList.length}) must match number of rounds (${numberOfRounds})`);
+         return;
+      }
+
+      try {
+         const response = await fetch("http://localhost:5243/api/lobby/create", {
+            method: "POST",
+            headers: {
+               "Authorization": "Bearer " + token,
+               "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+               numberOfRounds: numberOfRounds,
+               gamesList: gamesList,
+               maxPlayers: maxPlayers
+            })
+         });
+
+         if (!response.ok) {
+            const error = await response.json();
+            alert(`Failed to create lobby: ${error.message || "Unknown error"}`);
+            return;
+         }
+
+         const data = await response.json();
+         console.log("Lobby created:", data);
+         alert(`Lobby created! Code: ${data.code}`);
+
+         // Navigate to the new lobby
+         navigate(`/match/${data.code}`);
+
+      } catch (err) {
+         console.error("Error creating lobby:", err);
+         alert("Something went wrong. Please try again.");
+      }
+   };
    return (
-      <div>
-         <h1>Home page</h1>
-         <button onClick={handleQueueJoin} className="linkButton">Queue</button>
+      <div style={{ padding: "20px" }}>
+         <h1>Home Page</h1>
+
+         {/* Queue Button */}
+         <div style={{ marginBottom: "30px" }}>
+            <button onClick={handleQueueJoin} className="linkButton">Queue</button>
+         </div>
+
+         <hr />
+
+         {/* NEW: Create Lobby Section */}
+         <div style={{ marginBottom: "30px" }}>
+            <h2>Create New Lobby</h2>
+
+            <div style={{ marginBottom: "10px" }}>
+               <label>
+                  Number of Rounds:
+                  <input
+                     type="number"
+                     min="1"
+                     max="10"
+                     value={numberOfRounds}
+                     onChange={(e) => {
+                        const rounds = parseInt(e.target.value) || 1;
+                        setNumberOfRounds(rounds);
+                        // Auto-adjust games list to match rounds
+                        const currentGames = gamesInput.split(",").map(g => g.trim()).filter(g => g);
+                        if (currentGames.length > rounds) {
+                           setGamesInput(currentGames.slice(0, rounds).join(","));
+                        }
+                     }}
+                     style={{ marginLeft: "10px", width: "60px" }}
+                  />
+               </label>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+               <label>
+                  Max Players:
+                  <input
+                     type="number"
+                     min="2"
+                     max="10"
+                     value={maxPlayers}
+                     onChange={(e) => setMaxPlayers(parseInt(e.target.value) || 2)}
+                     style={{ marginLeft: "10px", width: "60px" }}
+                  />
+               </label>
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+               <label style={{ display: "block", marginBottom: "5px" }}>
+                  Select Games for Each Round:
+               </label>
+               {Array.from({ length: numberOfRounds }).map((_, index) => {
+                  const currentGames = gamesInput.split(",").map(g => g.trim());
+                  const selectedGame = currentGames[index] || "TicTacToe";
+
+                  return (
+                     <div key={index} style={{ marginBottom: "5px" }}>
+                        <label style={{ marginRight: "10px" }}>
+                           Round {index + 1}:
+                        </label>
+                        <select
+                           value={selectedGame}
+                           onChange={(e) => {
+                              const games = gamesInput.split(",").map(g => g.trim());
+                              games[index] = e.target.value;
+                              // Fill remaining rounds if needed
+                              while (games.length < numberOfRounds) {
+                                 games.push("TicTacToe");
+                              }
+                              setGamesInput(games.slice(0, numberOfRounds).join(","));
+                           }}
+                           style={{ padding: "5px", width: "200px" }}
+                        >
+                           <option value="TicTacToe">Tic Tac Toe</option>
+                           <option value="RockPaperScissors">Rock Paper Scissors</option>
+                        </select>
+                     </div>
+                  );
+               })}
+            </div>
+
+            <button onClick={handleCreateLobby} className="linkButton">
+               Create Lobby
+            </button>
+         </div>
+
+         <hr />
+
+         {/* Existing: Join Lobby Section */}
          <div>
+            <h2>Join Existing Lobby</h2>
             <input
                type="text"
                inputMode="numeric"
                placeholder="Lobby Code"
                value={lobbyID}
                onChange={e => setlobbyID(e.target.value.replace(/[^0-9]/g, ""))}
+               style={{ marginRight: "10px" }}
             />
-            <button onClick={handleLobbyCreation} className="linkButton">Lobby</button>
+            <button onClick={handleLobbyJoin} className="linkButton">Join Lobby</button>
          </div>
       </div>
    );

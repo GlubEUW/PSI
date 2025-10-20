@@ -25,7 +25,7 @@ public class LobbyService() : ILobbyService
 
       if (_sessions.TryGetValue(code, out var session) && session is not null)
          return session._gameIdByPlayerName.Remove(playerName);
-         
+
       return false;
    }
 
@@ -36,7 +36,7 @@ public class LobbyService() : ILobbyService
          gameId = null;
          return false;
       }
-      
+
       if (_sessions.TryGetValue(code, out var session) && session is not null)
       {
          if (session._gameIdByPlayerName.TryGetValue(playerName, out var gameID) && gameID is not null)
@@ -50,13 +50,13 @@ public class LobbyService() : ILobbyService
    }
 
 
-    public List<string> GetPlayersInLobby(string code)
-    {
-        if (_sessions.TryGetValue(code, out var session) && session is not null)
-            return new List<string>(session.Players);
-        
-        return new List<string>();
-    }
+   public List<string> GetPlayersInLobby(string code)
+   {
+      if (_sessions.TryGetValue(code, out var session) && session is not null)
+         return new List<string>(session.Players);
+
+      return new List<string>();
+   }
 
    public LobbyInfoDto GetLobbyInfo(string code)
    {
@@ -129,5 +129,39 @@ public class LobbyService() : ILobbyService
          return null;
       }
       return "Game does not exist.";
+   }
+
+   public Task<string> CreateLobbyWithSettings(int numberOfRounds, List<string> gamesList, int maxPlayers)
+   {
+      string code;
+      do
+      {
+         code = GenerateUniqueLobbyCode();
+      } while (_sessions.ContainsKey(code));
+
+      _sessions[code] = new MatchSession
+      {
+         Code = code,
+         Players = new List<string>(maxPlayers),  // Set capacity
+         NumberOfRounds = numberOfRounds,
+         GamesList = gamesList,
+         MaxPlayers = maxPlayers,
+         inGame = false
+      };
+      return Task.FromResult(code);
+   }
+
+   private string GenerateUniqueLobbyCode()
+   {
+      var random = new Random();
+      string code;
+
+      do
+      {
+         code = random.Next(1000, 9999).ToString();
+      }
+      while (_sessions.ContainsKey(code));
+
+      return code;
    }
 }
