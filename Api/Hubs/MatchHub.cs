@@ -32,6 +32,13 @@ public class MatchHub : Hub
       var code = httpContext.Request.Query["code"].ToString();
       var playerName = httpContext.Request.Query["playerName"].ToString();
 
+      if(_lobbyService.AddGameId(code, playerName)) // Later add gameId as argument to this 
+      {
+         await Clients.Caller.SendAsync("Error", "Could not add gameId.");
+         Context.Abort();
+         return;
+      }
+
       if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(playerName))
       {
          await Clients.Caller.SendAsync("Error", "Invalid connection parameters.");
@@ -59,7 +66,12 @@ public class MatchHub : Hub
    {
       var code = Context.Items[ContextKeys.Code] as string;
       var playerName = Context.Items[ContextKeys.PlayerName] as string;
-      
+
+      if (!_lobbyService.RemoveGameId(code, playerName))
+         Console.WriteLine($"Failed to remove gameId for player {playerName}");
+
+      Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
+
       if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(playerName))
       {
          Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
@@ -100,11 +112,16 @@ public class MatchHub : Hub
       });
    }
 
-   public async Task MakeMove(string gameId, JsonElement moveData)
+   public async Task MakeMove(JsonElement moveData)
    {
-      if(_gameService.MakeMove(gameId, moveData, out var newState))
+      var code = Context.Items[ContextKeys.Code] as string;
+      var playerName = Context.Items[ContextKeys.PlayerName] as string;
+      if(_lobbyService.TryGetGameId(code, playerName, out var gameId) && gameId is not null)
       {
-         await Clients.Group(gameId).SendAsync("GameUpdate", newState);
+         if(_gameService.MakeMove(gameId, moveData, out var newState))
+         {
+            await Clients.Group(gameId).SendAsync("GameUpdate", newState);
+         }
       }
    }
 

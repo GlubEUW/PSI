@@ -47,7 +47,7 @@ function TicTacToe({ gameId, playerName, connection, onReturnToLobby }) {
    const handleClick = (x, y) => {
       if (!connection || board[x][y] !== 0 || winner) return;
 
-      connection.invoke("MakeMove", gameId, { PlayerName: playerName, X: x, Y: y } )
+      connection.invoke("MakeMove", { PlayerName: playerName, X: x, Y: y } )
          .catch(err => console.error("Move failed:", err));
    };
 
