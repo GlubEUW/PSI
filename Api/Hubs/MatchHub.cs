@@ -32,12 +32,6 @@ public class MatchHub : Hub
       var code = httpContext.Request.Query["code"].ToString();
       var playerName = httpContext.Request.Query["playerName"].ToString();
 
-      if(_lobbyService.AddGameId(code, playerName)) // Later add gameId as argument to this 
-      {
-         await Clients.Caller.SendAsync("Error", "Could not add gameId.");
-         Context.Abort();
-         return;
-      }
 
       if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(playerName))
       {
@@ -50,6 +44,13 @@ public class MatchHub : Hub
       if (joined is not null)
       {
          await Clients.Caller.SendAsync("Error", "Could not join the match.");
+         Context.Abort();
+         return;
+      }
+
+      if(!_lobbyService.AddGameId(code, playerName)) // Later add gameId as argument to this 
+      {
+         await Clients.Caller.SendAsync("Error", "Could not add gameId.");
          Context.Abort();
          return;
       }
@@ -67,8 +68,6 @@ public class MatchHub : Hub
       var code = Context.Items[ContextKeys.Code] as string;
       var playerName = Context.Items[ContextKeys.PlayerName] as string;
 
-      if (!_lobbyService.RemoveGameId(code, playerName))
-         Console.WriteLine($"Failed to remove gameId for player {playerName}");
 
       Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
 
@@ -83,6 +82,9 @@ public class MatchHub : Hub
       {
          Console.WriteLine("Could not retrieve lobby code or player name on disconnect.");
       }
+
+      if (!_lobbyService.RemoveGameId(code, playerName))
+         Console.WriteLine($"Failed to remove gameId for player {playerName}");
 
       await base.OnDisconnectedAsync(exception);
    }
