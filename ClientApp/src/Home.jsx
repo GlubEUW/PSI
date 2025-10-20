@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { JoinLobby } from "./api/lobby";
+import { CanJoinLobby } from "./api/lobby";
 
 function Home() {
    const navigate = useNavigate();
@@ -53,7 +53,7 @@ function Home() {
       }
 
       try {
-         const lobbyInfoResponse = await JoinLobby(token, lobbyID);
+         const lobbyInfoResponse = await CanJoinLobby(token, lobbyID);
          if (!lobbyInfoResponse.ok) {
             alert(await lobbyInfoResponse.json().then(data => data.message, "Unresolved error"));
             return;
