@@ -59,9 +59,9 @@ public class MatchHub : Hub
 
    public override async Task OnDisconnectedAsync(Exception? exception)
    {
-      var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
-      var playerName = Context.Items[ContextKeys.PlayerName] as string ?? throw new ArgumentNullException();
-
+      var code = Context.Items[ContextKeys.Code] as string;
+      var playerName = Context.Items[ContextKeys.PlayerName] as string;
+      
       if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(playerName))
       {
          Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
