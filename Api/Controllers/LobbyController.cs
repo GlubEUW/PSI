@@ -45,28 +45,29 @@ namespace Api.Controllers
       [HttpPost("create")]
       public async Task<ActionResult> CreateLobbyWithSettings([FromBody] CreateLobbyDto request)
       {
-         if (request.NumberOfRounds < 1)
-            return BadRequest(new { Message = "Number of rounds must be at least 1." });
+         if (request.NumberOfRounds < 1 || request.NumberOfRounds > 5)
+            return BadRequest(new { Message = "Number of rounds must be between 1 and 5." });
 
-         if (request.GamesList == null || request.GamesList.Count == 0)
-            return BadRequest(new { Message = "Games list cannot be empty." });
+         if (request.NumberOfPlayers < 2 || request.NumberOfPlayers > 10)
+            return BadRequest(new { Message = "Number of players must be between 2 and 10." });
 
-         if (request.MaxPlayers < 2)
-            return BadRequest(new { Message = "Max players must be at least 2." });
+         if (!request.RandomGames)
+         {
+            if (request.GamesList == null || request.GamesList.Count == 0)
+               return BadRequest(new { Message = "Games list cannot be empty when not using random games." });
+         }
 
          var lobbyCode = await _lobbyService.CreateLobbyWithSettings(
+            request.NumberOfPlayers,
             request.NumberOfRounds,
-            request.GamesList,
-            request.MaxPlayers
+            request.RandomGames,
+            request.GamesList
          );
 
          return Ok(new
          {
             Code = lobbyCode,
-            Message = $"Lobby {lobbyCode} created successfully",
-            NumberOfRounds = request.NumberOfRounds,
-            GamesList = request.GamesList,
-            MaxPlayers = request.MaxPlayers
+            Message = $"Lobby {lobbyCode} created successfully"
          });
       }
    }

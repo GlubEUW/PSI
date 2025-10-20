@@ -131,7 +131,7 @@ public class LobbyService() : ILobbyService
       return "Game does not exist.";
    }
 
-   public Task<string> CreateLobbyWithSettings(int numberOfRounds, List<string> gamesList, int maxPlayers)
+   public Task<string> CreateLobbyWithSettings(int numberOfPlayers, int numberOfRounds, bool randomGames, List<string>? gamesList)
    {
       string code;
       do
@@ -139,29 +139,40 @@ public class LobbyService() : ILobbyService
          code = GenerateUniqueLobbyCode();
       } while (_sessions.ContainsKey(code));
 
-      _sessions[code] = new MatchSession
-      {
-         Code = code,
-         Players = new List<string>(maxPlayers),  // Set capacity
-         NumberOfRounds = numberOfRounds,
-         GamesList = gamesList,
-         MaxPlayers = maxPlayers,
-         inGame = false
-      };
-      return Task.FromResult(code);
-   }
+      List<string> finalGamesList;
 
-   private string GenerateUniqueLobbyCode()
-   {
-      var random = new Random();
-      string code;
-
-      do
+      if (randomGames || gamesList == null || gamesList.Count == 0)
       {
-         code = random.Next(1000, 9999).ToString();
+         finalGamesList = GenerateRandomGames(numberOfRounds);
       }
-      while (_sessions.ContainsKey(code));
+      else
+      {
+         finalGamesList = gamesList;
+      }
 
-      return code;
-   }
+        _sessions[code] = new MatchSession
+        {
+            Code = code,
+            Players = new List<string>(maxPlayers),  // Set capacity
+            NumberOfRounds = numberOfRounds,
+            GamesList = gamesList,
+            MaxPlayers = maxPlayers,
+            inGame = false
+        };
+        return Task.FromResult(code);
+    }
+
+    private string GenerateUniqueLobbyCode()
+    {
+        var random = new Random();
+        string code;
+
+        do
+        {
+            code = random.Next(1000, 9999).ToString();
+        }
+        while (_sessions.ContainsKey(code));
+
+        return code;
+    }
 }

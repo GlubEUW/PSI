@@ -5,8 +5,9 @@ import { CanJoinLobby } from "./api/lobby";
 function Home() {
    const navigate = useNavigate();
    const [lobbyID, setlobbyID] = useState("");
+   const [numberOfPlayers, setNumberOfPlayers] = useState(2);
    const [numberOfRounds, setNumberOfRounds] = useState(1);
-   const [maxPlayers, setMaxPlayers] = useState(2);
+   const [randomGames, setRandomGames] = useState(false);
    const [gamesInput, setGamesInput] = useState("TicTacToe");
 
    const handleQueueJoin = async () => {
@@ -77,11 +78,19 @@ function Home() {
          return;
       }
 
-      const gamesList = gamesInput.split(",").map(g => g.trim()).filter(g => g.length > 0);
+      let gamesList = null;
 
-      if (gamesList.length !== numberOfRounds) {
-         alert(`Number of games (${gamesList.length}) must match number of rounds (${numberOfRounds})`);
-         return;
+      if (!randomGames) {
+         const games = gamesInput
+            .split(",")
+            .map(g => g.trim())
+            .filter(g => g.length > 0);
+         
+         while (games.length < numberOfRounds) {
+            games.push("TicTacToe");
+         }
+         
+         gamesList = games.slice(0, numberOfRounds);
       }
 
       try {
@@ -92,9 +101,10 @@ function Home() {
                "Content-Type": "application/json"
             },
             body: JSON.stringify({
+               numberOfPlayers: numberOfPlayers,
                numberOfRounds: numberOfRounds,
-               gamesList: gamesList,
-               maxPlayers: maxPlayers
+               randomGames: randomGames,
+               gamesList: gamesList
             })
          });
 
@@ -105,31 +115,40 @@ function Home() {
          }
 
          const data = await response.json();
-         console.log("Lobby created:", data);
          alert(`Lobby created! Code: ${data.code}`);
-
-         // Navigate to the new lobby
          navigate(`/match/${data.code}`);
 
       } catch (err) {
-         console.error("Error creating lobby:", err);
          alert("Something went wrong. Please try again.");
       }
    };
+
    return (
       <div style={{ padding: "20px" }}>
          <h1>Home Page</h1>
 
-         {/* Queue Button */}
          <div style={{ marginBottom: "30px" }}>
             <button onClick={handleQueueJoin} className="linkButton">Queue</button>
          </div>
 
          <hr />
 
-         {/* NEW: Create Lobby Section */}
          <div style={{ marginBottom: "30px" }}>
             <h2>Create New Lobby</h2>
+
+            <div style={{ marginBottom: "10px" }}>
+               <label>
+                  Number of Players:
+                  <input
+                     type="number"
+                     min="2"
+                     max="10"
+                     value={numberOfPlayers}
+                     onChange={(e) => setNumberOfPlayers(parseInt(e.target.value) || 2)}
+                     style={{ marginLeft: "10px", width: "60px" }}
+                  />
+               </label>
+            </div>
 
             <div style={{ marginBottom: "10px" }}>
                <label>
@@ -137,15 +156,16 @@ function Home() {
                   <input
                      type="number"
                      min="1"
-                     max="10"
+                     max="5"
                      value={numberOfRounds}
                      onChange={(e) => {
                         const rounds = parseInt(e.target.value) || 1;
                         setNumberOfRounds(rounds);
-                        // Auto-adjust games list to match rounds
-                        const currentGames = gamesInput.split(",").map(g => g.trim()).filter(g => g);
-                        if (currentGames.length > rounds) {
-                           setGamesInput(currentGames.slice(0, rounds).join(","));
+                        if (!randomGames) {
+                           const currentGames = gamesInput.split(",").map(g => g.trim()).filter(g => g);
+                           if (currentGames.length > rounds) {
+                              setGamesInput(currentGames.slice(0, rounds).join(","));
+                           }
                         }
                      }}
                      style={{ marginLeft: "10px", width: "60px" }}
@@ -155,51 +175,50 @@ function Home() {
 
             <div style={{ marginBottom: "10px" }}>
                <label>
-                  Max Players:
                   <input
-                     type="number"
-                     min="2"
-                     max="10"
-                     value={maxPlayers}
-                     onChange={(e) => setMaxPlayers(parseInt(e.target.value) || 2)}
-                     style={{ marginLeft: "10px", width: "60px" }}
+                     type="checkbox"
+                     checked={randomGames}
+                     onChange={(e) => setRandomGames(e.target.checked)}
+                     style={{ marginRight: "5px" }}
                   />
+                  Random Games
                </label>
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
-               <label style={{ display: "block", marginBottom: "5px" }}>
-                  Select Games for Each Round:
-               </label>
-               {Array.from({ length: numberOfRounds }).map((_, index) => {
-                  const currentGames = gamesInput.split(",").map(g => g.trim());
-                  const selectedGame = currentGames[index] || "TicTacToe";
+            {!randomGames && (
+               <div style={{ marginBottom: "10px" }}>
+                  <label style={{ display: "block", marginBottom: "5px" }}>
+                     Select Games for Each Round:
+                  </label>
+                  {Array.from({ length: numberOfRounds }).map((_, index) => {
+                     const currentGames = gamesInput.split(",").map(g => g.trim());
+                     const selectedGame = currentGames[index] || "TicTacToe";
 
-                  return (
-                     <div key={index} style={{ marginBottom: "5px" }}>
-                        <label style={{ marginRight: "10px" }}>
-                           Round {index + 1}:
-                        </label>
-                        <select
-                           value={selectedGame}
-                           onChange={(e) => {
-                              const games = gamesInput.split(",").map(g => g.trim());
-                              games[index] = e.target.value;
-                              // Fill remaining rounds if needed
-                              while (games.length < numberOfRounds) {
-                                 games.push("TicTacToe");
-                              }
-                              setGamesInput(games.slice(0, numberOfRounds).join(","));
-                           }}
-                           style={{ padding: "5px", width: "200px" }}
-                        >
-                           <option value="TicTacToe">Tic Tac Toe</option>
-                           <option value="RockPaperScissors">Rock Paper Scissors</option>
-                        </select>
-                     </div>
-                  );
-               })}
-            </div>
+                     return (
+                        <div key={index} style={{ marginBottom: "5px" }}>
+                           <label style={{ marginRight: "10px" }}>
+                              Round {index + 1}:
+                           </label>
+                           <select
+                              value={selectedGame}
+                              onChange={(e) => {
+                                 const games = gamesInput.split(",").map(g => g.trim());
+                                 games[index] = e.target.value;
+                                 while (games.length < numberOfRounds) {
+                                    games.push("TicTacToe");
+                                 }
+                                 setGamesInput(games.slice(0, numberOfRounds).join(","));
+                              }}
+                              style={{ padding: "5px", width: "200px" }}
+                           >
+                              <option value="TicTacToe">Tic Tac Toe</option>
+                              <option value="RockPaperScissors">Rock Paper Scissors</option>
+                           </select>
+                        </div>
+                     );
+                  })}
+               </div>
+            )}
 
             <button onClick={handleCreateLobby} className="linkButton">
                Create Lobby
@@ -208,7 +227,6 @@ function Home() {
 
          <hr />
 
-         {/* Existing: Join Lobby Section */}
          <div>
             <h2>Join Existing Lobby</h2>
             <input
@@ -216,7 +234,7 @@ function Home() {
                inputMode="numeric"
                placeholder="Lobby Code"
                value={lobbyID}
-               onChange={e => setlobbyID(e.target.value.replace(/[^0-9]/g, ""))}
+               onChange={e => setLobbyID(e.target.value.replace(/[^0-9]/g, ""))}
                style={{ marginRight: "10px" }}
             />
             <button onClick={handleLobbyJoin} className="linkButton">Join Lobby</button>

@@ -12,7 +12,7 @@ public interface ILobbyService
    public Task<bool> CreateMatch(string code);
    public Task<string?> JoinMatch(string code, string playerName);
    public Task<bool> LeaveMatch(string code, string playerName);
-   public Task<string> CreateLobbyWithSettings(int numberOfRounds, List<string> gamesList, int maxPlayers);
+   public Task<string> CreateLobbyWithSettings(int numberOfPlayers, int numberOfRounds, bool randomGames, List<string>? gamesList);
 
    public string? CanJoinLobby(string code, string playerName);
 }
