@@ -67,12 +67,12 @@ public class LobbyService() : ILobbyService
          CreateMatch(code);
          session = _sessions[code];
       }
-      var result = CanJoinLobby(code, playerName);
-      if (result is null)
+      var error = CanJoinLobby(code, playerName);
+      if (error is null)
       {
          session.Players.Add(playerName);
       }
-      return Task.FromResult(result);
+      return Task.FromResult(error);
    }
 
    public Task<bool> LeaveMatch(string code, string playerName)

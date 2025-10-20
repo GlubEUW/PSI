@@ -34,10 +34,10 @@ namespace Api.Controllers
          var name = User.Identity?.Name;
          if (name is null) return Unauthorized();
 
-         var result = _lobbyService.CanJoinLobby(code, name);
-         if (result is null)
+         var error = _lobbyService.CanJoinLobby(code, name);
+         if (error is null)
             return Ok(new { Message = "Can join match." });
-         return BadRequest(new { Message = result });
+         return BadRequest(new { Message = error });
       }
 
       [HttpPost("{code}/leave")]
