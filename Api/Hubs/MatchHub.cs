@@ -38,7 +38,7 @@ public class MatchHub : Hub
          Context.Abort();
          return;
       }
-      
+
       var joined = await _lobbyService.JoinMatch(code, playerName);
       if (joined is not null)
       {
@@ -47,7 +47,7 @@ public class MatchHub : Hub
          return;
       }
 
-      if(!_lobbyService.AddGameId(code, playerName))
+      if (!_lobbyService.AddGameId(code, playerName))
       {
          await Clients.Caller.SendAsync("Error", "Could not add gameId.");
          Context.Abort();
@@ -92,9 +92,20 @@ public class MatchHub : Hub
       return Task.FromResult(_lobbyService.GetPlayersInLobby(code));
    }
 
-   public async Task StartMatch(string selectedGameType)
+   public async Task StartMatch()
    {
       var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
+      var session = _lobbyService.GetMatchSession(code) ?? throw new ArgumentNullException();
+
+      if (session.CurrentRound >= session.GamesList.Count)
+      {
+         await Clients.Group(code).SendAsync("RoundsEnded");
+         return;
+      }
+
+      var selectedGameType = session.GamesList[session.CurrentRound];
+      session.GameType = selectedGameType;
+      session.InGame = true;
       var players = _lobbyService.GetPlayersInLobby(code);
 
       if (!_gameService.StartGame(code, selectedGameType, players))
@@ -108,17 +119,21 @@ public class MatchHub : Hub
          gameType = selectedGameType,
          gameId = code,
          players,
-         initialState = _gameService.GetGameState(code)
+         initialState = _gameService.GetGameState(code),
+         round = session.CurrentRound + 1
       });
+
+      session.CurrentRound++;
    }
+
 
    public async Task MakeMove(JsonElement moveData)
    {
       var code = Context.Items[ContextKeys.Code] as string;
       var playerName = Context.Items[ContextKeys.PlayerName] as string;
-      if(_lobbyService.TryGetGameId(code, playerName, out var gameId) && gameId is not null)
+      if (_lobbyService.TryGetGameId(code, playerName, out var gameId) && gameId is not null)
       {
-         if(_gameService.MakeMove(gameId, moveData, out var newState))
+         if (_gameService.MakeMove(gameId, moveData, out var newState))
          {
             await Clients.Group(gameId).SendAsync("GameUpdate", newState);
          }
@@ -128,7 +143,6 @@ public class MatchHub : Hub
    public async Task EndGame(string gameId)
    {
       _gameService.RemoveGame(gameId);
-      await Clients.Group(gameId).SendAsync("GameEnded");
    }
 
    public Task<object?> GetGameState(string gameId)

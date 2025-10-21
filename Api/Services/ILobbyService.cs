@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Api.Models;
 
 namespace Api.Services;
@@ -15,4 +16,6 @@ public interface ILobbyService
    public Task<string> CreateLobbyWithSettings(int numberOfPlayers, int numberOfRounds, bool randomGames, List<string>? gamesList);
 
    public string? CanJoinLobby(string code, string playerName);
+
+   public MatchSession? GetMatchSession(string code);
 }
