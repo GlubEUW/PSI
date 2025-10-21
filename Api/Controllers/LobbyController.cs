@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Api.Services;
+using Api.Models;
 
 namespace Api.Controllers
 {

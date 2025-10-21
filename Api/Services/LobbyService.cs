@@ -150,29 +150,41 @@ public class LobbyService() : ILobbyService
          finalGamesList = gamesList;
       }
 
-        _sessions[code] = new MatchSession
-        {
-            Code = code,
-            Players = new List<string>(maxPlayers),  // Set capacity
-            NumberOfRounds = numberOfRounds,
-            GamesList = gamesList,
-            MaxPlayers = maxPlayers,
-            inGame = false
-        };
-        return Task.FromResult(code);
-    }
+      _sessions[code] = new MatchSession
+      {
+         Code = code,
+         Players = new List<string>(numberOfPlayers),
+         GamesList = finalGamesList,
+         InGame = false
+      };
+      return Task.FromResult(code);
+   }
 
-    private string GenerateUniqueLobbyCode()
-    {
-        var random = new Random();
-        string code;
+   private List<string> GenerateRandomGames(int count)
+   {
+      var availableGames = new[] { "TicTacToe", "RockPaperScissors" };
+      var random = new Random();
+      var games = new List<string>();
 
-        do
-        {
-            code = random.Next(1000, 9999).ToString();
-        }
-        while (_sessions.ContainsKey(code));
+      for (int i = 0; i < count; i++)
+      {
+         games.Add(availableGames[random.Next(availableGames.Length)]);
+      }
 
-        return code;
-    }
+      return games;
+   }
+
+   private string GenerateUniqueLobbyCode()
+   {
+      var random = new Random();
+      string code;
+
+      do
+      {
+         code = random.Next(1000, 9999).ToString();
+      }
+      while (_sessions.ContainsKey(code));
+
+      return code;
+   }
 }
