@@ -21,8 +21,25 @@ public class TicTacToeGame : IGame
       new int[3]
    };
 
-   public string? PlayerTurn { get; set; } // Which player's turn it is currently
+   public string? PlayerTurn { get; set; }
    public string? Winner { get; set; } = null;
+
+   public BoardEnumerator AllCells => new BoardEnumerator(Board);
+
+   private static readonly List<List<(int row, int col)>> WinningLines = new()
+   {
+      // Rows
+      new() { (0, 0), (0, 1), (0, 2) },
+      new() { (1, 0), (1, 1), (1, 2) },
+      new() { (2, 0), (2, 1), (2, 2) },
+      // Columns
+      new() { (0, 0), (1, 0), (2, 0) },
+      new() { (0, 1), (1, 1), (2, 1) },
+      new() { (0, 2), (1, 2), (2, 2) },
+      // Diagonals
+      new() { (0, 0), (1, 1), (2, 2) },
+      new() { (0, 2), (1, 1), (2, 0) }
+   };
 
    public TicTacToeGame(List<string> players)
    {
@@ -51,21 +68,21 @@ public class TicTacToeGame : IGame
 
    private bool ApplyMove(string playerName, int x, int y)
    {
-      if (Winner != null) 
+      if (Winner != null)
          return false;
-      if (Board[x][y] != (int)State.Empty) 
+      if (Board[x][y] != (int)State.Empty)
          return false;
-      if (playerName != PlayerTurn) 
+      if (playerName != PlayerTurn)
          return false;
 
       Board[x][y] = (int)Players[playerName];
-      
+
       CheckWinner();
       if (Winner == "X")
          Winner = Players.FirstOrDefault(p => p.Value == State.X).Key;
       else if (Winner == "O")
          Winner = Players.FirstOrDefault(p => p.Value == State.O).Key;
-         
+
       PlayerTurn = Players.Keys.FirstOrDefault(name => name != playerName);
 
       return true;
@@ -73,66 +90,36 @@ public class TicTacToeGame : IGame
 
    private void CheckWinner()
    {
-      int[][] b = Board;
+      // Check for winner using LINQ query syntax
+      var winningState = (from line in WinningLines
+                          let cellValues = (from pos in line
+                                            join cell in AllCells
+                                            on new { pos.row, pos.col } equals new { cell.row, cell.col }
+                                            select cell.value).ToList()
+                          where cellValues.Count == 3 &&
+                                cellValues[0] != State.Empty &&
+                                cellValues.All(v => v == cellValues[0])
+                          select cellValues[0]).FirstOrDefault();
 
-      // Check rows
-      for (int i = 0; i < 3; i++)
+      if (winningState != State.Empty)
       {
-         if(b[i][0] == (int)State.X && b[i][1] == (int)State.X && b[i][2] == (int)State.X)
-         {
-            Winner = "X";
-            return;
-         }
-         if(b[i][0] == (int)State.O && b[i][1] == (int)State.O && b[i][2] == (int)State.O)
-         {
-            Winner = "O";
-            return;
-         }
-      }
-
-      // Check columns
-      for (int i = 0; i < 3; i++)
-      {
-         if(b[0][i] == (int)State.X && b[1][i] == (int)State.X && b[2][i] == (int)State.X)
-         {
-            Winner = "X";
-            return;
-         }
-         if(b[0][i] == (int)State.O && b[1][i] == (int)State.O && b[2][i] == (int)State.O)
-         {
-            Winner = "O";
-            return;
-         }
-      }
-
-      // Check diagonals
-      if((b[0][0] == (int)State.X && b[1][1] == (int)State.X && b[2][2] == (int)State.X) ||
-         (b[0][2] == (int)State.X && b[1][1] == (int)State.X && b[2][0] == (int)State.X))
-      {
-         Winner = "X";
-         return;
-      }
-      if((b[0][0] == (int)State.O && b[1][1] == (int)State.O && b[2][2] == (int)State.O) ||
-         (b[0][2] == (int)State.O && b[1][1] == (int)State.O && b[2][0] == (int)State.O))
-      {
-         Winner = "O";
+         Winner = winningState.ToString();
          return;
       }
 
-      bool isDraw = true;
-      for (int i = 0; i < 3; i++)
-         for (int j = 0; j < 3; j++)
-            if (b[i][j] == (int)State.Empty)
-               isDraw = false;
+      // Check for draw using LINQ query syntax
+      var emptyCells = from cell in AllCells
+                       where cell.value == State.Empty
+                       select cell;
 
-      if (isDraw)
+      if (!emptyCells.Any())
          Winner = "Draw";
    }
 
    public string? GetWinner() => Winner;
 }
 
-public struct TicTacToeMove 
+public struct TicTacToeMove
 {
    required public string PlayerName { get; set; }
    public int X { get; set; }
