@@ -85,8 +85,7 @@ public class LobbyService() : ILobbyService
    {
       if (!_sessions.TryGetValue(code, out var session))
       {
-         CreateMatch(code);
-         session = _sessions[code];
+         return Task.FromResult<string?>("Game does not exist.");
       }
       var error = CanJoinLobby(code, playerName);
       if (error is null)
