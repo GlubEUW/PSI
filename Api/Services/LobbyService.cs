@@ -53,7 +53,7 @@ public class LobbyService() : ILobbyService
    public List<string> GetPlayersInLobby(string code)
    {
       if (_sessions.TryGetValue(code, out var session) && session is not null)
-         return new List<string>(session.Players);
+         return session.Players.ToList();
 
       return new List<string>();
    }
@@ -163,14 +163,10 @@ public class LobbyService() : ILobbyService
    {
       var availableGames = new[] { "TicTacToe", "RockPaperScissors" };
       var random = new Random();
-      var games = new List<string>();
 
-      for (int i = 0; i < count; i++)
-      {
-         games.Add(availableGames[random.Next(availableGames.Length)]);
-      }
-
-      return games;
+      return Enumerable.Range(0, count)
+    .Select(_ => availableGames[random.Next(availableGames.Length)])
+    .ToList();
    }
 
    private string GenerateUniqueLobbyCode()
