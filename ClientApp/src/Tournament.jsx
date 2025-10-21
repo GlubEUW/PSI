@@ -34,6 +34,13 @@ function TournamentPage({ code, playerName, connection }) {
       }
    };
 
+   connection.on("TournamentMatchStarted", (matchData) => {
+      console.log("Tournament match started:", matchData);
+      setCurrentMatchData(matchData);
+      setPhase("match");
+      setMessage(`Match: ${matchData.player1} vs ${matchData.player2}`);
+   });
+
    const recordMatchResult = async (winner, isDraw = false) => {
       if (!connection || !currentMatchData) return;
       try {
@@ -99,6 +106,15 @@ function TournamentPage({ code, playerName, connection }) {
             <p>Waiting for next match to start...</p>
          </div>
       );
+   }
+   if (phase === "game" && currentMatchData) {
+      const GameComponent = gameComponents[tournamentStatus.gameType];
+      return <GameComponent
+         gameId={currentMatchData.gameId}
+         playerName={playerName}
+         connection={connection}
+         onReturnToLobby={() => recordMatchResult(currentMatchData.player1 === playerName ? currentMatchData.player2 : currentMatchData.player1)}
+      />;
    }
 
 }

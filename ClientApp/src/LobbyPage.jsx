@@ -4,11 +4,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import TicTacToe from "./TicTacToe.jsx";
 import Rps from "./Rps.jsx";
+import TournamentPage from "./Tournament.jsx";
 
 const gameComponents = {
    TicTacToe: TicTacToe,
    RockPaperScissors: Rps
-   // Future games can be added here
 };
 
 function LobbyPage() {
@@ -23,6 +23,7 @@ function LobbyPage() {
    const connectedRef = useRef(false);
    const [phase, setPhase] = useState("lobby");
    const [gameType, setGameType] = useState("TicTacToe");
+   const [mode, setMode] = useState("match");
 
    useEffect(() => {
       if (connectedRef.current) return;
@@ -90,8 +91,6 @@ function LobbyPage() {
       };
    }, [code]);
 
-
-
    const startMatch = async (selectedGameType) => {
       if (!connection) return;
       try {
@@ -100,6 +99,16 @@ function LobbyPage() {
          console.error(err);
       }
    };
+
+   if (mode === "tournament") {
+      return (
+         <TournamentPage
+            code={code}
+            playerName={user.name}
+            connection={connection}
+         />
+      );
+   }
 
    if (phase === "game" && gameType) {
       const GameComponent = gameComponents[gameType];
@@ -116,6 +125,14 @@ function LobbyPage() {
          <h2>Lobby {code}</h2>
          <p>Your name is: {user.name}</p>
          <p>{message}</p>
+
+         <div>
+            <label>Mode:</label>
+            <select value={mode} onChange={(e) => setMode(e.target.value)}>
+               <option value="match">Quick Match</option>
+               <option value="tournament">Tournament</option>
+            </select>
+         </div>
 
          <label>
             Game Type:
