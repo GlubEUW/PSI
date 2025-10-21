@@ -115,7 +115,6 @@ function Home() {
          }
 
          const data = await response.json();
-         alert(`Lobby created! Code: ${data.code}`);
          navigate(`/match/${data.code}`);
 
       } catch (err) {
