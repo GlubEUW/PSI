@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Api.Services;
+using Api.Models;
 
 namespace Api.Controllers
 {
@@ -16,18 +17,8 @@ namespace Api.Controllers
          _lobbyService = lobbyService;
       }
 
-      [HttpPost("{code}/create")]
-      public async Task<ActionResult> CreateMatch(string code)
-      {
-         var success = await _lobbyService.CreateMatch(code);
-         if (success)
-            return Ok(new { Message = $"Match {code} created." });
-
-         return Conflict(new { Message = $"Match {code} already exists." });
-      }
-
       [HttpPost("{code}/canjoin")]
-      public async Task<ActionResult> CanJoinMatch(string code)
+      public ActionResult CanJoinMatch(string code)
       {
          var name = User.Identity?.Name;
          if (name is null)
@@ -51,6 +42,34 @@ namespace Api.Controllers
             return BadRequest(new { Message = "Unable to leave match or match does not exist." });
 
          return Ok(new { Message = $"Left match {code} successfully." });
+      }
+      [HttpPost("create")]
+      public async Task<ActionResult> CreateLobbyWithSettings([FromBody] CreateLobbyDto request)
+      {
+         if (request.NumberOfRounds < 1 || request.NumberOfRounds > 5)
+            return BadRequest(new { Message = "Number of rounds must be between 1 and 5." });
+
+         if (request.NumberOfPlayers < 2 || request.NumberOfPlayers > 10)
+            return BadRequest(new { Message = "Number of players must be between 2 and 10." });
+
+         if (!request.RandomGames)
+         {
+            if (request.GamesList == null || request.GamesList.Count == 0)
+               return BadRequest(new { Message = "Games list cannot be empty when not using random games." });
+         }
+
+         var lobbyCode = await _lobbyService.CreateLobbyWithSettings(
+            request.NumberOfPlayers,
+            request.NumberOfRounds,
+            request.RandomGames,
+            request.GamesList
+         );
+
+         return Ok(new
+         {
+            Code = lobbyCode,
+            Message = $"Lobby {lobbyCode} created successfully"
+         });
       }
    }
 }
