@@ -47,7 +47,7 @@ function TicTacToe({ gameId, playerName, connection, onReturnToLobby }) {
    const handleClick = (x, y) => {
       if (!connection || board[x][y] !== 0 || winner) return;
 
-      connection.invoke("MakeMove", { PlayerName: playerName, X: x, Y: y } )
+      connection.invoke("MakeMove", { PlayerName: playerName, X: x, Y: y })
          .catch(err => console.error("Move failed:", err));
    };
 
@@ -87,7 +87,12 @@ function TicTacToe({ gameId, playerName, connection, onReturnToLobby }) {
                ))
             )}
          </div>
-         {winner ? <button onClick={returnToLobby} className="linkButton">Back To Lobby</button> : null}
+
+         {winner && (
+            <div>
+               <button onClick={returnToLobby} className="linkButton">Back To Lobby</button>
+            </div>
+         )}
       </div>
    );
 }

@@ -92,14 +92,15 @@ function LobbyPage() {
 
 
 
-   const startMatch = async (selectedGameType) => {
+   const startMatch = async () => {
       if (!connection) return;
       try {
-         await connection.invoke("StartMatch", selectedGameType);
+         await connection.invoke("StartMatch");
       } catch (err) {
          console.error(err);
       }
    };
+
 
    if (phase === "game" && gameType) {
       const GameComponent = gameComponents[gameType];
@@ -117,19 +118,8 @@ function LobbyPage() {
          <p>Your name is: {user.name}</p>
          <p>{message}</p>
 
-         <label>
-            Game Type:
-            <select
-               value={gameType}
-               onChange={(e) => setGameType(e.target.value)}
-            >
-               <option value="" disabled>Select a game</option>
-               <option value="TicTacToe">Tic Tac Toe</option>
-               <option value="RockPaperScissors">Rock Paper Scissors</option>
-            </select>
-         </label>
 
-         <button onClick={() => startMatch(gameType)}>Start Match</button>
+         <button onClick={() => startMatch()}>Start Match</button>
 
          <h3>Players in Lobby:</h3>
          <ul>

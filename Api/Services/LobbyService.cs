@@ -158,6 +158,13 @@ public class LobbyService() : ILobbyService
       };
       return Task.FromResult(code);
    }
+   public MatchSession? GetMatchSession(string code)
+   {
+      if (_sessions.TryGetValue(code, out var session))
+         return session;
+      return null;
+   }
+
 
    private List<string> GenerateRandomGames(int count)
    {
