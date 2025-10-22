@@ -12,10 +12,12 @@ public class LobbyService() : ILobbyService
    public RoundInfoDto GetMatchRoundInfo(string code)
    {
       var session = _sessions[code];
+      var numberOfRnds = session?.NumberOfRounds;
+      var currentRnd = (session?.CurrentRound + 1) > numberOfRnds ? numberOfRnds : session?.CurrentRound + 1;
       return new RoundInfoDto
       (
-         (session?.CurrentRound ?? 0) + 1,
-         session?.NumberOfRounds ?? 1
+         currentRnd ?? 1,
+         numberOfRnds ?? 1
       );
    }
    public bool AddGameId(string code, Guid userId, string gameId = "")
