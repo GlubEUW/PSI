@@ -1,9 +1,6 @@
 using System.Text;
 using Api.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Api.Services;
 
@@ -27,29 +24,29 @@ builder.Services.AddSwaggerGen(c =>
    });
 
    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+   {
+      {
+         new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+         {
+            Reference = new Microsoft.OpenApi.Models.OpenApiReference
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
+               Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+               Id = "Bearer"
+            }
+         },
+         new string[] {}
+      }
+   });
 });
 
 
 builder.Services.AddCors(options =>
 {
    options.AddPolicy("AllowClient", policy =>
-       policy.WithOrigins("http://localhost:5173")
-             .AllowAnyHeader()
-             .AllowAnyMethod()
-             .AllowCredentials());
+      policy.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

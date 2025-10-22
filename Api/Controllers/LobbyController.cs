@@ -29,6 +29,7 @@ namespace Api.Controllers
          var error = _lobbyService.CanJoinLobby(code, id);
          if (error is null)
             return Ok(new { Message = "Can join match." });
+
          return BadRequest(new { Message = error });
       }
 
@@ -58,20 +59,16 @@ namespace Api.Controllers
 
          if (!request.RandomGames)
          {
-            if (request.GamesList == null || request.GamesList.Count == 0)
+            if (request.GamesList is null || request.GamesList.Count == 0)
                return BadRequest(new { Message = "Games list cannot be empty when not using random games." });
 
             foreach (var gameName in request.GamesList)
             {
                if (string.IsNullOrWhiteSpace(gameName))
-               {
                   return BadRequest(new { Message = "Game name cannot be empty." });
-               }
 
                if (!GameFactory.ValidGameTypes.Contains(gameName))
-               {
                   return BadRequest(new { Message = $"Invalid game: {gameName}." });
-               }
             }
          }
 

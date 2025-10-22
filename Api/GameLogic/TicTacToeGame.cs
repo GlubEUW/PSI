@@ -1,14 +1,9 @@
 using System.Text.Json;
 using Api.Entities;
+using Api.Enums;
+using Api.Structs;
 
 namespace Api.GameLogic;
-
-public enum State
-{
-   Empty,
-   X,
-   O
-}
 
 public class TicTacToeGame : IGame
 {
@@ -41,15 +36,22 @@ public class TicTacToeGame : IGame
 
    public bool MakeMove(JsonElement moveData)
    {
-      if (!moveData.TryDeserialize(out TicTacToeMove move)) return false;
+      if (!moveData.TryDeserialize(out TicTacToeMove move))
+         return false;
+         
       return ApplyMove(move.PlayerId, move.X, move.Y);
    }
 
    private bool ApplyMove(Guid playerId, int x, int y)
    {
-      if (Winner is not null) return false;
-      if (Board[x][y] != (int)State.Empty) return false;
-      if (playerId != PlayerTurn) return false;
+      if (Winner is not null)
+         return false;
+
+      if (Board[x][y] != (int)State.Empty)
+         return false;
+         
+      if (playerId != PlayerTurn) 
+         return false;
 
       Board[x][y] = (int)PlayerSigns[playerId];
 
@@ -92,13 +94,6 @@ public class TicTacToeGame : IGame
       if (Board.IsBoardFull())
          Winner = "Draw";
    }
-}
-
-public struct TicTacToeMove
-{
-   required public Guid PlayerId { get; set; }
-   public int X { get; set; }
-   public int Y { get; set; }
 }
 
 public static class TicTacToeExtensions

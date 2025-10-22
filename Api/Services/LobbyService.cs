@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Linq;
 using Api.Models;
 using Api.Entities;
 using Api.GameLogic;
@@ -21,6 +20,7 @@ public class LobbyService() : ILobbyService
          numberOfRnds ?? 1
       );
    }
+   
    public bool AddGameId(string code, Guid userId, string gameId = "")
    {
       if (string.IsNullOrEmpty(gameId))
@@ -89,14 +89,12 @@ public class LobbyService() : ILobbyService
    public Task<string?> JoinMatch(string code, User user)
    {
       if (!_sessions.TryGetValue(code, out var session))
-      {
          return Task.FromResult<string?>("Game does not exist.");
-      }
+      
       var error = CanJoinLobby(code, user.Id);
       if (error is null)
-      {
          session.Players.Add(user);
-      }
+      
       return Task.FromResult(error);
    }
 
@@ -121,17 +119,14 @@ public class LobbyService() : ILobbyService
       if (_sessions.TryGetValue(code, out var session) && session != null)
       {
          if (session.InGame)
-         {
             return "Game already started.";
-         }
+         
          if (session.Players.Count >= session.Players.Capacity)
-         {
             return "Lobby is full.";
-         }
+         
          if (session.Players.Any(u => u.Id == userId))
-         {
             return "Name already taken.";
-         }
+         
          return null;
       }
       return "Game does not exist.";
@@ -148,13 +143,10 @@ public class LobbyService() : ILobbyService
       List<string> finalGamesList;
 
       if (randomGames || gamesList == null || gamesList.Count == 0)
-      {
          finalGamesList = GenerateRandomGames(numberOfRounds);
-      }
+
       else
-      {
          finalGamesList = gamesList;
-      }
 
       _sessions[code] = new MatchSession
       {
@@ -170,6 +162,7 @@ public class LobbyService() : ILobbyService
    {
       if (_sessions.TryGetValue(code, out var session))
          return session;
+         
       return null;
    }
 

@@ -79,11 +79,11 @@ function Home() {
             .split(",")
             .map(g => g.trim())
             .filter(g => g.length > 0);
-         
+
          while (games.length < numberOfRounds) {
             games.push("TicTacToe");
          }
-         
+
          gamesList = games.slice(0, numberOfRounds);
       }
 

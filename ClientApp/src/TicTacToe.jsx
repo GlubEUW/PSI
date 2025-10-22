@@ -45,17 +45,18 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
    }, [connection, gameId]);
 
    const handleClick = (x, y) => {
-      if (!connection || board[x][y] !== 0 || winner) return;
+      if (!connection || board[x][y] !== 0 || winner) 
+         return;
 
       connection.invoke("MakeMove", { PlayerId: playerId, X: x, Y: y })
          .catch(err => console.error("Move failed:", err));
    };
 
    const returnToLobby = () => {
-      if (connection) {
+      if (connection) 
          connection.invoke("EndGame", gameId)
             .catch(err => console.error("Failed to end game:", err));
-      }
+      
       onReturnToLobby();
    };
 
