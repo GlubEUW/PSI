@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using Api.Models;
 using Api.Entities;
+using Api.GameLogic;
 
 namespace Api.Services;
 
@@ -175,7 +176,7 @@ public class LobbyService() : ILobbyService
 
    private List<string> GenerateRandomGames(int count)
    {
-      var availableGames = new[] { "TicTacToe", "RockPaperScissors" };
+      var availableGames = GameFactory.ValidGameTypes.ToArray();
       var random = new Random();
       var games = new List<string>();
 
