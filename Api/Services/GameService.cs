@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Api.Entities;
 using Api.GameLogic;
 
 namespace Api.Services;
@@ -9,9 +10,9 @@ public class GameService : IGameService
 {
    private static readonly ConcurrentDictionary<string, IGame> _games = new();
 
-   public bool StartGame(string gameId, string gameType, List<Guid> playerIds, List<string> playerNames)
+   public bool StartGame(string gameId, string gameType, List<User> players)
    {
-      if (playerIds == null || playerIds.Count < 2)
+      if (players == null || players.Count < 2)
          return false;
 
       if (_games.ContainsKey(gameId))
@@ -19,7 +20,7 @@ public class GameService : IGameService
 
       try
       {
-         _games[gameId] = GameFactory.CreateGame(gameType, playerIds, playerNames);
+         _games[gameId] = GameFactory.CreateGame(gameType, players);
          Console.WriteLine($"Game {gameId} started with type {gameType}");
          return true;
       }

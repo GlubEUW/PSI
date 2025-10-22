@@ -1,13 +1,15 @@
+using Api.Entities;
+
 namespace Api.GameLogic;
 
 public static class GameFactory
 {
-   public static IGame CreateGame(string gameType, List<Guid> playerIds, List<string> playerNames)
+   public static IGame CreateGame(string gameType, List<User> players)
    {
       return gameType switch
       {
-         "TicTacToe" => new TicTacToeGame(playerIds, playerNames),
-         "RockPaperScissors" => new RpsGame(playerIds, playerNames),
+         "TicTacToe" => new TicTacToeGame(players),
+         "RockPaperScissors" => new RpsGame(players),
          _ => throw new ArgumentException($"Unknown game type: {gameType}")
       };
    }

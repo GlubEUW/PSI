@@ -9,6 +9,15 @@ public class LobbyService() : ILobbyService
 {
    private static ConcurrentDictionary<string, MatchSession> _sessions = new();
 
+   public RoundInfoDto GetMatchRoundInfo(string code)
+   {
+      var session = _sessions[code];
+      return new RoundInfoDto
+      (
+         (session?.CurrentRound ?? 0) + 1,
+         session?.NumberOfRounds ?? 1
+      );
+   }
    public bool AddGameId(string code, Guid userId, string gameId = "")
    {
       if (string.IsNullOrEmpty(gameId))
@@ -51,21 +60,12 @@ public class LobbyService() : ILobbyService
       return false;
    }
 
-
-   public List<string> GetPlayersInLobby(string code)
+   public List<User> GetPlayersInLobby(string code)
    {
       if (_sessions.TryGetValue(code, out var session) && session is not null) // LINQ Usage
-         return session.Players.Select(p => p.Name).ToList();
+         return session.Players;
 
-      return new List<string>();
-   }
-
-   public List<Guid> GetPlayerIdsInLobby(string code)
-   {
-      if (_sessions.TryGetValue(code, out var session) && session is not null) // LINQ Usage
-         return session.Players.Select(p => p.Id).ToList();
-
-      return new List<Guid>();
+      return new List<User>();
    }
 
    public Task<bool> CreateMatch(string code)
@@ -158,6 +158,7 @@ public class LobbyService() : ILobbyService
          Code = code,
          Players = new List<User>(numberOfPlayers),
          GamesList = finalGamesList,
+         NumberOfRounds = numberOfRounds,
          InGame = false
       };
       return Task.FromResult(code);

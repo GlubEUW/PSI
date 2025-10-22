@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Api.Entities;
 
 namespace Api.GameLogic;
 
@@ -13,8 +14,8 @@ public class TicTacToeGame : IGame
 {
    public string GameType => "TicTacToe";
 
-   public Dictionary<Guid, State> Players { get; set; } = new();
-   public Dictionary<Guid, string> PlayerNamesById { get; set; } = new();
+   public List<User> Players { get; set; }
+   public Dictionary<Guid, State> PlayerSigns { get; set; } = new();
    public int[][] Board { get; set; } = new int[3][]
    {
       new int[3],
@@ -23,31 +24,27 @@ public class TicTacToeGame : IGame
    };
 
    public Guid? PlayerTurn { get; set; } // Which player's turn it is currently
-   public char? WinnerSign { get; set; } = null;
-   public Guid? Winner { get; set; } = null;
+   public string? Winner { get; set; } = null;
 
-   public TicTacToeGame(List<Guid> playerIds, List<string> playerNames)
+   public TicTacToeGame(List<User> players)
    {
-      PlayerTurn = playerIds.FirstOrDefault();
-      Players[playerIds[0]] = State.X;
-      Players[playerIds[1]] = State.O;
-      PlayerNamesById[playerIds[0]] = playerNames[0];
-      PlayerNamesById[playerIds[1]] = playerNames[1];
+      Players = players;
+
+      PlayerTurn = players[0].Id;
+
+      PlayerSigns[Players[0].Id] = State.X;
+      PlayerSigns[Players[1].Id] = State.O;
    }
 
    public object GetState()
    {
+      User? CurrentPlayer = Players.FirstOrDefault(p => p.Id == PlayerTurn);
       return new
       {
          Board,
-         PlayerTurn = PlayerTurn.HasValue ? PlayerNamesById[PlayerTurn.Value] : null,
-         Winner = WinnerSign switch
-         {
-            'X' => PlayerNamesById[Players.First(p => p.Value == State.X).Key],
-            'O' => PlayerNamesById[Players.First(p => p.Value == State.O).Key],
-            'D' => "Draw",
-            _   => null
-         }
+         PlayerTurn = CurrentPlayer?.Name,
+         Winner,
+         WinCounts = Players.Select(p => p.Wins).ToList()
       };
    }
 
@@ -73,11 +70,21 @@ public class TicTacToeGame : IGame
       if (playerId != PlayerTurn) 
          return false;
 
-      Board[x][y] = (int)Players[playerId];
+      Board[x][y] = (int)PlayerSigns[playerId];
       
       CheckWinner();
-         
-      PlayerTurn = Players.Keys.FirstOrDefault(name => name != playerId);
+      if (Winner == "X")
+      {
+         Winner = Players[0].Name;
+         Players[0].Wins++;
+      }
+      else if (Winner == "O")
+      {
+         Winner = Players[1].Name;
+         Players[1].Wins++;
+      }
+      
+      PlayerTurn = PlayerSigns.Keys.FirstOrDefault(id => id != playerId);
       
       return true;
    }
@@ -91,12 +98,12 @@ public class TicTacToeGame : IGame
       {
          if(b[i][0] == (int)State.X && b[i][1] == (int)State.X && b[i][2] == (int)State.X)
          {
-            WinnerSign = 'X';
+            Winner = "X";
             return;
          }
          if(b[i][0] == (int)State.O && b[i][1] == (int)State.O && b[i][2] == (int)State.O)
          {
-            WinnerSign = 'O';
+            Winner = "O";
             return;
          }
       }
@@ -106,12 +113,12 @@ public class TicTacToeGame : IGame
       {
          if(b[0][i] == (int)State.X && b[1][i] == (int)State.X && b[2][i] == (int)State.X)
          {
-            WinnerSign = 'X';
+            Winner = "X";
             return;
          }
          if(b[0][i] == (int)State.O && b[1][i] == (int)State.O && b[2][i] == (int)State.O)
          {
-            WinnerSign = 'O';
+            Winner = "O";
             return;
          }
       }
@@ -120,13 +127,13 @@ public class TicTacToeGame : IGame
       if((b[0][0] == (int)State.X && b[1][1] == (int)State.X && b[2][2] == (int)State.X) ||
          (b[0][2] == (int)State.X && b[1][1] == (int)State.X && b[2][0] == (int)State.X))
       {
-         WinnerSign = 'X';
+         Winner = "X";
          return;
       }
       if((b[0][0] == (int)State.O && b[1][1] == (int)State.O && b[2][2] == (int)State.O) ||
          (b[0][2] == (int)State.O && b[1][1] == (int)State.O && b[2][0] == (int)State.O))
       {
-         WinnerSign = 'O';
+         Winner = "O";
          return;
       }
 
@@ -137,7 +144,7 @@ public class TicTacToeGame : IGame
                isDraw = false;
 
       if (isDraw)
-         WinnerSign = 'D';
+         Winner = "Draw";
    }
 }
 
