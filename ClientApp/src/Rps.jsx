@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const choices = ["Rock", "Paper", "Scissors"];
 
-function Rps({ gameId, playerName, connection, onReturnToLobby }) {
+function Rps({ gameId, playerId, connection, onReturnToLobby }) {
   const [game, setGame] = useState({ players: {}, result: null });
   const [myChoice, setMyChoice] = useState(null);
 
@@ -38,7 +38,7 @@ function Rps({ gameId, playerName, connection, onReturnToLobby }) {
     setMyChoice(selectedChoice);
     const choiceValue = { "Rock": 1, "Paper": 2, "Scissors": 3 }[selectedChoice];
 
-    connection.invoke("MakeMove", { PlayerName: playerName, Choice: choiceValue })
+    connection.invoke("MakeMove", { PlayerId: playerId, Choice: choiceValue })
       .catch(err => console.error("Move failed:", err));
   };
 

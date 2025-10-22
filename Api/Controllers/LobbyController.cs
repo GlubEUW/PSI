@@ -21,10 +21,11 @@ namespace Api.Controllers
       public ActionResult CanJoinMatch(string code)
       {
          var name = User.Identity?.Name;
-         if (name is null)
+         var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
+         if (name is null || idClaim is null || !Guid.TryParse(idClaim.Value, out var id))
             return Unauthorized();
 
-         var error = _lobbyService.CanJoinLobby(code, name);
+         var error = _lobbyService.CanJoinLobby(code, id);
          if (error is null)
             return Ok(new { Message = "Can join match." });
          return BadRequest(new { Message = error });
@@ -34,15 +35,17 @@ namespace Api.Controllers
       public async Task<ActionResult> LeaveMatch(string code)
       {
          var name = User.Identity?.Name;
-         if (name is null)
+         var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
+         if (name is null || idClaim is null || !Guid.TryParse(idClaim.Value, out var id))
             return Unauthorized();
 
-         var success = await _lobbyService.LeaveMatch(code, name);
+         var success = await _lobbyService.LeaveMatch(code, id);
          if (!success)
             return BadRequest(new { Message = "Unable to leave match or match does not exist." });
 
          return Ok(new { Message = $"Left match {code} successfully." });
       }
+      
       [HttpPost("create")]
       public async Task<ActionResult> CreateLobbyWithSettings([FromBody] CreateLobbyDto request)
       {

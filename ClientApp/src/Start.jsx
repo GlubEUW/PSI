@@ -22,7 +22,7 @@ function Start() {
          }
 
          const token = await response.text();
-         localStorage.setItem("guestToken", token);
+         localStorage.setItem("userToken", token);
          navigate("/home");
       } catch (error) {
          console.error("Error during guest login: ", error);

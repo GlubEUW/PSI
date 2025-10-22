@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using Api.Models;
+using Api.Entities;
 
 namespace Api.Services;
 
@@ -7,31 +9,31 @@ public class LobbyService() : ILobbyService
 {
    private static ConcurrentDictionary<string, MatchSession> _sessions = new();
 
-   public bool AddGameId(string code, string playerName, string gameId = "")
+   public bool AddGameId(string code, Guid userId, string gameId = "")
    {
       if (string.IsNullOrEmpty(gameId))
          gameId = code;
 
       if (_sessions.TryGetValue(code, out var session) && session is not null)
-         return session._gameIdByPlayerName.TryAdd(playerName, gameId);
+         return session._gameIdByUserId.TryAdd(userId, gameId);
 
       return false;
    }
 
-   public bool RemoveGameId(string? code, string? playerName)
+   public bool RemoveGameId(string? code, Guid? userId)
    {
-      if (code is null || playerName is null)
+      if (code is null || userId is null)
          return false;
 
       if (_sessions.TryGetValue(code, out var session) && session is not null)
-         return session._gameIdByPlayerName.Remove(playerName);
+         return session._gameIdByUserId.Remove((Guid)userId);
 
       return false;
    }
 
-   public bool TryGetGameId(string? code, string? playerName, out string? gameId)
+   public bool TryGetGameId(string? code, Guid userId, out string? gameId)
    {
-      if (code is null || playerName is null)
+      if (code is null)
       {
          gameId = null;
          return false;
@@ -39,7 +41,7 @@ public class LobbyService() : ILobbyService
 
       if (_sessions.TryGetValue(code, out var session) && session is not null)
       {
-         if (session._gameIdByPlayerName.TryGetValue(playerName, out var gameID) && gameID is not null)
+         if (session._gameIdByUserId.TryGetValue(userId, out var gameID) && gameID is not null)
          {
             gameId = gameID;
             return true;
@@ -52,18 +54,18 @@ public class LobbyService() : ILobbyService
 
    public List<string> GetPlayersInLobby(string code)
    {
-      if (_sessions.TryGetValue(code, out var session) && session is not null)
-         return new List<string>(session.Players);
+      if (_sessions.TryGetValue(code, out var session) && session is not null) // LINQ Usage
+         return session.Players.Select(p => p.Name).ToList();
 
       return new List<string>();
    }
 
-   public LobbyInfoDto GetLobbyInfo(string code)
+   public List<Guid> GetPlayerIdsInLobby(string code)
    {
-      return new LobbyInfoDto
-      {
-         Players = GetPlayersInLobby(code)
-      };
+      if (_sessions.TryGetValue(code, out var session) && session is not null) // LINQ Usage
+         return session.Players.Select(p => p.Id).ToList();
+
+      return new List<Guid>();
    }
 
    public Task<bool> CreateMatch(string code)
@@ -73,7 +75,7 @@ public class LobbyService() : ILobbyService
          _sessions[code] = new MatchSession
          {
             Code = code,
-            Players = new List<string>(2),
+            Players = new List<User>(2),
             InGame = false
          };
          return Task.FromResult(true);
@@ -81,35 +83,37 @@ public class LobbyService() : ILobbyService
       return Task.FromResult(false);
    }
 
-   public Task<string?> JoinMatch(string code, string playerName)
+   public Task<string?> JoinMatch(string code, User user)
    {
       if (!_sessions.TryGetValue(code, out var session))
       {
          return Task.FromResult<string?>("Game does not exist.");
       }
-      var error = CanJoinLobby(code, playerName);
+      var error = CanJoinLobby(code, user.Id);
       if (error is null)
       {
-         session.Players.Add(playerName);
+         session.Players.Add(user);
       }
       return Task.FromResult(error);
    }
 
-   public Task<bool> LeaveMatch(string code, string playerName)
+   public Task<bool> LeaveMatch(string code, Guid userId)
    {
       if (_sessions.TryGetValue(code, out var session))
       {
-         session.Players.Remove(playerName);
+         var user = session.Players.FirstOrDefault(u => u.Id == userId);
+         if (user is not null)
+            session.Players.Remove(user);
+
          if (session.Players.Count == 0)
-         {
             return Task.FromResult(_sessions.TryRemove(code, out _));
-         }
+         
          return Task.FromResult(true);
       }
       return Task.FromResult(false);
    }
 
-   public string? CanJoinLobby(string code, string playerName)
+   public string? CanJoinLobby(string code, Guid userId)
    {
       if (_sessions.TryGetValue(code, out var session) && session != null)
       {
@@ -121,7 +125,7 @@ public class LobbyService() : ILobbyService
          {
             return "Lobby is full.";
          }
-         if (session.Players.Contains(playerName))
+         if (session.Players.Any(u => u.Id == userId))
          {
             return "Name already taken.";
          }
@@ -152,7 +156,7 @@ public class LobbyService() : ILobbyService
       _sessions[code] = new MatchSession
       {
          Code = code,
-         Players = new List<string>(numberOfPlayers),
+         Players = new List<User>(numberOfPlayers),
          GamesList = finalGamesList,
          InGame = false
       };

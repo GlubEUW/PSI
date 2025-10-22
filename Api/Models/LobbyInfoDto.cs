@@ -1,5 +1,5 @@
 namespace Api.Models;
-public record class LobbyInfoDto
+public record LobbyInfoDto
 {
-   public List<string> Players { get; set; } = new();
+   public List<(string, Guid)> Players { get; set; } = new();
 }

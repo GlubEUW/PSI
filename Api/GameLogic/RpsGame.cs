@@ -14,26 +14,26 @@ public class RpsGame : IGame
 {
    public string GameType => "RockPaperScissors";
 
-   public Dictionary<string, RpsChoice> Players { get; set; } = new();
+   public Dictionary<Guid, RpsChoice> Players { get; set; } = new();
+   public Dictionary<Guid, string> PlayerNamesById { get; set; } = new();
+   public Guid? Winner { get; set; }
    public string? Result { get; set; }
 
-   public RpsGame(List<string> players)
+   public RpsGame(List<Guid> playerIds, List<string> playerNames)
    {
-      if (players == null || players.Count < 2)
-      {
-         Players["Player1"] = RpsChoice.None;
-         Players["Player2"] = RpsChoice.None;
-      }
-      else
-      {
-         Players[players[0]] = RpsChoice.None;
-         Players[players[1]] = RpsChoice.None;
-      }
+      Players[playerIds[0]] = RpsChoice.None;
+      Players[playerIds[1]] = RpsChoice.None;
+      PlayerNamesById[playerIds[0]] = playerNames[0];
+      PlayerNamesById[playerIds[1]] = playerNames[1];
    }
 
    public object GetState()
    {
-      return new { Players, Result };
+      return new
+      {
+         Players,
+         Result
+      };
    }
 
    public bool MakeMove(JsonElement moveData)
@@ -41,11 +41,18 @@ public class RpsGame : IGame
       try
       {
          var move = moveData.Deserialize<RpsMove>();
-         Players[move.PlayerName] = move.Choice;
+         Players[move.PlayerId] = move.Choice;
 
          // Check if both players made a choice
          if (Players.Count == 2 && !Players.ContainsValue(RpsChoice.None)) // Suggestion: refactor to foreach
-            Result = DetermineWinner();
+         {
+            Winner = DetermineWinner();
+            if (Winner is null)
+               Result = "Draw!";
+
+            else
+               Result = $"{PlayerNamesById[Winner.Value]} wins!";
+         }
 
          return true;
       }
@@ -55,7 +62,7 @@ public class RpsGame : IGame
       }
    }
 
-   private string DetermineWinner()
+   private Guid? DetermineWinner()
    {
       var players = Players.Keys.ToList();
       var p1 = players[0];
@@ -63,22 +70,20 @@ public class RpsGame : IGame
       var c1 = Players[p1];
       var c2 = Players[p2];
 
-      if (c1 == c2) 
-         return "Draw!";
+      if (c1 == c2)
+         return null;
 
       if ((c1 == RpsChoice.Rock && c2 == RpsChoice.Scissors) ||
           (c1 == RpsChoice.Paper && c2 == RpsChoice.Rock) ||
           (c1 == RpsChoice.Scissors && c2 == RpsChoice.Paper))
-         return $"{p1} wins!";
+         return p1;
 
-      return $"{p2} wins!";
+      return p2;
    }
-
-   public string? GetWinner() => Result;
 }
 
 public struct RpsMove
 {
-   public required string PlayerName { get; set; }
+   public required Guid PlayerId { get; set; }
    public RpsChoice Choice { get; set; }
 }

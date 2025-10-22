@@ -13,7 +13,8 @@ public class TicTacToeGame : IGame
 {
    public string GameType => "TicTacToe";
 
-   public Dictionary<string, State> Players { get; set; } = new();
+   public Dictionary<Guid, State> Players { get; set; } = new();
+   public Dictionary<Guid, string> PlayerNamesById { get; set; } = new();
    public int[][] Board { get; set; } = new int[3][]
    {
       new int[3],
@@ -21,19 +22,33 @@ public class TicTacToeGame : IGame
       new int[3]
    };
 
-   public string? PlayerTurn { get; set; } // Which player's turn it is currently
-   public string? Winner { get; set; } = null;
+   public Guid? PlayerTurn { get; set; } // Which player's turn it is currently
+   public char? WinnerSign { get; set; } = null;
+   public Guid? Winner { get; set; } = null;
 
-   public TicTacToeGame(List<string> players)
+   public TicTacToeGame(List<Guid> playerIds, List<string> playerNames)
    {
-      PlayerTurn = players.FirstOrDefault();
-      Players[players[0]] = State.X;
-      Players[players[1]] = State.O;
+      PlayerTurn = playerIds.FirstOrDefault();
+      Players[playerIds[0]] = State.X;
+      Players[playerIds[1]] = State.O;
+      PlayerNamesById[playerIds[0]] = playerNames[0];
+      PlayerNamesById[playerIds[1]] = playerNames[1];
    }
 
    public object GetState()
    {
-      return new { Board, PlayerTurn, Winner };
+      return new
+      {
+         Board,
+         PlayerTurn = PlayerTurn.HasValue ? PlayerNamesById[PlayerTurn.Value] : null,
+         Winner = WinnerSign switch
+         {
+            'X' => PlayerNamesById[Players.First(p => p.Value == State.X).Key],
+            'O' => PlayerNamesById[Players.First(p => p.Value == State.O).Key],
+            'D' => "Draw",
+            _   => null
+         }
+      };
    }
 
    public bool MakeMove(JsonElement moveData)
@@ -41,7 +56,7 @@ public class TicTacToeGame : IGame
       try
       {
          var move = moveData.Deserialize<TicTacToeMove>();
-         return ApplyMove(move.PlayerName, move.X, move.Y);
+         return ApplyMove(move.PlayerId, move.X, move.Y);
       }
       catch (JsonException)
       {
@@ -49,25 +64,21 @@ public class TicTacToeGame : IGame
       }
    }
 
-   private bool ApplyMove(string playerName, int x, int y)
+   private bool ApplyMove(Guid playerId, int x, int y)
    {
-      if (Winner != null) 
+      if (Winner is not null) 
          return false;
       if (Board[x][y] != (int)State.Empty) 
          return false;
-      if (playerName != PlayerTurn) 
+      if (playerId != PlayerTurn) 
          return false;
 
-      Board[x][y] = (int)Players[playerName];
+      Board[x][y] = (int)Players[playerId];
       
       CheckWinner();
-      if (Winner == "X")
-         Winner = Players.FirstOrDefault(p => p.Value == State.X).Key;
-      else if (Winner == "O")
-         Winner = Players.FirstOrDefault(p => p.Value == State.O).Key;
          
-      PlayerTurn = Players.Keys.FirstOrDefault(name => name != playerName);
-
+      PlayerTurn = Players.Keys.FirstOrDefault(name => name != playerId);
+      
       return true;
    }
 
@@ -80,12 +91,12 @@ public class TicTacToeGame : IGame
       {
          if(b[i][0] == (int)State.X && b[i][1] == (int)State.X && b[i][2] == (int)State.X)
          {
-            Winner = "X";
+            WinnerSign = 'X';
             return;
          }
          if(b[i][0] == (int)State.O && b[i][1] == (int)State.O && b[i][2] == (int)State.O)
          {
-            Winner = "O";
+            WinnerSign = 'O';
             return;
          }
       }
@@ -95,12 +106,12 @@ public class TicTacToeGame : IGame
       {
          if(b[0][i] == (int)State.X && b[1][i] == (int)State.X && b[2][i] == (int)State.X)
          {
-            Winner = "X";
+            WinnerSign = 'X';
             return;
          }
          if(b[0][i] == (int)State.O && b[1][i] == (int)State.O && b[2][i] == (int)State.O)
          {
-            Winner = "O";
+            WinnerSign = 'O';
             return;
          }
       }
@@ -109,13 +120,13 @@ public class TicTacToeGame : IGame
       if((b[0][0] == (int)State.X && b[1][1] == (int)State.X && b[2][2] == (int)State.X) ||
          (b[0][2] == (int)State.X && b[1][1] == (int)State.X && b[2][0] == (int)State.X))
       {
-         Winner = "X";
+         WinnerSign = 'X';
          return;
       }
       if((b[0][0] == (int)State.O && b[1][1] == (int)State.O && b[2][2] == (int)State.O) ||
          (b[0][2] == (int)State.O && b[1][1] == (int)State.O && b[2][0] == (int)State.O))
       {
-         Winner = "O";
+         WinnerSign = 'O';
          return;
       }
 
@@ -126,15 +137,13 @@ public class TicTacToeGame : IGame
                isDraw = false;
 
       if (isDraw)
-         Winner = "Draw";
+         WinnerSign = 'D';
    }
-
-   public string? GetWinner() => Winner;
 }
 
 public struct TicTacToeMove 
 {
-   required public string PlayerName { get; set; }
+   required public Guid PlayerId { get; set; }
    public int X { get; set; }
    public int Y { get; set; }
 }

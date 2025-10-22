@@ -12,10 +12,10 @@ const gameComponents = {
 };
 
 function LobbyPage() {
-   const token = localStorage.getItem("guestToken");
+   const token = localStorage.getItem("userToken");
    const { code } = useParams();
    const navigate = useNavigate();
-   const [user, setUser] = useState({ name: "Loading..." });
+   const [user, setUser] = useState({ name: "Loading...", id: "" });
    const [connection, setConnection] = useState(null);
    const [players, setPlayers] = useState([]);
    const [message, setMessage] = useState("");
@@ -49,7 +49,7 @@ function LobbyPage() {
          setUser(userData);
 
          conn = new HubConnectionBuilder()
-            .withUrl(`http://localhost:5243/matchHub?code=${code}&playerName=${userData.name}`, {
+            .withUrl(`http://localhost:5243/matchHub?code=${code}`, {
                accessTokenFactory: () => token
             })
             .withAutomaticReconnect()
@@ -106,7 +106,7 @@ function LobbyPage() {
       const GameComponent = gameComponents[gameType];
       return <GameComponent
          gameId={code}
-         playerName={user.name}
+         playerId={user.id}
          connection={connection}
          onReturnToLobby={() => setPhase("lobby")}
       />;

@@ -12,7 +12,7 @@ function Home() {
    const [gamesInput, setGamesInput] = useState("TicTacToe");
 
    const handleQueueJoin = async () => {
-      const token = localStorage.getItem("guestToken");
+      const token = localStorage.getItem("userToken");
 
       if (!token) {
          alert("You must be logged in to access the queue.");
@@ -37,7 +37,7 @@ function Home() {
    };
 
    const handleLobbyJoin = async () => {
-      const token = localStorage.getItem("guestToken");
+      const token = localStorage.getItem("userToken");
 
       if (!token) {
          alert("You must be logged in to access the lobby.");
@@ -64,7 +64,7 @@ function Home() {
       navigate(`/match/${lobbyID}`);
    }
    const handleCreateLobby = async () => {
-      const token = localStorage.getItem("guestToken");
+      const token = localStorage.getItem("userToken");
 
       if (!token) {
          alert("You must be logged in to create a lobby.");

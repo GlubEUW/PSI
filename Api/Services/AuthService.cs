@@ -11,21 +11,24 @@ public class AuthService(IConfiguration configuration) : IAuthService
 {
    public string? GuestCreate(UserDto request)
    {
-      var guest = new Guest();
+      var guest = new User();
       if (string.IsNullOrWhiteSpace(request.Name))
          return null;
 
+      guest.Id = Guid.NewGuid();
       guest.Name = request.Name;
-
+      guest.Role = UserRole.Guest;
+      
       return CreateToken(guest);
    }
 
-   private string CreateToken(Guest guest)
+   private string CreateToken(User user)
    {
       var claims = new List<Claim>
          {
-            new Claim(ClaimTypes.Name, guest.Name),
-            new Claim(ClaimTypes.NameIdentifier, guest.Id.ToString())
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Role, user.Role.ToString())
          };
 
       var privateKey = new SymmetricSecurityKey(
