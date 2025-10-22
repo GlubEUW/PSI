@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Security.Claims;
 using Api.Services;
 using Api.Entities;
+using Api.Models;
 
 namespace Api.Hubs;
 
@@ -72,10 +73,13 @@ public class MatchHub : Hub
          return;
       }
 
+
       Context.Items.Add(ContextKeys.Code, code);
       Context.Items.Add(ContextKeys.User, user);
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
-      await Clients.Group(code).SendAsync("PlayersUpdated", user.Name); // FIXME: Send user?
+      
+      var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+      await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       Console.WriteLine($"Player {user.Name} connected to lobby {code}");
       await base.OnConnectedAsync();
    }
@@ -87,10 +91,13 @@ public class MatchHub : Hub
 
       if (!string.IsNullOrEmpty(code) && user is not null)
       {
+
          Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
          await _lobbyService.LeaveMatch(code, user.Id);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
-         await Clients.Group(code).SendAsync("PlayersUpdated", user.Name); // FIXME: Send user?
+         
+         var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+         await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       }
       else
       {
@@ -103,9 +110,12 @@ public class MatchHub : Hub
       await base.OnDisconnectedAsync(exception);
    }
 
-   public Task<List<string>> GetPlayers(string code)
+   public Task<List<PlayerInfoDto>> GetPlayers(string code)
    {
-      return Task.FromResult(_lobbyService.GetPlayersInLobby(code));
+      var players = _lobbyService.GetPlayersInLobby(code);
+      var playerNames = players.Select(p => p.Name).ToList();
+      var playerDtos = players.Select(p => new PlayerInfoDto(p.Name, p.Wins)).ToList();
+      return Task.FromResult(playerDtos);
    }
 
    public async Task StartMatch()
@@ -122,10 +132,9 @@ public class MatchHub : Hub
       var selectedGameType = session.GamesList[session.CurrentRound];
       session.GameType = selectedGameType;
       session.InGame = true;
-      var playerIds = _lobbyService.GetPlayerIdsInLobby(code);
-      var playerNames = _lobbyService.GetPlayersInLobby(code);
+      var players = _lobbyService.GetPlayersInLobby(code);
 
-      if (!_gameService.StartGame(code, selectedGameType, playerIds, playerNames))
+      if (!_gameService.StartGame(code, selectedGameType, players))
       {
          await Clients.Caller.SendAsync("Error", "Failed to start the game.");
          return;
@@ -135,7 +144,7 @@ public class MatchHub : Hub
       {
          gameType = selectedGameType,
          gameId = code,
-         playerIds,
+         playerIds = players.Select(p => p.Id).ToList(),
          initialState = _gameService.GetGameState(code),
          round = session.CurrentRound + 1
       });
@@ -159,6 +168,12 @@ public class MatchHub : Hub
 
    public async Task EndGame(string gameId)
    {
+      var code = Context.Items[ContextKeys.Code] as string;
+      if (!string.IsNullOrEmpty(code))
+      {
+         var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+         await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+      }
       _gameService.RemoveGame(gameId);
    }
 
