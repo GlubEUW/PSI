@@ -66,7 +66,7 @@ public class MatchHub : Hub
          return;
       }
 
-      if (!_lobbyService.AddGameId(code: code, userId: user.Id, gameId: code))
+      if (!_lobbyService.AddGameId(code: code, userId: user.Id))
       {
          await Clients.Caller.SendAsync("Error", "Could not add gameId.");
          Context.Abort();
