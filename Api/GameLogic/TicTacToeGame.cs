@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Api.Entities;
 
 namespace Api.GameLogic;
 
@@ -12,129 +13,133 @@ public enum State
 public class TicTacToeGame : IGame
 {
    public string GameType => "TicTacToe";
-
-   public Dictionary<string, State> Players { get; set; } = new();
-   public int[][] Board { get; set; } = new int[3][]
-   {
-      new int[3],
-      new int[3],
-      new int[3]
-   };
-
-   public string? PlayerTurn { get; set; } // Which player's turn it is currently
+   public List<User> Players { get; set; }
+   public Dictionary<Guid, State> PlayerSigns { get; set; } = new();
+   public int[][] Board { get; set; } = new int[3][] { new int[3], new int[3], new int[3] };
+   public Guid? PlayerTurn { get; set; }
    public string? Winner { get; set; } = null;
 
-   public TicTacToeGame(List<string> players)
+   public TicTacToeGame(List<User> players)
    {
-      PlayerTurn = players.FirstOrDefault();
-      Players[players[0]] = State.X;
-      Players[players[1]] = State.O;
+      Players = players;
+      PlayerTurn = players[0].Id;
+      PlayerSigns[Players[0].Id] = State.X;
+      PlayerSigns[Players[1].Id] = State.O;
    }
 
    public object GetState()
    {
-      return new { Board, PlayerTurn, Winner };
+      var currentPlayer = Players.FirstOrDefault(p => p.Id == PlayerTurn);
+      return new
+      {
+         Board,
+         PlayerTurn = currentPlayer?.Name,
+         Winner,
+         WinCounts = Players.Select(p => p.Wins).ToList()
+      };
    }
 
    public bool MakeMove(JsonElement moveData)
    {
-      try
-      {
-         var move = moveData.Deserialize<TicTacToeMove>();
-         return ApplyMove(move.PlayerName, move.X, move.Y);
-      }
-      catch (JsonException)
-      {
-         return false;
-      }
+      if (!moveData.TryDeserialize(out TicTacToeMove move)) return false;
+      return ApplyMove(move.PlayerId, move.X, move.Y);
    }
 
-   private bool ApplyMove(string playerName, int x, int y)
+   private bool ApplyMove(Guid playerId, int x, int y)
    {
-      if (Winner != null) 
-         return false;
-      if (Board[x][y] != (int)State.Empty) 
-         return false;
-      if (playerName != PlayerTurn) 
-         return false;
+      if (Winner is not null) return false;
+      if (Board[x][y] != (int)State.Empty) return false;
+      if (playerId != PlayerTurn) return false;
 
-      Board[x][y] = (int)Players[playerName];
-      
+      Board[x][y] = (int)PlayerSigns[playerId];
+
       CheckWinner();
-      if (Winner == "X")
-         Winner = Players.FirstOrDefault(p => p.Value == State.X).Key;
-      else if (Winner == "O")
-         Winner = Players.FirstOrDefault(p => p.Value == State.O).Key;
-         
-      PlayerTurn = Players.Keys.FirstOrDefault(name => name != playerName);
 
+      if (Winner == "X")
+      {
+         Winner = Players[0].Name;
+         Players[0].Wins++;
+      }
+      else if (Winner == "O")
+      {
+         Winner = Players[1].Name;
+         Players[1].Wins++;
+      }
+
+      PlayerTurn = PlayerSigns.FirstOtherKey(playerId);
       return true;
    }
 
    private void CheckWinner()
    {
-      int[][] b = Board;
-
-      // Check rows
-      for (int i = 0; i < 3; i++)
+      foreach (var s in new[] { State.X, State.O })
       {
-         if(b[i][0] == (int)State.X && b[i][1] == (int)State.X && b[i][2] == (int)State.X)
+         for (int i = 0; i < 3; i++)
          {
-            Winner = "X";
-            return;
+            if (Board.IsRowEqual(i, s) || Board.IsColumnEqual(i, s))
+            {
+               Winner = s.ToString();
+               return;
+            }
          }
-         if(b[i][0] == (int)State.O && b[i][1] == (int)State.O && b[i][2] == (int)State.O)
+         if (Board.IsDiagonalEqual(s))
          {
-            Winner = "O";
-            return;
-         }
-      }
-
-      // Check columns
-      for (int i = 0; i < 3; i++)
-      {
-         if(b[0][i] == (int)State.X && b[1][i] == (int)State.X && b[2][i] == (int)State.X)
-         {
-            Winner = "X";
-            return;
-         }
-         if(b[0][i] == (int)State.O && b[1][i] == (int)State.O && b[2][i] == (int)State.O)
-         {
-            Winner = "O";
+            Winner = s.ToString();
             return;
          }
       }
 
-      // Check diagonals
-      if((b[0][0] == (int)State.X && b[1][1] == (int)State.X && b[2][2] == (int)State.X) ||
-         (b[0][2] == (int)State.X && b[1][1] == (int)State.X && b[2][0] == (int)State.X))
-      {
-         Winner = "X";
-         return;
-      }
-      if((b[0][0] == (int)State.O && b[1][1] == (int)State.O && b[2][2] == (int)State.O) ||
-         (b[0][2] == (int)State.O && b[1][1] == (int)State.O && b[2][0] == (int)State.O))
-      {
-         Winner = "O";
-         return;
-      }
-
-      bool isDraw = true;
-      for (int i = 0; i < 3; i++)
-         for (int j = 0; j < 3; j++)
-            if (b[i][j] == (int)State.Empty)
-               isDraw = false;
-
-      if (isDraw)
+      if (Board.IsBoardFull())
          Winner = "Draw";
    }
-
-   public string? GetWinner() => Winner;
 }
 
-public struct TicTacToeMove 
+public struct TicTacToeMove
 {
-   required public string PlayerName { get; set; }
+   required public Guid PlayerId { get; set; }
    public int X { get; set; }
    public int Y { get; set; }
+}
+
+public static class TicTacToeExtensions
+{
+   public static bool IsRowEqual(this int[][] board, int row, State s)
+   {
+      return board[row].All(cell => cell == (int)s);
+   }
+
+   public static bool IsColumnEqual(this int[][] board, int col, State s)
+   {
+      return board.All(row => row[col] == (int)s);
+   }
+
+   public static bool IsDiagonalEqual(this int[][] board, State s)
+   {
+      return (board[0][0] == (int)s && board[1][1] == (int)s && board[2][2] == (int)s) ||
+             (board[0][2] == (int)s && board[1][1] == (int)s && board[2][0] == (int)s);
+   }
+
+   public static bool IsBoardFull(this int[][] board)
+   {
+      return board.All(row => row.All(cell => cell != (int)State.Empty));
+   }
+
+   public static TKey FirstOtherKey<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey keyToExclude) where TKey : notnull
+   {
+      return dict.Keys.First(k => !k.Equals(keyToExclude));
+   }
+
+   public static bool TryDeserialize<T>(this JsonElement element, out T? result)
+   {
+      try
+      {
+         result = element.Deserialize<T>();
+         return true;
+      }
+      catch (JsonException)
+      {
+         result = default;
+         return false;
+      }
+   }
 }

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { CanJoinLobby } from "./api/lobby";
+import { CreateLobby, CanJoinLobby } from "./api/lobby";
+import { CanJoinQueue } from "./api/queue";
 
 function Home() {
    const navigate = useNavigate();
@@ -11,7 +12,7 @@ function Home() {
    const [gamesInput, setGamesInput] = useState("TicTacToe");
 
    const handleQueueJoin = async () => {
-      const token = localStorage.getItem("guestToken");
+      const token = localStorage.getItem("userToken");
 
       if (!token) {
          alert("You must be logged in to access the queue.");
@@ -20,14 +21,7 @@ function Home() {
       }
 
       try {
-         const response = await fetch("http://localhost:5243/api/queue", { // FIXME: Refactor to separate file in ./api/
-            method: "POST",
-            headers: {
-               "Authorization": "Bearer " + token,
-               "Content-Type": "application/json"
-            },
-         });
-
+         const response = await CanJoinQueue(token);
          if (!response.ok) {
             console.log("Status: ", response.status);
             alert("Failed to join queue: " + "Status " + response.status);
@@ -43,7 +37,7 @@ function Home() {
    };
 
    const handleLobbyJoin = async () => {
-      const token = localStorage.getItem("guestToken");
+      const token = localStorage.getItem("userToken");
 
       if (!token) {
          alert("You must be logged in to access the lobby.");
@@ -57,9 +51,9 @@ function Home() {
       }
 
       try {
-         const lobbyInfoResponse = await CanJoinLobby(token, lobbyID);
-         if (!lobbyInfoResponse.ok) {
-            alert(await lobbyInfoResponse.json().then(data => data.message, "Unresolved error"));
+         const response = await CanJoinLobby(token, lobbyID);
+         if (!response.ok) {
+            alert(await response.json().then(data => data.message, "Unresolved error"));
             return;
          }
       } catch (err) {
@@ -70,7 +64,7 @@ function Home() {
       navigate(`/match/${lobbyID}`);
    }
    const handleCreateLobby = async () => {
-      const token = localStorage.getItem("guestToken");
+      const token = localStorage.getItem("userToken");
 
       if (!token) {
          alert("You must be logged in to create a lobby.");
@@ -94,20 +88,7 @@ function Home() {
       }
 
       try {
-         const response = await fetch("http://localhost:5243/api/lobby/create", {
-            method: "POST",
-            headers: {
-               "Authorization": "Bearer " + token,
-               "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-               numberOfPlayers: numberOfPlayers,
-               numberOfRounds: numberOfRounds,
-               randomGames: randomGames,
-               gamesList: gamesList
-            })
-         });
-
+         const response = await CreateLobby(token, numberOfPlayers, numberOfRounds, randomGames, gamesList);
          if (!response.ok) {
             const error = await response.json();
             alert(`Failed to create lobby: ${error.message || "Unknown error"}`);

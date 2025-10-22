@@ -29,7 +29,7 @@ public class UserController(IAuthService authService) : ControllerBase
       if (name is null || idClaim is null || !Guid.TryParse(idClaim.Value, out var id))
          return Unauthorized();
 
-      var user = new UserDto(name);
+      var user = new UserDto(name, id);
 
       return Ok(user);
    }

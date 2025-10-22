@@ -1,21 +1,21 @@
-using System.Text.RegularExpressions;
 using Api.Models;
+using Api.Entities;
 
 namespace Api.Services;
 
 public interface ILobbyService
 {
-   public bool AddGameId(string code, string playerName, string gameId = "");
-   public bool RemoveGameId(string? code, string? playerName);
-   public bool TryGetGameId(string? code, string? playerName, out string? gameId);
-   public List<string> GetPlayersInLobby(string code);
-   public LobbyInfoDto GetLobbyInfo(string code);
+   public RoundInfoDto GetMatchRoundInfo(string code);
+   public bool AddGameId(string code, Guid userId, string gameId = "");
+   public bool RemoveGameId(string? code, Guid? userId);
+   public bool TryGetGameId(string? code, Guid userId, out string? gameId);
+   public List<User> GetPlayersInLobby(string code);
    public Task<bool> CreateMatch(string code);
-   public Task<string?> JoinMatch(string code, string playerName);
-   public Task<bool> LeaveMatch(string code, string playerName);
+   public Task<string?> JoinMatch(string code, User user);
+   public Task<bool> LeaveMatch(string code, Guid userId);
    public Task<string> CreateLobbyWithSettings(int numberOfPlayers, int numberOfRounds, bool randomGames, List<string>? gamesList);
 
-   public string? CanJoinLobby(string code, string playerName);
+   public string? CanJoinLobby(string code, Guid userId);
 
    public MatchSession? GetMatchSession(string code);
 }

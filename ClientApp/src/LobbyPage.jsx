@@ -12,12 +12,14 @@ const gameComponents = {
 };
 
 function LobbyPage() {
-   const token = localStorage.getItem("guestToken");
+   const token = localStorage.getItem("userToken");
    const { code } = useParams();
    const navigate = useNavigate();
-   const [user, setUser] = useState({ name: "Loading..." });
+   const [totalRounds, setTotalRounds] = useState(1);
+   const [currentRound, setCurrentRound] = useState(1);
+   const [user, setUser] = useState({ name: "Loading...", id: "" });
    const [connection, setConnection] = useState(null);
-   const [players, setPlayers] = useState([]);
+   const [players, setPlayers] = useState([{ name: "", wins: 0 }]);
    const [message, setMessage] = useState("");
 
    const connectedRef = useRef(false);
@@ -49,34 +51,39 @@ function LobbyPage() {
          setUser(userData);
 
          conn = new HubConnectionBuilder()
-            .withUrl(`http://localhost:5243/matchHub?code=${code}&playerName=${userData.name}`, {
+            .withUrl(`http://localhost:5243/matchHub?code=${code}`, {
                accessTokenFactory: () => token
             })
             .withAutomaticReconnect()
             .build();
 
-         conn.on("PlayersUpdated", async () => {
+         conn.on("PlayersUpdated", async (roundInfo) => {
             try {
-               const names = await conn.invoke("GetPlayers", code);
-               setPlayers(names);
+               if(roundInfo) {
+                  setCurrentRound(roundInfo.currentRound);
+                  setTotalRounds(roundInfo.totalRounds);
+               }
+
+               const playerInfo = await conn.invoke("GetPlayers", code);
+               setPlayers(playerInfo);
             } catch {
                setPlayers([]);
             }
          });
+
          conn.on("MatchStarted", (data) => {
             console.log("Match started!", data);
             setGameType(data.gameType);
             setPhase("game");
          });
 
-
          try {
             await conn.start();
             setConnection(conn);
             setMessage(`Connected to lobby ${code}`);
 
-            const names = await conn.invoke("GetPlayers", code);
-            setPlayers(names);
+            const playerInfo = await conn.invoke("GetPlayers", code);
+            setPlayers(playerInfo);
          } catch (err) {
             console.error("Connection failed:", err);
             setMessage("Connection failed.");
@@ -106,7 +113,7 @@ function LobbyPage() {
       const GameComponent = gameComponents[gameType];
       return <GameComponent
          gameId={code}
-         playerName={user.name}
+         playerId={user.id}
          connection={connection}
          onReturnToLobby={() => setPhase("lobby")}
       />;
@@ -121,10 +128,13 @@ function LobbyPage() {
 
          <button onClick={() => startMatch()}>Start Match</button>
 
+         <p>Round {currentRound}/{totalRounds}</p>
          <h3>Players in Lobby:</h3>
          <ul>
-            {players.map((name, idx) => (
-               <li key={idx}>{name}</li>
+            {players.map((player, idx) => (
+               <li key={idx}>
+                  {player.name} - Wins: {player.wins ?? 0}
+               </li>
             ))}
          </ul>
       </div>

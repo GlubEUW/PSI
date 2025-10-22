@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function TicTacToe({ gameId, playerName, connection, onReturnToLobby }) {
+function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
    const [board, setBoard] = useState([
       [0, 0, 0],
       [0, 0, 0],
@@ -47,7 +47,7 @@ function TicTacToe({ gameId, playerName, connection, onReturnToLobby }) {
    const handleClick = (x, y) => {
       if (!connection || board[x][y] !== 0 || winner) return;
 
-      connection.invoke("MakeMove", { PlayerName: playerName, X: x, Y: y })
+      connection.invoke("MakeMove", { PlayerId: playerId, X: x, Y: y })
          .catch(err => console.error("Move failed:", err));
    };
 

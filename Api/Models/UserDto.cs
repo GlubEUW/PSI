@@ -1,3 +1,3 @@
 namespace Api.Models;
 
-public record class UserDto(string Name);
+public record UserDto(string Name, Guid Id);

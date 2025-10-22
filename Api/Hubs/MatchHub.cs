@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.SignalR;
-using Api.Services;
 using System.Text.Json;
+using System.Security.Claims;
+using Api.Services;
+using Api.Entities;
+using Api.Models;
 
 namespace Api.Hubs;
 
@@ -8,7 +11,7 @@ public class MatchHub : Hub
 {
    private enum ContextKeys
    {
-      PlayerName,
+      User,
       Code
    }
    private readonly ILobbyService _lobbyService;
@@ -30,16 +33,32 @@ public class MatchHub : Hub
       }
 
       var code = httpContext.Request.Query["code"].ToString();
-      var playerName = httpContext.Request.Query["playerName"].ToString();
-
-      if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(playerName))
+      if (string.IsNullOrEmpty(code))
       {
          await Clients.Caller.SendAsync("Error", "Invalid connection parameters.");
          Context.Abort();
          return;
       }
 
-      var joined = await _lobbyService.JoinMatch(code, playerName);
+      var userName = Context.User?.Identity?.Name;
+      var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userRole = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
+
+      if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(userRole))
+      {
+         await Clients.Caller.SendAsync("Error", "User not authenticated.");
+         Context.Abort();
+         return;
+      }
+
+      var user = new User
+      {
+         Id = Guid.Parse(userId),
+         Name = userName,
+         Role = Enum.Parse<UserRole>(userRole)
+      };
+
+      var joined = await _lobbyService.JoinMatch(code, user);
       if (joined is not null)
       {
          await Clients.Caller.SendAsync("Error", "Could not join the match.");
@@ -47,49 +66,56 @@ public class MatchHub : Hub
          return;
       }
 
-      if (!_lobbyService.AddGameId(code, playerName))
+      if (!_lobbyService.AddGameId(code: code, userId: user.Id))
       {
          await Clients.Caller.SendAsync("Error", "Could not add gameId.");
          Context.Abort();
          return;
       }
 
+
       Context.Items.Add(ContextKeys.Code, code);
-      Context.Items.Add(ContextKeys.PlayerName, playerName);
+      Context.Items.Add(ContextKeys.User, user);
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
-      await Clients.Group(code).SendAsync("PlayersUpdated", playerName);
-      Console.WriteLine($"Player {playerName} connected to lobby {code}");
+      
+      var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+      await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+      Console.WriteLine($"Player {user.Name} connected to lobby {code}");
       await base.OnConnectedAsync();
    }
 
    public override async Task OnDisconnectedAsync(Exception? exception)
    {
       var code = Context.Items[ContextKeys.Code] as string;
-      var playerName = Context.Items[ContextKeys.PlayerName] as string;
+      var user = Context.Items[ContextKeys.User] as User;
 
-      Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
-
-      if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(playerName))
+      if (!string.IsNullOrEmpty(code) && user is not null)
       {
-         Console.WriteLine($"Player {playerName} disconnected from lobby {code}");
-         await _lobbyService.LeaveMatch(code, playerName);
+
+         Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
+         await _lobbyService.LeaveMatch(code, user.Id);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
-         await Clients.Group(code).SendAsync("PlayersUpdated", playerName);
+         
+         var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+         await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       }
       else
       {
          Console.WriteLine("Could not retrieve lobby code or player name on disconnect.");
       }
 
-      if (!_lobbyService.RemoveGameId(code, playerName))
-         Console.WriteLine($"Failed to remove gameId for player {playerName}");
+      if (user is not null && !_lobbyService.RemoveGameId(code, user.Id))
+         Console.WriteLine($"Failed to remove gameId for player {user.Name}");
 
       await base.OnDisconnectedAsync(exception);
    }
 
-   public Task<List<string>> GetPlayers(string code)
+   public Task<List<PlayerInfoDto>> GetPlayers(string code)
    {
-      return Task.FromResult(_lobbyService.GetPlayersInLobby(code));
+      var players = _lobbyService.GetPlayersInLobby(code);
+      var playerNames = players.Select(p => p.Name).ToList();
+      var playerDtos = players.Select(p => new PlayerInfoDto(p.Name, p.Wins)).ToList();
+      return Task.FromResult(playerDtos);
    }
 
    public async Task StartMatch()
@@ -118,7 +144,7 @@ public class MatchHub : Hub
       {
          gameType = selectedGameType,
          gameId = code,
-         players,
+         playerIds = players.Select(p => p.Id).ToList(),
          initialState = _gameService.GetGameState(code),
          round = session.CurrentRound + 1
       });
@@ -130,8 +156,8 @@ public class MatchHub : Hub
    public async Task MakeMove(JsonElement moveData)
    {
       var code = Context.Items[ContextKeys.Code] as string;
-      var playerName = Context.Items[ContextKeys.PlayerName] as string;
-      if (_lobbyService.TryGetGameId(code, playerName, out var gameId) && gameId is not null)
+      var user = Context.Items[ContextKeys.User] as User;
+      if (user is not null && _lobbyService.TryGetGameId(code, user.Id, out var gameId) && gameId is not null)
       {
          if (_gameService.MakeMove(gameId, moveData, out var newState))
          {
@@ -142,6 +168,12 @@ public class MatchHub : Hub
 
    public async Task EndGame(string gameId)
    {
+      var code = Context.Items[ContextKeys.Code] as string;
+      if (!string.IsNullOrEmpty(code))
+      {
+         var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+         await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+      }
       _gameService.RemoveGame(gameId);
    }
 
