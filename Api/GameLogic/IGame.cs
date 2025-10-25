@@ -4,7 +4,7 @@ namespace Api.GameLogic;
 
 public interface IGame
 {
-   string GameType { get; }
-   object GetState();
-   bool MakeMove(JsonElement moveData);
+   public string GameType { get; }
+   public object GetState();
+   public bool MakeMove(JsonElement moveData);
 }
