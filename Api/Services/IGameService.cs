@@ -5,8 +5,8 @@ namespace Api.Services;
 
 public interface IGameService
 {
-   bool StartGame(string gameId, string gameType, List<User> players);
-   bool RemoveGame(string gameId);
-   bool MakeMove(string gameId, JsonElement data, out object? newState);
-   object? GetGameState(string gameId);
+   public bool StartGame(string gameId, string gameType, List<User> players);
+   public bool RemoveGame(string gameId);
+   public bool MakeMove(string gameId, JsonElement data, out object? newState);
+   public object? GetGameState(string gameId);
 }

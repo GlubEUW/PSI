@@ -11,6 +11,5 @@ public class MatchSession
    public int NumberOfRounds { get; set; } = 1;
    public int CurrentRound { get; set; } = 0;
    public bool InGame { get; set; }
-
    public readonly Dictionary<Guid, string> _gameIdByUserId = new();
 }

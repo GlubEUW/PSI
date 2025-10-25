@@ -1,10 +1,7 @@
+using Api.Enums;
+
 namespace Api.Entities;
 
-public enum UserRole
-{
-   Guest,
-   Registered
-}
 public class User : IComparable<User> // Usage of standard DOTNET interface
 {
    public Guid Id { get; set; } = Guid.Empty;

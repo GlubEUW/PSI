@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Api.Entities;
 using Api.Models;
+using Api.Enums;
 
 namespace Api.Services;
 
@@ -25,24 +26,24 @@ public class AuthService(IConfiguration configuration) : IAuthService
    private string CreateToken(User user)
    {
       var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.Name),
-        new Claim(ClaimTypes.Role, user.Role.ToString())
-    };
+   {
+      new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+      new Claim(ClaimTypes.Name, user.Name),
+      new Claim(ClaimTypes.Role, user.Role.ToString())
+   };
 
       var privateKey = new SymmetricSecurityKey(
-          Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!)
+         Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!)
       );
 
       var creds = new SigningCredentials(privateKey, SecurityAlgorithms.HmacSha256);
 
       var tokenDescriptor = new JwtSecurityToken(
-          issuer: configuration.GetValue<string>("AppSettings:Issuer"),
-          audience: configuration.GetValue<string>("AppSettings:Audience"),
-          claims: claims,
-          expires: DateTime.UtcNow.AddMinutes(configuration.GetValue<int>("AppSettings:TokenExpiryMinutes")),
-          signingCredentials: creds
+            issuer: configuration.GetValue<string>("AppSettings:Issuer"),
+            audience: configuration.GetValue<string>("AppSettings:Audience"),
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(configuration.GetValue<int>("AppSettings:TokenExpiryMinutes")),
+            signingCredentials: creds
       );
 
       var handler = new JwtSecurityTokenHandler();
