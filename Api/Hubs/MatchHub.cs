@@ -8,21 +8,15 @@ using Api.Enums;
 
 namespace Api.Hubs;
 
-public class MatchHub : Hub
+public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hub
 {
    private enum ContextKeys
    {
       User,
       Code
    }
-   private readonly ILobbyService _lobbyService;
-   private readonly IGameService _gameService;
-
-   public MatchHub(ILobbyService lobbyService, IGameService gameService)
-   {
-      _lobbyService = lobbyService;
-      _gameService = gameService;
-   }
+   private readonly ILobbyService _lobbyService = lobbyService;
+   private readonly IGameService _gameService = gameService;
 
    public override async Task OnConnectedAsync()
    {
