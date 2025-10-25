@@ -51,12 +51,6 @@ csharp_style_expression_bodied_lambdas = true:error        # Support concise lam
 csharp_style_expression_bodied_local_functions = false:error  # Enforce full local function syntax
 
 ##############################
-# 🧱 Braces and structure
-##############################
-
-csharp_prefer_braces = true:error  # Always require braces for control flow (if, while, etc.)
-
-##############################
 # 🎯 Miscellaneous style preferences
 ##############################
 
