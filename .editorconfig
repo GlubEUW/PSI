@@ -54,20 +54,17 @@ csharp_style_expression_bodied_local_functions = false:error  # Enforce full loc
 # 🎯 Miscellaneous style preferences
 ##############################
 
-dotnet_style_prefer_auto_properties = true:error           # Prefer get/set over full backing fields
-dotnet_style_object_initializer = true:error               # Encourage object initializers
-dotnet_style_collection_initializer = true:error           # Favor collection initializers like `new[] { }`
-dotnet_style_prefer_simplified_boolean_expressions = true:error
-dotnet_style_prefer_conditional_expression_over_assignment = true:error
-dotnet_style_prefer_conditional_expression_over_return = true:error
-dotnet_style_coalesce_expression = true:error              # Prefer `??` operator
-dotnet_style_null_propagation = true:error                 # Prefer `?.` null-safe access
-dotnet_style_prefer_is_null_check_over_reference_equality_method = true:error
-dotnet_style_prefer_inferred_tuple_names = true:error
-dotnet_style_explicit_tuple_names = true:error
-dotnet_style_prefer_inferred_anonymous_type_member_names = true:error
-dotnet_style_prefer_compound_assignment = true:error       # Prefer `+=` over `x = x + y`
-dotnet_style_prefer_simplified_interpolation = true:error  # Encourage $"{name}" style
+dotnet_style_object_initializer = true:error               # Encourage object initializers https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0017
+dotnet_style_collection_initializer = true:error           # Favor collection initializers like `new[] { }` https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0028
+dotnet_style_prefer_simplified_boolean_expressions = true:suggestion # Simplify boolean expressions where possible https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0075
+dotnet_style_coalesce_expression = true:error              # Prefer `??` operator https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0029-ide0030-ide0270
+dotnet_style_null_propagation = true:error                 # Prefer `?.` null-safe access https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0031
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:error # Use `is null` instead of `Object.ReferenceEquals` or '==' operator https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0091
+dotnet_style_prefer_inferred_tuple_names = true:suggestion # Use inferred names in tuples https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0037
+dotnet_style_explicit_tuple_names = true:suggestion        # Enforce explicit tuple element names https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0033
+dotnet_style_prefer_inferred_anonymous_type_member_names = true:error # Use inferred names in anonymous types https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0037S
+dotnet_style_prefer_compound_assignment = true:error       # Prefer `+=` over `x = x + y` https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0054-ide0074
+dotnet_style_prefer_simplified_interpolation = true:error  # Encourage $"{name}" style https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0071
 
 ##############################
 # 🧭 Top-level and modern features
