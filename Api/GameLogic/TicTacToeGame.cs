@@ -38,7 +38,7 @@ public class TicTacToeGame : IGame
    {
       if (!moveData.TryDeserialize(out TicTacToeMove move))
          return false;
-         
+
       return ApplyMove(move.PlayerId, move.X, move.Y);
    }
 
@@ -49,8 +49,8 @@ public class TicTacToeGame : IGame
 
       if (Board[x][y] != (int)State.Empty)
          return false;
-         
-      if (playerId != PlayerTurn) 
+
+      if (playerId != PlayerTurn)
          return false;
 
       Board[x][y] = (int)PlayerSigns[playerId];
@@ -76,7 +76,7 @@ public class TicTacToeGame : IGame
    {
       foreach (var s in new[] { State.X, State.O })
       {
-         for (int i = 0; i < 3; i++)
+         for (var i = 0; i < 3; i++)
          {
             if (Board.IsRowEqual(i, s) || Board.IsColumnEqual(i, s))
             {

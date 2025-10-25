@@ -20,7 +20,7 @@ public class LobbyService() : ILobbyService
          numberOfRnds ?? 1
       );
    }
-   
+
    public bool AddGameId(string code, Guid userId, string gameId = "")
    {
       if (string.IsNullOrEmpty(gameId))
@@ -90,11 +90,11 @@ public class LobbyService() : ILobbyService
    {
       if (!_sessions.TryGetValue(code, out var session))
          return Task.FromResult<string?>("Game does not exist.");
-      
+
       var error = CanJoinLobby(code, user.Id);
       if (error is null)
          session.Players.Add(user);
-      
+
       return Task.FromResult(error);
    }
 
@@ -108,7 +108,7 @@ public class LobbyService() : ILobbyService
 
          if (session.Players.Count == 0)
             return Task.FromResult(_sessions.TryRemove(code, out _));
-         
+
          return Task.FromResult(true);
       }
       return Task.FromResult(false);
@@ -120,13 +120,13 @@ public class LobbyService() : ILobbyService
       {
          if (session.InGame)
             return "Game already started.";
-         
+
          if (session.Players.Count >= session.Players.Capacity)
             return "Lobby is full.";
-         
+
          if (session.Players.Any(u => u.Id == userId))
             return "Name already taken.";
-         
+
          return null;
       }
       return "Game does not exist.";
@@ -162,7 +162,7 @@ public class LobbyService() : ILobbyService
    {
       if (_sessions.TryGetValue(code, out var session))
          return session;
-         
+
       return null;
    }
 
@@ -173,7 +173,7 @@ public class LobbyService() : ILobbyService
       var random = new Random();
       var games = new List<string>();
 
-      for (int i = 0; i < count; i++)
+      for (var i = 0; i < count; i++)
       {
          games.Add(availableGames[random.Next(availableGames.Length)]);
       }

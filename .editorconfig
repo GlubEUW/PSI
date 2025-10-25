@@ -32,9 +32,9 @@ dotnet_diagnostic.IDE0005.severity = error
 ##############################
 
 # ❌ Prevent use of 'var' even if type is obvious—enforce explicit types
-csharp_style_var_for_built_in_types = false:error
-csharp_style_var_when_type_is_apparent = false:error
-csharp_style_var_elsewhere = true:suggestion         # Allow 'var' only when type is complex or unclear
+csharp_style_var_for_built_in_types = true:error
+csharp_style_var_when_type_is_apparent = true:error
+
 
 ##############################
 # 📐 Code style: expression-bodied members
@@ -135,6 +135,6 @@ dotnet_naming_style.simple_camel_case.word_separator =
 ##############################
 
 [*.{cs,vb}]
-tab_width = 4
-indent_size = 4
+tab_width = 3
+indent_size = 3
 end_of_line = crlf
