@@ -100,8 +100,6 @@ function LobbyPage() {
       };
    }, [code]);
 
-
-
    const startMatch = async () => {
       if (!connection) return;
       try {
@@ -110,7 +108,6 @@ function LobbyPage() {
          console.error(err);
       }
    };
-
 
    if (phase === "game" && gameType) {
       const GameComponent = gameComponents[gameType];
@@ -127,7 +124,6 @@ function LobbyPage() {
          <h2>Lobby {code}</h2>
          <p>Your name is: {user.name}</p>
          <p>{message}</p>
-
 
          <button onClick={() => startMatch()}>Start Match</button>
 

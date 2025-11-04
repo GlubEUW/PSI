@@ -39,7 +39,6 @@ builder.Services.AddSwaggerGen(c =>
    });
 });
 
-
 builder.Services.AddCors(options => options.AddPolicy("AllowClient", policy =>
       policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
@@ -92,7 +91,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<MatchHub>("/matchHub");
-
 
 if (app.Environment.IsDevelopment())
 {

@@ -166,7 +166,6 @@ public class LobbyService() : ILobbyService
       return null;
    }
 
-
    private List<string> GenerateRandomGames(int count)
    {
       var availableGames = GameFactory.ValidGameTypes.ToArray();

@@ -68,7 +68,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          return;
       }
 
-
       Context.Items.Add(ContextKeys.Code, code);
       Context.Items.Add(ContextKeys.User, user);
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
@@ -146,7 +145,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
 
       session.CurrentRound++;
    }
-
 
    public async Task MakeMove(JsonElement moveData)
    {
