@@ -1,10 +1,22 @@
 using System.Text.Json;
+
 using Api.Entities;
-using Api.Enums;
-using Api.Structs;
 
 namespace Api.GameLogic;
 
+public enum RpsChoice
+{
+   None = 0,
+   Rock = 1,
+   Paper = 2,
+   Scissors = 3
+}
+
+public struct RpsMove
+{
+   public required Guid PlayerId { get; set; }
+   public RpsChoice Choice { get; set; }
+}
 public class RpsGame : IGame
 {
    public string GameType => "RockPaperScissors";
