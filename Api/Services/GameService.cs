@@ -5,7 +5,6 @@ using Api.GameLogic;
 
 namespace Api.Services;
 
-
 public class GameService : IGameService
 {
    private static readonly ConcurrentDictionary<string, IGame> _games = new();
@@ -36,6 +35,7 @@ public class GameService : IGameService
       var removed = _games.TryRemove(gameId, out _);
       if (removed)
          Console.WriteLine($"Game {gameId} removed.");
+
       return removed;
    }
 

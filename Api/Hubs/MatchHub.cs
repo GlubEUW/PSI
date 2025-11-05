@@ -4,24 +4,19 @@ using System.Security.Claims;
 using Api.Services;
 using Api.Entities;
 using Api.Models;
+using Api.Enums;
 
 namespace Api.Hubs;
 
-public class MatchHub : Hub
+public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hub
 {
    private enum ContextKeys
    {
       User,
       Code
    }
-   private readonly ILobbyService _lobbyService;
-   private readonly IGameService _gameService;
-
-   public MatchHub(ILobbyService lobbyService, IGameService gameService)
-   {
-      _lobbyService = lobbyService;
-      _gameService = gameService;
-   }
+   private readonly ILobbyService _lobbyService = lobbyService;
+   private readonly IGameService _gameService = gameService;
 
    public override async Task OnConnectedAsync()
    {
@@ -73,11 +68,10 @@ public class MatchHub : Hub
          return;
       }
 
-
       Context.Items.Add(ContextKeys.Code, code);
       Context.Items.Add(ContextKeys.User, user);
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
-      
+
       var roundInfo = _lobbyService.GetMatchRoundInfo(code);
       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       Console.WriteLine($"Player {user.Name} connected to lobby {code}");
@@ -95,7 +89,7 @@ public class MatchHub : Hub
          Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
          await _lobbyService.LeaveMatch(code, user.Id);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
-         
+
          var roundInfo = _lobbyService.GetMatchRoundInfo(code);
          await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       }
@@ -152,7 +146,6 @@ public class MatchHub : Hub
       session.CurrentRound++;
    }
 
-
    public async Task MakeMove(JsonElement moveData)
    {
       var code = Context.Items[ContextKeys.Code] as string;
@@ -160,9 +153,7 @@ public class MatchHub : Hub
       if (user is not null && _lobbyService.TryGetGameId(code, user.Id, out var gameId) && gameId is not null)
       {
          if (_gameService.MakeMove(gameId, moveData, out var newState))
-         {
             await Clients.Group(gameId).SendAsync("GameUpdate", newState);
-         }
       }
    }
 

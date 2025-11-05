@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Api.Entities;
 
 namespace Api.GameLogic;
@@ -11,6 +12,11 @@ public enum RpsChoice
    Scissors = 3
 }
 
+public struct RpsMove
+{
+   public required Guid PlayerId { get; set; }
+   public RpsChoice Choice { get; set; }
+}
 public class RpsGame : IGame
 {
    public string GameType => "RockPaperScissors";
@@ -77,10 +83,4 @@ public class RpsGame : IGame
       Players[1].Wins++;
       return $"{Players[1].Name} wins!";
    }
-}
-
-public struct RpsMove
-{
-   public required Guid PlayerId { get; set; }
-   public RpsChoice Choice { get; set; }
 }

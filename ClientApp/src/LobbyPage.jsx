@@ -27,7 +27,9 @@ function LobbyPage() {
    const [gameType, setGameType] = useState("TicTacToe");
 
    useEffect(() => {
-      if (connectedRef.current) return;
+      if (connectedRef.current)
+         return;
+
       connectedRef.current = true;
 
       document.title = "Lobby: " + code;
@@ -59,7 +61,7 @@ function LobbyPage() {
 
          conn.on("PlayersUpdated", async (roundInfo) => {
             try {
-               if(roundInfo) {
+               if (roundInfo) {
                   setCurrentRound(roundInfo.currentRound);
                   setTotalRounds(roundInfo.totalRounds);
                }
@@ -93,11 +95,10 @@ function LobbyPage() {
       connect();
 
       return () => {
-         if (conn) conn.stop();
+         if (conn)
+            conn.stop();
       };
    }, [code]);
-
-
 
    const startMatch = async () => {
       if (!connection) return;
@@ -107,7 +108,6 @@ function LobbyPage() {
          console.error(err);
       }
    };
-
 
    if (phase === "game" && gameType) {
       const GameComponent = gameComponents[gameType];
@@ -124,7 +124,6 @@ function LobbyPage() {
          <h2>Lobby {code}</h2>
          <p>Your name is: {user.name}</p>
          <p>{message}</p>
-
 
          <button onClick={() => startMatch()}>Start Match</button>
 
