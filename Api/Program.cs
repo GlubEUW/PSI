@@ -1,8 +1,10 @@
 using System.Text;
 using Api.Hubs;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Api.Services;
+using Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,6 +78,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
          }
       };
    });
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<DatabaseContext>(options =>
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+        npgsqlOptions.CommandTimeout(120)
+    ));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IGameService, GameService>();
