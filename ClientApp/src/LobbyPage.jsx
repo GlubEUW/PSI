@@ -1,15 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { GetGuestUser } from "./api/user";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
-import TicTacToe from "./TicTacToe.jsx";
-import Rps from "./Rps.jsx";
-
-const gameComponents = {
-   TicTacToe: TicTacToe,
-   RockPaperScissors: Rps
-   // Future games can be added here
-};
 
 function LobbyPage() {
    const token = localStorage.getItem("userToken");
@@ -23,8 +15,6 @@ function LobbyPage() {
    const [message, setMessage] = useState("");
 
    const connectedRef = useRef(false);
-   const [phase, setPhase] = useState("lobby");
-   const [gameType, setGameType] = useState("TicTacToe");
 
    useEffect(() => {
       if (connectedRef.current)
@@ -75,8 +65,10 @@ function LobbyPage() {
 
          conn.on("MatchStarted", (data) => {
             console.log("Match started!", data);
-            setGameType(data.gameType);
-            setPhase("game");
+            navigate("game", {
+               state: { gameType: data.gameType },
+               replace: false
+            });
          });
 
          try {
@@ -98,7 +90,7 @@ function LobbyPage() {
          if (conn)
             conn.stop();
       };
-   }, [code]);
+   }, [code, navigate, token]);
 
    const startMatch = async () => {
       if (!connection) return;
@@ -109,34 +101,31 @@ function LobbyPage() {
       }
    };
 
-   if (phase === "game" && gameType) {
-      const GameComponent = gameComponents[gameType];
-      return <GameComponent
-         gameId={code}
-         playerId={user.id}
-         connection={connection}
-         onReturnToLobby={() => setPhase("lobby")}
-      />;
-   }
+   const outletContext = { connection, user, code };
 
    return (
-      <div>
-         <h2>Lobby {code}</h2>
-         <p>Your name is: {user.name}</p>
-         <p>{message}</p>
+      <>
+         <Outlet context={outletContext} />
+         {!window.location.pathname.includes('/game') && (
+            <div>
+               <h2>Lobby {code}</h2>
+               <p>Your name is: {user.name}</p>
+               <p>{message}</p>
 
-         <button onClick={() => startMatch()}>Start Match</button>
+               <button onClick={() => startMatch()}>Start Match</button>
 
-         <p>Round {currentRound}/{totalRounds}</p>
-         <h3>Players in Lobby:</h3>
-         <ul>
-            {players.map((player, idx) => (
-               <li key={idx}>
-                  {player.name} - Wins: {player.wins ?? 0}
-               </li>
-            ))}
-         </ul>
-      </div>
+               <p>Round {currentRound}/{totalRounds}</p>
+               <h3>Players in Lobby:</h3>
+               <ul>
+                  {players.map((player, idx) => (
+                     <li key={idx}>
+                        {player.name} - Wins: {player.wins ?? 0}
+                     </li>
+                  ))}
+               </ul>
+            </div>
+         )}
+      </>
    );
 }
 

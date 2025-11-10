@@ -1,5 +1,7 @@
 using Api.Data;
 using Api.Entities;
+using Api.Enums;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,102 +9,97 @@ namespace Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TestController : ControllerBase
+public class TestController(DatabaseContext context) : ControllerBase
 {
-    private readonly DatabaseContext _context;
+   private readonly DatabaseContext _context = context;
 
-    public TestController(DatabaseContext context)
-    {
-        _context = context;
-    }
+   [HttpPost("insert-sample")]
+   public async Task<IActionResult> InsertSample()
+   {
+      try
+      {
+         var user = new User
+         {
+            Id = Guid.NewGuid(),
+            Name = "TestUser_" + DateTime.UtcNow.Ticks,
+            Role = UserRole.Guest,
+            Wins = 5
+         };
 
-    [HttpPost("insert-sample")]
-    public async Task<IActionResult> InsertSample()
-    {
-        try
-        {
-            var user = new User
+         await _context.Users.AddAsync(user);
+         await _context.SaveChangesAsync();
+
+         return Ok(new
+         {
+            message = "User inserted successfully!",
+            user = new
             {
-                Id = Guid.NewGuid(),
-                Name = "TestUser_" + DateTime.UtcNow.Ticks,
-                Role = UserRole.Guest,
-                Wins = 5
-            };
+               user.Id,
+               user.Name,
+               user.Role,
+               user.Wins
+            }
+         });
+      }
+      catch (Exception ex)
+      {
+         return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+      }
+   }
 
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+   [HttpGet("read-all")]
+   public async Task<IActionResult> ReadAll()
+   {
+      try
+      {
+         var users = await _context.Users.ToListAsync();
 
-            return Ok(new
+         return Ok(new
+         {
+            count = users.Count,
+            users = users.Select(u => new
             {
-                message = "User inserted successfully!",
-                user = new
-                {
-                    user.Id,
-                    user.Name,
-                    user.Role,
-                    user.Wins
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
-        }
-    }
+               u.Id,
+               u.Name,
+               u.Role,
+               u.Wins
+            })
+         });
+      }
+      catch (Exception ex)
+      {
+         return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+      }
+   }
 
-    [HttpGet("read-all")]
-    public async Task<IActionResult> ReadAll()
-    {
-        try
-        {
-            var users = await _context.Users.ToListAsync();
+   [HttpGet("test-connection")]
+   public async Task<IActionResult> TestConnection()
+   {
+      try
+      {
+         var canConnect = await _context.Database.CanConnectAsync();
+         return Ok(new { connected = canConnect, message = "Database connection test" });
+      }
+      catch (Exception ex)
+      {
+         return StatusCode(500, new { error = ex.Message });
+      }
+   }
 
-            return Ok(new
-            {
-                count = users.Count,
-                users = users.Select(u => new
-                {
-                    u.Id,
-                    u.Name,
-                    u.Role,
-                    u.Wins
-                })
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
-        }
-    }
+   [HttpDelete("clear-all")]
+   public async Task<IActionResult> ClearAll()
+   {
+      try
+      {
+         var users = await _context.Users.ToListAsync();
+         _context.Users.RemoveRange(users);
+         await _context.SaveChangesAsync();
 
-    [HttpGet("test-connection")]
-    public async Task<IActionResult> TestConnection()
-    {
-        try
-        {
-            var canConnect = await _context.Database.CanConnectAsync();
-            return Ok(new { connected = canConnect, message = "Database connection test" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
-    [HttpDelete("clear-all")]
-    public async Task<IActionResult> ClearAll()
-    {
-        try
-        {
-            var users = await _context.Users.ToListAsync();
-            _context.Users.RemoveRange(users);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = $"Deleted {users.Count} users" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
+         return Ok(new { message = $"Deleted {users.Count} users" });
+      }
+      catch (Exception ex)
+      {
+         return StatusCode(500, new { error = ex.Message });
+      }
+   }
 }
