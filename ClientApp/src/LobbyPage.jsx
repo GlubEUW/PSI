@@ -66,7 +66,13 @@ function LobbyPage() {
          conn.on("MatchStarted", (data) => {
             console.log("Match started!", data);
             navigate("game", {
-               state: { gameType: data.gameType },
+               state: {
+                  gameType: data.gameType,
+                  gameId: data.gameId,
+                  playerIds: data.playerIds,
+                  initialState: data.initialState,
+                  round: data.round
+               },
                replace: false
             });
          });

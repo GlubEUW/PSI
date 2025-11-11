@@ -15,7 +15,6 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
          return;
       }
 
-      // Listen for game updates
       const handleGameUpdate = (game) => {
          console.log("Game update received:", game);
          if (game.board) {
@@ -44,19 +43,28 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
       };
    }, [connection, gameId]);
 
-   const handleClick = (x, y) => {
-      if (!connection || board[x][y] !== 0 || winner) 
-         return;
+   const handleClick = (row, col) => {
+      console.log(`Clicked cell [${row}][${col}], current value:`, board[row][col]);
 
-      connection.invoke("MakeMove", { PlayerId: playerId, X: x, Y: y })
+      if (!connection || board[row][col] !== 0 || winner) {
+         console.log("Move blocked:", {
+            hasConnection: !!connection,
+            cellValue: board[row][col],
+            winner
+         });
+         return;
+      }
+
+      console.log("Sending move:", { PlayerId: playerId, X: row, Y: col });
+
+      connection.invoke("MakeMove", { PlayerId: playerId, X: row, Y: col })
          .catch(err => console.error("Move failed:", err));
    };
-
    const returnToLobby = () => {
-      if (connection) 
+      if (connection)
          connection.invoke("EndGame", gameId)
             .catch(err => console.error("Failed to end game:", err));
-      
+
       onReturnToLobby();
    };
 
