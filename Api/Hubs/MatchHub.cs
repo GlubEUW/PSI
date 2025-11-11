@@ -55,16 +55,10 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          return;
       }
 
-      if (!_lobbyService.AddGameId(code: code, userId: user.Id))
-      {
-         await Clients.Caller.SendAsync("Error", "Could not add gameId.");
-         Context.Abort();
-         return;
-      }
-
       Context.Items.Add(ContextKeys.Code, code);
       Context.Items.Add(ContextKeys.User, user);
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
+      await Groups.AddToGroupAsync(Context.ConnectionId, user.Id.ToString());
 
       var roundInfo = _lobbyService.GetMatchRoundInfo(code);
       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
@@ -83,6 +77,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
          await _lobbyService.LeaveMatch(code, user.Id);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
+         await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.Id.ToString());
 
          var roundInfo = _lobbyService.GetMatchRoundInfo(code);
          await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
@@ -92,10 +87,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          Console.WriteLine("Could not retrieve lobby code or player name on disconnect.");
       }
 
-      if (user is not null && !_lobbyService.RemoveGameId(code, user.Id))
-         Console.WriteLine($"Failed to remove gameId for player {user.Name}");
-
-      await base.OnDisconnectedAsync(exception);
    }
 
    public Task<List<PlayerInfoDto>> GetPlayers(string code)
@@ -122,45 +113,116 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       session.InGame = true;
       var players = _lobbyService.GetPlayersInLobby(code);
 
-      if (!_gameService.StartGame(code, selectedGameType, players))
+      var playersPerGame = 2;
+      var pair = 0;
+      var playerGroups = new List<List<User>>();
+      var currentGroup = new List<User>();
+
+      foreach (var player in players)
       {
-         await Clients.Caller.SendAsync("Error", "Failed to start the game.");
-         return;
+         currentGroup.Add(player);
+         pair++;
+
+         if (pair == playersPerGame)
+         {
+            playerGroups.Add(currentGroup);
+            currentGroup = new List<User>();
+            pair = 0;
+         }
+      }
+      if (currentGroup.Count > 0)
+      {
+         playerGroups.Add(currentGroup);
       }
 
-      await Clients.Group(code).SendAsync("MatchStarted", new
+      session.PlayerGroups = playerGroups;
+      _lobbyService.ResetRoundEndTracking(code);
+      var i = 0;
+      foreach (var group in playerGroups)
       {
-         gameType = selectedGameType,
-         gameId = code,
-         playerIds = players.Select(p => p.Id).ToList(),
-         initialState = _gameService.GetGameState(code),
-         round = session.CurrentRound + 1
-      });
+         var gameId = $"{code}_G{i}_R{session.CurrentRound}";
+         if (!_gameService.StartGame(gameId, selectedGameType, group))
+         {
+            await Clients.Caller.SendAsync("Error", "Failed to start the game.");
+            return;
+         }
 
+
+         foreach (var player in group)
+         {
+            _lobbyService.AddGameId(code, player.Id, gameId);
+            await Clients.Group(player.Id.ToString()).SendAsync("MatchStarted", new
+            {
+               gameType = selectedGameType,
+               gameId = $"{code}_G{i}_R{session.CurrentRound}",
+               playerIds = group.Select(p => p.Id),
+               initialState = _gameService.GetGameState($"{code}_G{i}_R{session.CurrentRound}"),
+               round = session.CurrentRound + 1
+            });
+         }
+
+         i++;
+
+      }
       session.CurrentRound++;
    }
 
    public async Task MakeMove(JsonElement moveData)
    {
-      var code = Context.Items[ContextKeys.Code] as string;
-      var user = Context.Items[ContextKeys.User] as User;
-      if (user is not null && _lobbyService.TryGetGameId(code, user.Id, out var gameId) && gameId is not null)
+      var code = Context.Items[ContextKeys.Code] as string
+          ?? throw new InvalidOperationException("Code not found in context");
+
+      var user = Context.Items[ContextKeys.User] as User
+          ?? throw new InvalidOperationException("User not found in context");
+
+      var session = _lobbyService.GetMatchSession(code)
+          ?? throw new InvalidOperationException($"Match session not found for code: {code}");
+
+      if (!_lobbyService.TryGetGameId(code, user.Id, out var gameId) || gameId is null)
       {
-         if (_gameService.MakeMove(gameId, moveData, out var newState))
-            await Clients.Group(gameId).SendAsync("GameUpdate", newState);
+         await Clients.Caller.SendAsync("Error", "You are not currently in an active game.");
+         return;
       }
+
+      if (!_gameService.MakeMove(gameId, moveData, out var newState))
+         return;
+
+      var targetGroup = session.PlayerGroups.FirstOrDefault(g => g.Any(p => p.Id == user.Id));
+      if (targetGroup is null)
+      {
+         await Clients.Caller.SendAsync("Error", "Your player group could not be found.");
+         return;
+      }
+
+      var notifyTasks = targetGroup.Select(p =>
+          Clients.Group(p.Id.ToString()).SendAsync("GameUpdate", newState)
+      );
+
+      await Task.WhenAll(notifyTasks);
    }
+
+
 
    public async Task EndGame(string gameId)
    {
-      var code = Context.Items[ContextKeys.Code] as string;
-      if (!string.IsNullOrEmpty(code))
+      var code = Context.Items[ContextKeys.Code] as string
+          ?? throw new InvalidOperationException("Match code not found in context");
+
+      _gameService.RemoveGame(gameId);
+      _lobbyService.MarkGameAsEnded(code, gameId);
+
+      if (_lobbyService.AreAllGamesEnded(code))
       {
          var roundInfo = _lobbyService.GetMatchRoundInfo(code);
          await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+         await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
       }
-      _gameService.RemoveGame(gameId);
+      else
+      {
+         await Clients.Group(gameId).SendAsync("GameEnded", new { gameId });
+      }
    }
+
 
    public Task<object?> GetGameState(string gameId)
    {
