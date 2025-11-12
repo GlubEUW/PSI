@@ -135,7 +135,10 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       }
       if (currentGroup.Count > 0)
       {
-         playerGroups.Add(currentGroup);
+         foreach (var unmatchedPlayer in currentGroup)
+         {
+            await Clients.Group(unmatchedPlayer.Id.ToString()).SendAsync("NoPairing");
+         }
       }
 
       session.PlayerGroups = playerGroups;
