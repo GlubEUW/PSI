@@ -14,7 +14,7 @@ public static class GameFactory
       return gameType switch
       {
          "TicTacToe" => new TicTacToeGame(players),
-         "RockPaperScissors" => new RpsGame(players),
+         "RockPaperScissors" => new RockPaperScissorsGame(players),
          _ => throw new ArgumentException($"Unknown game type: {gameType}")
       };
    }
