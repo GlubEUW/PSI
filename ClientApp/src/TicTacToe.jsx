@@ -61,9 +61,16 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
    };
 
    return (
-      <div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
          <h2>Tic Tac Toe</h2>
-         {winner ? <h3>Winner: {winner}</h3> : <h3>Current turn: {playerTurn}</h3>}
+         {winner ? 
+            (<div style={{ marginBottom: "20px" }}>
+               <h3>Winner: {winner}</h3>
+               <button onClick={returnToLobby} className="normal-button">Back To Lobby</button>
+            </div>
+         ) : (
+            <h3>Current turn: {playerTurn}</h3>
+         )}
          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 60px)", gap: "5px" }}>
             {board.map((row, i) =>
                row.map((cell, j) => (
@@ -88,12 +95,6 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
                ))
             )}
          </div>
-
-         {winner && (
-            <div>
-               <button onClick={returnToLobby} className="linkButton">Back To Lobby</button>
-            </div>
-         )}
       </div>
    );
 }

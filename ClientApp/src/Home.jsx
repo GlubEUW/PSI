@@ -108,7 +108,7 @@ function Home() {
          <h1>Home Page</h1>
 
          <div style={{ marginBottom: "30px" }}>
-            <button onClick={handleQueueJoin} className="linkButton">Queue</button>
+            <button onClick={handleQueueJoin} className="normal-button">Queue</button>
          </div>
 
          <hr />
@@ -200,9 +200,7 @@ function Home() {
                </div>
             )}
 
-            <button onClick={handleCreateLobby} className="linkButton">
-               Create Lobby
-            </button>
+            <button onClick={handleCreateLobby} className="normal-button">Create Lobby</button>
          </div>
 
          <hr />
@@ -210,6 +208,7 @@ function Home() {
          <div>
             <h2>Join Existing Lobby</h2>
             <input
+               className="input-field"
                type="text"
                inputMode="numeric"
                placeholder="Lobby Code"
@@ -217,7 +216,7 @@ function Home() {
                onChange={e => setlobbyID(e.target.value.replace(/[^0-9]/g, ""))}
                style={{ marginRight: "10px" }}
             />
-            <button onClick={handleLobbyJoin} className="linkButton">Join Lobby</button>
+            <button onClick={handleLobbyJoin} className="normal-button">Join Lobby</button>
          </div>
       </div>
    );

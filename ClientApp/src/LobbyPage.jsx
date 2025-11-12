@@ -112,7 +112,7 @@ function LobbyPage() {
                <p>Your name is: {user.name}</p>
                <p>{message}</p>
 
-               <button onClick={() => startMatch()}>Start Match</button>
+               <button onClick={() => startMatch()} className="normal-button">Start Match</button>
 
                <p>Round {currentRound}/{totalRounds}</p>
                <h3>Players in Lobby:</h3>

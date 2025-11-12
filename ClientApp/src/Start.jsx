@@ -30,16 +30,31 @@ function Start() {
       }
    };
 
+   const handleLogin = async () => {};
+
+   const handleRegister = async () => {};
+
    return (
       <div>
          <h1>Main page</h1>
-         <input
-            type="text"
-            placeholder="Enter guest username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-         />
-         <button onClick={handleGuestLogin}>Continue as Guest</button>
+         <div style={{ marginBottom: "10px" }}>
+            <input
+               className="input-field"
+               type="text"
+               placeholder="Enter guest username"
+               value={username}
+               onChange={(e) => setUsername(e.target.value)}
+            />
+         </div>
+         <div style={{ marginBottom: "10px" }}>
+            <button onClick={handleGuestLogin} className="normal-button">Continue as Guest</button>
+         </div>
+         <div style={{ marginBottom: "10px" }}>
+            <button onClick={handleLogin} className="normal-button"> Login</button>
+         </div>
+         <div style={{ marginBottom: "10px" }}>
+            <button onClick={handleRegister} className="normal-button"> Register</button>
+         </div>
       </div>
    );
 }

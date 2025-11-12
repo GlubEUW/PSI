@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  --element-width: 200px;
 }
 
 .logo {
@@ -39,4 +40,32 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.normal-button {
+   width: var(--element-width);
+   padding: 0.5em;
+   font-size: 1em;
+   border: none;
+   border-radius: 5px;
+   background-color: #007bff;
+   color: white;
+   cursor: pointer;
+}
+.normal-button:hover {
+   background-color: #0056b3;
+}
+
+.input-field {
+   width: var(--element-width);
+   padding: 0.5em;
+   font-size: 1em;
+   border: 1px solid #ccc;
+   border-radius: 5px;
+   outline: none;
+   box-sizing: border-box;
+}
+.input-field:focus {
+   border-color: #007bff;
+   box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
 }

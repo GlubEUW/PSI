@@ -61,12 +61,7 @@ function Rps({ gameId, playerId, connection, onReturnToLobby }) {
          {game.result ? (
             <div>
                <h3 style={{ color: "green" }}>{game.result}</h3>
-               <button
-                  onClick={returnToLobby}
-                  style={{ padding: "10px 20px", fontSize: "16px", marginTop: "10px" }}
-               >
-                  Back To Lobby
-               </button>
+               <button onClick={returnToLobby} className="normal-button">Back To Lobby</button>
             </div>
          ) : (
             <h3>Your choice: {myChoice || "None"}</h3>
