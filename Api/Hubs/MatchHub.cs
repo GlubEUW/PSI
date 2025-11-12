@@ -118,7 +118,10 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       var playerGroups = new List<List<User>>();
       var currentGroup = new List<User>();
 
-      foreach (var player in players)
+      var random = new Random();
+      var shuffledPlayers = players.OrderBy(_ => random.Next()).ToList();
+
+      foreach (var player in shuffledPlayers)
       {
          currentGroup.Add(player);
          pair++;
