@@ -1,3 +1,3 @@
 namespace Api.Models;
 
-public record UserDto(string Name, Guid Id);
+public record UserDto(string Name, Guid Id, string? Password = null);

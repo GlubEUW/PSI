@@ -1,12 +1,9 @@
-using Api.Enums;
-
 namespace Api.Entities;
 
-public class User : IComparable<User> // Usage of standard DOTNET interface
+public abstract class User : IComparable<User> // Usage of standard DOTNET interface
 {
    public Guid Id { get; set; } = Guid.Empty;
    public string Name { get; set; } = string.Empty;
-   public UserRole Role { get; set; } = UserRole.Guest;
    public int Wins { get; set; } = 0;
    public int CompareTo(User? other)
    {
@@ -15,4 +12,11 @@ public class User : IComparable<User> // Usage of standard DOTNET interface
 
       return Wins.CompareTo(other.Wins);
    }
+}
+
+public class Guest : User { }
+
+public class RegisteredUser : User
+{
+   public string PasswordHash { get; set; } = string.Empty;
 }

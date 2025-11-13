@@ -1,6 +1,5 @@
 using Api.Data;
 using Api.Entities;
-using Api.Enums;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +17,10 @@ public class TestController(DatabaseContext context) : ControllerBase
    {
       try
       {
-         var user = new User
+         var user = new RegisteredUser
          {
             Id = Guid.NewGuid(),
             Name = "TestUser_" + DateTime.UtcNow.Ticks,
-            Role = UserRole.Guest,
             Wins = 5
          };
 
@@ -36,7 +34,6 @@ public class TestController(DatabaseContext context) : ControllerBase
             {
                user.Id,
                user.Name,
-               user.Role,
                user.Wins
             }
          });
@@ -61,7 +58,6 @@ public class TestController(DatabaseContext context) : ControllerBase
             {
                u.Id,
                u.Name,
-               u.Role,
                u.Wins
             })
          });
