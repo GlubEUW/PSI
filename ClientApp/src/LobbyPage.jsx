@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { GetGuestUser } from "./api/user";
+import { GetUser } from "./api/user";
 import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
@@ -32,7 +32,7 @@ function LobbyPage() {
             return;
          }
 
-         const response = await GetGuestUser(token);
+         const response = await GetUser(token);
          if (!response.ok) {
             setMessage("Failed to fetch user info. Redirecting...");
             setTimeout(() => navigate("/home"), 3000);

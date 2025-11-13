@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Start from "./Start";
+import Login from "./Login";
+import Register from "./Register";
 import Home from "./Home";
 import Queue from "./Queue";
 import LobbyPage from "./LobbyPage";
@@ -11,6 +13,8 @@ function App() {
       <Router>
          <Routes>
             <Route path="/" element={<Start />} />
+               <Route path="/login" element={<Login />} />
+               <Route path="/register" element={<Register />} />
             <Route path="/home" element={<Home />} />
             <Route path="/queue" element={<Queue />} />
             <Route path="/match/:code" element={<LobbyPage />}>
