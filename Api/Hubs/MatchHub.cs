@@ -45,23 +45,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          return;
       }
 
-      User user;
-      if (userRole == "Guest")
-      {
-         user = new Guest
-         {
-            Id = Guid.Parse(userId),
-            Name = userName,
-         };
-      }
-      else
-      {
-         user = new RegisteredUser
-         {
-            Id = Guid.Parse(userId),
-            Name = userName,
-         };
-      }
+      User user = UserService.CreateUser(userName, Guid.Parse(userId), userRole);
 
       var joined = await _lobbyService.JoinMatch(code, user);
       if (joined is not null)
