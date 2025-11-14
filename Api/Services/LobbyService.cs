@@ -58,7 +58,13 @@ public class LobbyService() : ILobbyService
 
       return new List<User>();
    }
+   public bool AreAllPlayersInLobby(string code)
+   {
+      if (!_sessions.TryGetValue(code, out var session))
+         return false;
 
+      return session.Players.All(p => !session._gameIdByUserId.ContainsKey(p.Id));
+   }
    public Task<bool> CreateMatch(string code)
    {
       if (!_sessions.ContainsKey(code))
@@ -202,17 +208,30 @@ public class LobbyService() : ILobbyService
       if (_sessions.TryGetValue(code, out var session))
       {
          var round = session.CurrentRound;
+
          if (!session.EndedGamesByRound.TryGetValue(round, out var endedSet))
          {
             endedSet = new HashSet<string>();
             session.EndedGamesByRound[round] = endedSet;
          }
+
          lock (endedSet)
          {
             endedSet.Add(gameId);
          }
+
+         var playersToRemove = session._gameIdByUserId
+             .Where(kvp => kvp.Value == gameId)
+             .Select(kvp => kvp.Key)
+             .ToList();
+
+         foreach (var playerId in playersToRemove)
+            session._gameIdByUserId.Remove(playerId);
+
+         session.InGame = false;
       }
    }
+
 
    public bool AreAllGamesEnded(string code)
    {

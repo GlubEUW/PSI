@@ -7,7 +7,7 @@ function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
    const [myChoice, setMyChoice] = useState(null);
 
    useEffect(() => {
-      if (!connection) 
+      if (!connection)
          return;
 
       const handleGameUpdate = (updatedGame) => {
@@ -33,8 +33,18 @@ function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
       return () => connection.off("GameUpdate", handleGameUpdate);
    }, [connection, gameId]);
 
+   useEffect(() => {
+      if (!game.result) return;
+
+      const timer = setTimeout(() => {
+         returnToLobby();
+      }, 5000);
+
+      return () => clearTimeout(timer);
+   }, [game.result]);
+
    const makeMove = (selectedChoice) => {
-      if (!connection || myChoice !== null || game.result !== null) 
+      if (!connection || myChoice !== null || game.result !== null)
          return;
 
       setMyChoice(selectedChoice);

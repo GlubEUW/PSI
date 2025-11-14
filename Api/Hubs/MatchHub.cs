@@ -102,6 +102,19 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
       var session = _lobbyService.GetMatchSession(code) ?? throw new ArgumentNullException();
 
+      if (!_lobbyService.AreAllPlayersInLobby(code))
+      {
+         await Clients.Caller.SendAsync("Error", "Not all players have returned to the lobby yet.");
+         return;
+      }
+
+      if (session.InGame)
+      {
+         await Clients.Caller.SendAsync("Error", "A game is still in progress.");
+         return;
+      }
+
+
       if (session.CurrentRound >= session.GamesList.Count)
       {
          await Clients.Group(code).SendAsync("RoundsEnded");

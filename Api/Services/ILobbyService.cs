@@ -19,4 +19,5 @@ public interface ILobbyService
    public void MarkGameAsEnded(string code, string gameId);
    public bool AreAllGamesEnded(string code);
    public void ResetRoundEndTracking(string code);
+   public bool AreAllPlayersInLobby(string code);
 }
