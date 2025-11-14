@@ -16,7 +16,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
    }
    private readonly ILobbyService _lobbyService = lobbyService;
    private readonly IGameService _gameService = gameService;
-   private static readonly Dictionary<string, HashSet<Guid>> _lobbyScreenUsers = new();
 
    public override async Task OnConnectedAsync()
    {
@@ -61,12 +60,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
       await Groups.AddToGroupAsync(Context.ConnectionId, user.Id.ToString());
 
-      if (!_lobbyScreenUsers.ContainsKey(code))
-      {
-         _lobbyScreenUsers[code] = new HashSet<Guid>();
-      }
-      _lobbyScreenUsers[code].Add(user.Id);
-
       var roundInfo = _lobbyService.GetMatchRoundInfo(code);
       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       Console.WriteLine($"Player {user.Name} connected to lobby {code}");
@@ -80,17 +73,8 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
 
       if (!string.IsNullOrEmpty(code) && user is not null)
       {
+
          Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
-
-         if (_lobbyScreenUsers.ContainsKey(code))
-         {
-            _lobbyScreenUsers[code].Remove(user.Id);
-            if (_lobbyScreenUsers[code].Count == 0)
-            {
-               _lobbyScreenUsers.Remove(code);
-            }
-         }
-
          await _lobbyService.LeaveMatch(code, user.Id);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.Id.ToString());
@@ -102,31 +86,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       {
          Console.WriteLine("Could not retrieve lobby code or player name on disconnect.");
       }
-   }
 
-   public Task UpdateLobbyStatus(bool isInLobby)
-   {
-      var code = Context.Items[ContextKeys.Code] as string;
-      var user = Context.Items[ContextKeys.User] as User;
-
-      if (string.IsNullOrEmpty(code) || user is null)
-         return Task.CompletedTask;
-
-      if (!_lobbyScreenUsers.ContainsKey(code))
-      {
-         _lobbyScreenUsers[code] = new HashSet<Guid>();
-      }
-
-      if (isInLobby)
-      {
-         _lobbyScreenUsers[code].Add(user.Id);
-      }
-      else
-      {
-         _lobbyScreenUsers[code].Remove(user.Id);
-      }
-
-      return Task.CompletedTask;
    }
 
    public Task<List<PlayerInfoDto>> GetPlayers(string code)
@@ -148,26 +108,10 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          return;
       }
 
-      var players = _lobbyService.GetPlayersInLobby(code);
-
-      if (!_lobbyScreenUsers.ContainsKey(code))
-      {
-         await Clients.Caller.SendAsync("CannotStartMatch", "No players are in the lobby screen.");
-         return;
-      }
-
-      var playersInLobby = _lobbyScreenUsers[code];
-      var allPlayersInLobby = players.All(p => playersInLobby.Contains(p.Id));
-
-      if (!allPlayersInLobby)
-      {
-         await Clients.Caller.SendAsync("CannotStartMatch", "All players must be in the lobby screen to start the match.");
-         return;
-      }
-
       var selectedGameType = session.GamesList[session.CurrentRound];
       session.GameType = selectedGameType;
       session.InGame = true;
+      var players = _lobbyService.GetPlayersInLobby(code);
 
       var playersPerGame = 2;
       var pair = 0;
@@ -209,6 +153,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
             return;
          }
 
+
          foreach (var player in group)
          {
             _lobbyService.AddGameId(code, player.Id, gameId);
@@ -223,6 +168,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          }
 
          i++;
+
       }
       session.CurrentRound++;
    }
@@ -261,6 +207,8 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       await Task.WhenAll(notifyTasks);
    }
 
+
+
    public async Task EndGame(string gameId)
    {
       var code = Context.Items[ContextKeys.Code] as string
@@ -280,6 +228,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          await Clients.Group(gameId).SendAsync("GameEnded", new { gameId });
       }
    }
+
 
    public Task<object?> GetGameState(string gameId)
    {

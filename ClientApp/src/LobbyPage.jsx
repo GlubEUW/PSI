@@ -13,6 +13,7 @@ function LobbyPage() {
    const [connection, setConnection] = useState(null);
    const [players, setPlayers] = useState([{ name: "", wins: 0 }]);
    const [message, setMessage] = useState("");
+
    const connectedRef = useRef(false);
 
    useEffect(() => {
@@ -34,7 +35,7 @@ function LobbyPage() {
          const response = await GetUser(token);
          if (!response.ok) {
             setMessage("Failed to fetch user info. Redirecting...");
-            setTimeout(() => navigate("/"), 3000);
+            setTimeout(() => navigate("/home"), 3000);
             return;
          }
 
@@ -68,9 +69,6 @@ function LobbyPage() {
 
          conn.on("MatchStarted", (data) => {
             console.log("Match started!", data);
-            conn.invoke("UpdateLobbyStatus", false).catch(err => {
-               console.error("Failed to update lobby status:", err);
-            });
             navigate("game", {
                state: {
                   gameType: data.gameType,
@@ -83,10 +81,6 @@ function LobbyPage() {
             });
          });
 
-         conn.on("CannotStartMatch", (reason) => {
-            setMessage(reason);
-         });
-
          try {
             await conn.start();
             setConnection(conn);
@@ -94,8 +88,6 @@ function LobbyPage() {
 
             const playerInfo = await conn.invoke("GetPlayers", code);
             setPlayers(playerInfo);
-
-            await conn.invoke("UpdateLobbyStatus", true);
          } catch (err) {
             console.error("Connection failed:", err);
             setMessage("Connection failed.");
