@@ -4,7 +4,6 @@ using System.Security.Claims;
 using Api.Services;
 using Api.Entities;
 using Api.Models;
-using Api.Enums;
 
 namespace Api.Hubs;
 
@@ -46,12 +45,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          return;
       }
 
-      var user = new User
-      {
-         Id = Guid.Parse(userId),
-         Name = userName,
-         Role = Enum.Parse<UserRole>(userRole)
-      };
+      User user = UserService.CreateUser(userName, Guid.Parse(userId), userRole);
 
       var joined = await _lobbyService.JoinMatch(code, user);
       if (joined is not null)

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const choices = ["Rock", "Paper", "Scissors"];
 
-function Rps({ gameId, playerId, connection, onReturnToLobby }) {
+function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
    const [game, setGame] = useState({ players: {}, result: null });
    const [myChoice, setMyChoice] = useState(null);
 
@@ -28,7 +28,7 @@ function Rps({ gameId, playerId, connection, onReturnToLobby }) {
                });
             }
          })
-         .catch(err => console.error("Failed to get RPS game state:", err));
+         .catch(err => console.error("Failed to get RockPaperScissors game state:", err));
 
       return () => connection.off("GameUpdate", handleGameUpdate);
    }, [connection, gameId]);
@@ -61,12 +61,7 @@ function Rps({ gameId, playerId, connection, onReturnToLobby }) {
          {game.result ? (
             <div>
                <h3 style={{ color: "green" }}>{game.result}</h3>
-               <button
-                  onClick={returnToLobby}
-                  style={{ padding: "10px 20px", fontSize: "16px", marginTop: "10px" }}
-               >
-                  Back To Lobby
-               </button>
+               <button onClick={returnToLobby} className="normal-button">Back To Lobby</button>
             </div>
          ) : (
             <h3>Your choice: {myChoice || "None"}</h3>
@@ -97,4 +92,4 @@ function Rps({ gameId, playerId, connection, onReturnToLobby }) {
    );
 }
 
-export default Rps;
+export default RockPaperScissors;

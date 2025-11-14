@@ -2,35 +2,79 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Api.Entities;
 using Api.Models;
-using Api.Enums;
+using Api.Data;
 
 namespace Api.Services;
 
-public class AuthService(IConfiguration configuration) : IAuthService
+public class AuthService(DatabaseContext context, IConfiguration configuration) : IAuthService
 {
    public string? GuestCreate(UserDto request)
    {
-      var guest = new User();
+      var guest = new Guest();
       if (string.IsNullOrWhiteSpace(request.Name))
          return null;
 
       guest.Id = Guid.NewGuid();
       guest.Name = request.Name;
-      guest.Role = UserRole.Guest;
 
       return CreateToken(guest);
+   }
+
+   public async Task<string?> LoginAsync(UserDto request)
+   {
+      var user = await context.Users.FirstOrDefaultAsync(u => u.Name == request.Name);
+
+      if (user is null)
+         return null;
+
+      if (request.Password is null
+         || new PasswordHasher<RegisteredUser>().VerifyHashedPassword(user, user.PasswordHash, request.Password)
+         == PasswordVerificationResult.Failed)
+         return null;
+
+      return CreateToken(user);
+   }
+
+   public async Task<RegisteredUser?> RegisterAsync(UserDto request)
+   {
+      if (await context.Users.AnyAsync(u => u.Name == request.Name))
+         return null;
+
+      var registeredUser = new RegisteredUser();
+
+      string? hashedPassword = null;
+      if (!string.IsNullOrWhiteSpace(request.Password))
+      {
+         hashedPassword = new PasswordHasher<RegisteredUser>()
+            .HashPassword(registeredUser, request.Password);
+      }
+
+      registeredUser.Id = Guid.NewGuid();
+      registeredUser.Name = request.Name;
+      registeredUser.PasswordHash = hashedPassword ?? string.Empty;
+
+      context.Users.Add(registeredUser);
+      await context.SaveChangesAsync();
+
+      return registeredUser;
    }
 
    private string CreateToken(User user)
    {
       var claims = new List<Claim>
-   {
-      new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-      new Claim(ClaimTypes.Name, user.Name),
-      new Claim(ClaimTypes.Role, user.Role.ToString())
-   };
+      {
+         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+         new Claim(ClaimTypes.Name, user.Name)
+      };
+
+      if (user is RegisteredUser)
+         claims.Add(new Claim(ClaimTypes.Role, "RegisteredUser"));
+      else if (user is Guest)
+         claims.Add(new Claim(ClaimTypes.Role, "Guest"));
 
       var privateKey = new SymmetricSecurityKey(
          Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!)

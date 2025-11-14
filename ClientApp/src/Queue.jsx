@@ -1,11 +1,17 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Queue() {
+   const navigate = useNavigate();
+
+   const goHome = () => {
+      navigate("/home");
+   };
+
    return (
       <div>
          <h1>Queue Page</h1>
          <p>This is the queue page.</p>
-         <Link to="/home">Back to Home</Link>
+         <button onClick={goHome} className="normal-button">Back to Home</button>
       </div>
    );
 }

@@ -1,12 +1,9 @@
-using Api.Entities;
 using Microsoft.EntityFrameworkCore;
+using Api.Entities;
 
 namespace Api.Data;
 
-public class DatabaseContext : DbContext
+public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbContext(options)
 {
-    public DatabaseContext(DbContextOptions<DatabaseContext> options)
-        : base(options) { }
-
-    public DbSet<User> Users { get; set; } = null!;
+   public DbSet<RegisteredUser> Users { get; set; } = null!;
 }
