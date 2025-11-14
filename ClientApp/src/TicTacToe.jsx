@@ -26,7 +26,6 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
 
       connection.on("GameUpdate", handleGameUpdate);
 
-      // Request initial game state
       connection.invoke("GetGameState", gameId)
          .then(state => {
             if (state) {
@@ -37,11 +36,20 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
          })
          .catch(err => console.error("Failed to get game state:", err));
 
-      // Cleanup listener on unmount
       return () => {
          connection.off("GameUpdate", handleGameUpdate);
       };
    }, [connection, gameId]);
+
+   useEffect(() => {
+      if (!winner) return;
+
+      const timer = setTimeout(() => {
+         returnToLobby();
+      }, 5000);
+
+      return () => clearTimeout(timer);
+   }, [winner]);
 
    const handleClick = (row, col) => {
       console.log(`Clicked cell [${row}][${col}], current value:`, board[row][col]);

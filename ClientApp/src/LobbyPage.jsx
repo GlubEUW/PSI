@@ -67,6 +67,10 @@ function LobbyPage() {
             setMessage("You were not matched due to an uneven player count.");
          });
 
+         conn.on("Error", (errorMessage) => {
+            setMessage(errorMessage);
+         });
+
          conn.on("MatchStarted", (data) => {
             console.log("Match started!", data);
             navigate("game", {
