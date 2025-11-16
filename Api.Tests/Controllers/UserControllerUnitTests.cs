@@ -79,7 +79,7 @@ public class UserControllerUnitTests
          ControllerContext = UnauthenticatedContext()
       };
 
-      var result = controller.GetGuestInfo();
+      var result = controller.GetUserInfo();
 
       Assert.IsType<UnauthorizedResult>(result.Result);
    }
@@ -96,7 +96,7 @@ public class UserControllerUnitTests
          ControllerContext = AuthenticatedContext(userId, userName)
       };
 
-      var result = controller.GetGuestInfo();
+      var result = controller.GetUserInfo();
 
       var ok = Assert.IsType<OkObjectResult>(result.Result);
       var dto = Assert.IsType<UserDto>(ok.Value);
