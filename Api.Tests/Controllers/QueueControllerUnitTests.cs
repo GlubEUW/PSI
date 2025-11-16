@@ -1,4 +1,3 @@
-using System;
 using System.Security.Claims;
 
 using Api.Controllers;
@@ -6,7 +5,6 @@ using Api.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-using Xunit;
 
 namespace Api.Tests.Controllers;
 

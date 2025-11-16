@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 using Api.Controllers;
 using Api.Models;
@@ -12,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 
 using Moq;
 
-using Xunit;
 
 namespace Api.Tests.Controllers;
 
@@ -96,7 +92,7 @@ public class LobbyControllerUnitTests
    {
       var mock = new Mock<ILobbyService>();
       mock.Setup(s => s.CreateLobbyWithSettings(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<List<string>>()))
-         .ReturnsAsync("ABC123");
+         .ReturnsAsync("1234");
 
       var controller = new LobbyController(mock.Object)
       {
@@ -108,8 +104,10 @@ public class LobbyControllerUnitTests
       var result = await controller.CreateLobbyWithSettings(dto);
 
       var ok = Assert.IsType<OkObjectResult>(result);
-      var obj = ok.Value as dynamic;
-      Assert.Equal("ABC123", (string)obj.Code);
+      var value = ok.Value!;
+      var codeProp = value.GetType().GetProperty("Code");
+      Assert.NotNull(codeProp);
+      Assert.Equal("1234", codeProp.GetValue(value)?.ToString());
    }
 
    [Fact]
@@ -131,7 +129,7 @@ public class LobbyControllerUnitTests
    {
       var userId = Guid.NewGuid();
       var mock = new Mock<ILobbyService>();
-      mock.Setup(s => s.CanJoinLobby("code123", userId)).Returns((string)null);
+      mock.Setup(s => s.CanJoinLobby("code123", userId)).Returns((string?)null);
 
       var controller = new LobbyController(mock.Object)
       {
@@ -141,8 +139,10 @@ public class LobbyControllerUnitTests
       var result = controller.CanJoinMatch("code123");
 
       var ok = Assert.IsType<OkObjectResult>(result);
-      var obj = ok.Value as dynamic;
-      Assert.Equal("Can join match.", (string)obj.Message);
+      var value = ok.Value!;
+      var messageProp = value.GetType().GetProperty("Message");
+      Assert.NotNull(messageProp);
+      Assert.Equal("Can join match.", messageProp.GetValue(value)?.ToString());
    }
 
    [Fact]
@@ -160,8 +160,10 @@ public class LobbyControllerUnitTests
       var result = controller.CanJoinMatch("code123");
 
       var bad = Assert.IsType<BadRequestObjectResult>(result);
-      var obj = bad.Value as dynamic;
-      Assert.Equal("Full", (string)obj.Message);
+      var value = bad.Value!;
+      var messageProp = value.GetType().GetProperty("Message");
+      Assert.NotNull(messageProp);
+      Assert.Equal("Full", messageProp.GetValue(value)?.ToString());
    }
 
    [Fact]
@@ -193,8 +195,10 @@ public class LobbyControllerUnitTests
       var result = await controller.LeaveMatch("code123");
 
       var ok = Assert.IsType<OkObjectResult>(result);
-      var obj = ok.Value as dynamic;
-      Assert.Contains("Left match", (string)obj.Message);
+      var value = ok.Value!;
+      var messageProp = value.GetType().GetProperty("Message");
+      Assert.NotNull(messageProp);
+      Assert.Contains("Left match", messageProp.GetValue(value)?.ToString());
    }
 
    [Fact]
