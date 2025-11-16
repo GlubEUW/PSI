@@ -126,32 +126,11 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       session.InGame = true;
       var players = _lobbyService.GetPlayersInLobby(code);
 
-      var playersPerGame = 2;
-      var pair = 0;
-      var playerGroups = new List<List<User>>();
-      var currentGroup = new List<User>();
+      var (playerGroups, unmatchedPlayers) = _gameService.CreatePlayerGroups(players, playersPerGame: 2);
 
-      var random = new Random();
-      var shuffledPlayers = players.OrderBy(_ => random.Next()).ToList();
-
-      foreach (var player in shuffledPlayers)
+      foreach (var unmatchedPlayer in unmatchedPlayers)
       {
-         currentGroup.Add(player);
-         pair++;
-
-         if (pair == playersPerGame)
-         {
-            playerGroups.Add(currentGroup);
-            currentGroup = new List<User>();
-            pair = 0;
-         }
-      }
-      if (currentGroup.Count > 0)
-      {
-         foreach (var unmatchedPlayer in currentGroup)
-         {
-            await Clients.Group(unmatchedPlayer.Id.ToString()).SendAsync("NoPairing");
-         }
+         await Clients.Group(unmatchedPlayer.Id.ToString()).SendAsync("NoPairing");
       }
 
       session.PlayerGroups = playerGroups;
