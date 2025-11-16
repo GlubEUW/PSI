@@ -27,6 +27,28 @@ Api/.nuget/
 Api/.idea/
 
 # =========================
+# .NET / C# / Visual Studio FOR TESTS
+# =========================
+Api.Tests/bin/
+Api.Tests/obj/
+Api.Tests/*.user
+Api.Tests/*.suo
+Api.Tests/*.userosscache
+Api.Tests/*.sln.docstates
+Api.Tests/.vs/
+Api.Tests/.vscode/
+Api.Tests/appsettings.Development.json
+
+# NuGet packages
+Api.Tests/packages/
+Api.Tests/*.nupkg
+Api.Tests/*.snupkg
+Api.Tests/.nuget/
+
+# Rider
+Api.Tests/.idea/
+
+# =========================
 # Node / Vite / React (frontend)
 # =========================
 
