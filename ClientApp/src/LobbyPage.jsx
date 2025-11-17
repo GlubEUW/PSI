@@ -115,6 +115,13 @@ function LobbyPage() {
       }
    };
 
+   const quitLobby = async () => {
+      if (connection) {
+         await connection.stop();
+      }
+      navigate("/home");
+   }
+
    const outletContext = { connection, user, code };
 
    return (
@@ -137,6 +144,7 @@ function LobbyPage() {
                      </li>
                   ))}
                </ul>
+               <button onClick={() => quitLobby()} className="normal-button">Quit Lobby</button>
             </div>
          )}
       </>
