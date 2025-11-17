@@ -1,7 +1,6 @@
 using System.Security.Claims;
 
 using Api.Controllers;
-using Api.GameLogic;
 using Api.Models;
 using Api.Services;
 
@@ -15,6 +14,8 @@ namespace Api.Tests.Controllers;
 
 public class LobbyControllerUnitTests
 {
+   private const string _defaultCode = "code123";
+
    private static ControllerContext AuthenticatedContext(Guid userId, string userName = "tester")
    {
       var claims = new List<Claim>
@@ -50,33 +51,39 @@ public class LobbyControllerUnitTests
       };
    }
 
-   [Fact]
-   public void CanJoinMatch_Unauthorized_ReturnsUnauthorized()
+   // Helpers
+   private static LobbyController CreateController(ILobbyService service, ControllerContext ctx)
    {
-      var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = UnauthenticatedContext()
-      };
-
-      var result = controller.CanJoinMatch("code123");
-
-      Assert.IsType<UnauthorizedResult>(result);
+      return new(service) { ControllerContext = ctx };
    }
 
-   [Fact]
-   public void CanJoinMatch_Unauthorized_UnauthorizedWhenContextDoesNotHaveName()
+   private static string? ReadResultProp(IActionResult result, string propName)
    {
-      var userId = Guid.NewGuid();
-      var mock = new Mock<ILobbyService>();
-      mock.Setup(s => s.CanJoinLobby("code123", userId)).Returns((string?)null);
-
-      var controller = new LobbyController(mock.Object)
+      switch (result)
       {
-         ControllerContext = NoNameContext()
-      };
+         case OkObjectResult ok when ok.Value is not null:
+            return ok.Value.GetType().GetProperty(propName)?.GetValue(ok.Value)?.ToString();
+         case BadRequestObjectResult bad when bad.Value is not null:
+            return bad.Value.GetType().GetProperty(propName)?.GetValue(bad.Value)?.ToString();
+         default:
+            return null;
+      }
+   }
 
-      var result = controller.CanJoinMatch("code123");
+   // Data sources
+   public static IEnumerable<object[]> UnauthorizedContexts()
+   {
+      yield return new object[] { UnauthenticatedContext() };
+      yield return new object[] { NoNameContext() };
+   }
+
+   [Theory]
+   [MemberData(nameof(UnauthorizedContexts))]
+   public void CanJoinMatch_Unauthorized_ReturnsUnauthorized(ControllerContext ctx)
+   {
+      var mock = new Mock<ILobbyService>();
+      var controller = CreateController(mock.Object, ctx);
+      var result = controller.CanJoinMatch(_defaultCode);
       Assert.IsType<UnauthorizedResult>(result);
    }
 
@@ -87,18 +94,9 @@ public class LobbyControllerUnitTests
       var mock = new Mock<ILobbyService>();
       mock.Setup(s => s.CanJoinLobby("code123", userId)).Returns((string?)null);
 
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(userId)
-      };
-
-      var result = controller.CanJoinMatch("code123");
-
-      var ok = Assert.IsType<OkObjectResult>(result);
-      var value = ok.Value!;
-      var messageProp = value.GetType().GetProperty("Message");
-      Assert.NotNull(messageProp);
-      Assert.Equal("Can join match.", messageProp.GetValue(value)?.ToString());
+      var controller = CreateController(mock.Object, AuthenticatedContext(userId));
+      var result = controller.CanJoinMatch(_defaultCode);
+      Assert.Equal("Can join match.", ReadResultProp(result, "Message"));
    }
 
    [Fact]
@@ -108,31 +106,17 @@ public class LobbyControllerUnitTests
       var mock = new Mock<ILobbyService>();
       mock.Setup(s => s.CanJoinLobby("code123", userId)).Returns("Full");
 
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(userId)
-      };
-
-      var result = controller.CanJoinMatch("code123");
-
-      var bad = Assert.IsType<BadRequestObjectResult>(result);
-      var value = bad.Value!;
-      var messageProp = value.GetType().GetProperty("Message");
-      Assert.NotNull(messageProp);
-      Assert.Equal("Full", messageProp.GetValue(value)?.ToString());
+      var controller = CreateController(mock.Object, AuthenticatedContext(userId));
+      var result = controller.CanJoinMatch(_defaultCode);
+      Assert.Equal("Full", ReadResultProp(result, "Message"));
    }
 
    [Fact]
    public async Task LeaveMatch_Unauthorized_ReturnsUnauthorized()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = UnauthenticatedContext()
-      };
-
-      var result = await controller.LeaveMatch("code123");
-
+      var controller = CreateController(mock.Object, UnauthenticatedContext());
+      var result = await controller.LeaveMatch(_defaultCode);
       Assert.IsType<UnauthorizedResult>(result);
    }
 
@@ -140,13 +124,8 @@ public class LobbyControllerUnitTests
    public async Task LeaveMatch_Unauthorized_NoNameReturnsUnauthorized()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = NoNameContext()
-      };
-
-      var result = await controller.LeaveMatch("code123");
-
+      var controller = CreateController(mock.Object, NoNameContext());
+      var result = await controller.LeaveMatch(_defaultCode);
       Assert.IsType<UnauthorizedResult>(result);
    }
 
@@ -157,18 +136,9 @@ public class LobbyControllerUnitTests
       var mock = new Mock<ILobbyService>();
       mock.Setup(s => s.LeaveMatch("code123", userId)).ReturnsAsync(true);
 
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(userId)
-      };
-
-      var result = await controller.LeaveMatch("code123");
-
-      var ok = Assert.IsType<OkObjectResult>(result);
-      var value = ok.Value!;
-      var messageProp = value.GetType().GetProperty("Message");
-      Assert.NotNull(messageProp);
-      Assert.Contains("Left match", messageProp.GetValue(value)?.ToString());
+      var controller = CreateController(mock.Object, AuthenticatedContext(userId));
+      var result = await controller.LeaveMatch(_defaultCode);
+      Assert.Contains("Left match", ReadResultProp(result, "Message"));
    }
 
    [Fact]
@@ -178,13 +148,8 @@ public class LobbyControllerUnitTests
       var mock = new Mock<ILobbyService>();
       mock.Setup(s => s.LeaveMatch("code123", userId)).ReturnsAsync(false);
 
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(userId)
-      };
-
-      var result = await controller.LeaveMatch("code123");
-
+      var controller = CreateController(mock.Object, AuthenticatedContext(userId));
+      var result = await controller.LeaveMatch(_defaultCode);
       Assert.IsType<BadRequestObjectResult>(result);
    }
 
@@ -192,15 +157,9 @@ public class LobbyControllerUnitTests
    public async Task CreateLobbyWithSettings_InvalidNumberOfRounds_ReturnsBadRequest()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
-
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
       var dto = new CreateLobbyDto { NumberOfRounds = 0, NumberOfPlayers = 2, RandomGames = true };
-
       var result = await controller.CreateLobbyWithSettings(dto);
-
       Assert.IsType<BadRequestObjectResult>(result);
    }
 
@@ -208,15 +167,9 @@ public class LobbyControllerUnitTests
    public async Task CreateLobbyWithSettings_InvalidNumberOfPlayers_ReturnsBadRequest()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
-
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
       var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 1, RandomGames = true };
-
       var result = await controller.CreateLobbyWithSettings(dto);
-
       Assert.IsType<BadRequestObjectResult>(result);
    }
 
@@ -224,15 +177,9 @@ public class LobbyControllerUnitTests
    public async Task CreateLobbyWithSettings_EmptyGamesListWhenNotRandom_ReturnsBadRequest()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
-
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
       var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string>() };
-
       var result = await controller.CreateLobbyWithSettings(dto);
-
       Assert.IsType<BadRequestObjectResult>(result);
    }
 
@@ -240,15 +187,9 @@ public class LobbyControllerUnitTests
    public async Task CreateLobbyWithSettings_NullGamesListWhenNotRandom_ReturnsBadRequest()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
-
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
       var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = null };
-
       var result = await controller.CreateLobbyWithSettings(dto);
-
       Assert.IsType<BadRequestObjectResult>(result);
    }
 
@@ -256,15 +197,9 @@ public class LobbyControllerUnitTests
    public async Task CreateLobbyWithSettings_EmptyOrNullGameInGamesList_ReturnsBadRequest()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
-
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
       var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "" } };
-
       var result = await controller.CreateLobbyWithSettings(dto);
-
       Assert.IsType<BadRequestObjectResult>(result);
    }
 
@@ -272,15 +207,9 @@ public class LobbyControllerUnitTests
    public async Task CreateLobbyWithSettings_NotAGameInGamesList_ReturnsBadRequest()
    {
       var mock = new Mock<ILobbyService>();
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
-
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
       var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "Game1" } };
-
       var result = await controller.CreateLobbyWithSettings(dto);
-
       Assert.IsType<BadRequestObjectResult>(result);
    }
 
@@ -291,20 +220,12 @@ public class LobbyControllerUnitTests
       mock.Setup(s => s.CreateLobbyWithSettings(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<List<string>>()))
          .ReturnsAsync("1234");
 
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
 
       var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = true };
 
       var result = await controller.CreateLobbyWithSettings(dto);
-
-      var ok = Assert.IsType<OkObjectResult>(result);
-      var value = ok.Value!;
-      var codeProp = value.GetType().GetProperty("Code");
-      Assert.NotNull(codeProp);
-      Assert.Equal("1234", codeProp.GetValue(value)?.ToString());
+      Assert.Equal("1234", ReadResultProp(result, "Code"));
    }
 
    [Fact]
@@ -314,20 +235,11 @@ public class LobbyControllerUnitTests
       mock.Setup(s => s.CreateLobbyWithSettings(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<List<string>>()))
          .ReturnsAsync("1234");
 
-      var controller = new LobbyController(mock.Object)
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
 
       var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "TicTacToe" } };
 
       var result = await controller.CreateLobbyWithSettings(dto);
-
-      var ok = Assert.IsType<OkObjectResult>(result);
-      var value = ok.Value!;
-      var codeProp = value.GetType().GetProperty("Code");
-      Assert.NotNull(codeProp);
-      Assert.Equal("1234", codeProp.GetValue(value)?.ToString());
+      Assert.Equal("1234", ReadResultProp(result, "Code"));
    }
 }
-
