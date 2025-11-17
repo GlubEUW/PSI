@@ -114,7 +114,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          return;
       }
 
-
       if (session.CurrentRound >= session.GamesList.Count)
       {
          await Clients.Group(code).SendAsync("RoundsEnded");
@@ -122,10 +121,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       }
 
       var selectedGameType = session.GamesList[session.CurrentRound];
-      session.GameType = selectedGameType;
-      session.InGame = true;
       var players = _lobbyService.GetPlayersInLobby(code);
-
       var (playerGroups, unmatchedPlayers) = _gameService.CreatePlayerGroups(players, playersPerGame: 2);
 
       foreach (var unmatchedPlayer in unmatchedPlayers)
@@ -133,32 +129,44 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          await Clients.Group(unmatchedPlayer.Id.ToString()).SendAsync("NoPairing");
       }
 
-      session.PlayerGroups = playerGroups;
-      _lobbyService.ResetRoundEndTracking(code);
+      var gameInfos = new List<(string gameId, List<User> group)>();
       var i = 0;
       foreach (var group in playerGroups)
       {
          var gameId = $"{code}_G{i}_R{session.CurrentRound}";
          if (!_gameService.StartGame(gameId, selectedGameType, group))
          {
+            foreach (var (createdGameId, _) in gameInfos)
+            {
+               _gameService.RemoveGame(createdGameId);
+            }
             await Clients.Caller.SendAsync("Error", "Failed to start the game.");
             return;
          }
+         gameInfos.Add((gameId, group));
+         i++;
+      }
 
+      session.GameType = selectedGameType;
+      session.PlayerGroups = playerGroups;
+      session.InGame = true;
+      _lobbyService.ResetRoundEndTracking(code);
 
+      i = 0;
+      foreach (var (gameId, group) in gameInfos)
+      {
          foreach (var player in group)
          {
             _lobbyService.AddGameId(code, player.Id, gameId);
             await Clients.Group(player.Id.ToString()).SendAsync("MatchStarted", new
             {
                gameType = selectedGameType,
-               gameId = $"{code}_G{i}_R{session.CurrentRound}",
+               gameId,
                playerIds = group.Select(p => p.Id),
-               initialState = _gameService.GetGameState($"{code}_G{i}_R{session.CurrentRound}"),
+               initialState = _gameService.GetGameState(gameId),
                round = session.CurrentRound + 1
             });
          }
-
          i++;
 
       }

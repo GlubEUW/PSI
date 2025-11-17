@@ -25,6 +25,7 @@ public class GameService : IGameService
       catch (Exception ex)
       {
          Console.WriteLine($"Error starting game: {ex.Message}");
+         _games.TryRemove(gameId, out _);
          return false;
       }
    }
