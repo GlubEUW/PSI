@@ -1,10 +1,6 @@
-using System.Security.Claims;
-
 using Api.Controllers;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace Api.Tests.Controllers;
 
@@ -14,27 +10,13 @@ public class QueueControllerUnitTests
 
    private static ControllerContext AuthenticatedContext(Guid userId, string userName = "tester")
    {
-      var claims = new[]
-      {
-         new Claim(ClaimTypes.Name, userName),
-         new Claim(ClaimTypes.NameIdentifier, userId.ToString())
-      };
-
-      var identity = new ClaimsIdentity(claims, "Test");
-      var user = new ClaimsPrincipal(identity);
-
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = user }
-      };
+      var principal = TestHelpers.CreateClaimsPrincipal(userName, "Guest", userId);
+      return TestHelpers.BuildControllerContext(principal);
    }
 
    private static ControllerContext UnauthenticatedContext()
    {
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) }
-      };
+      return TestHelpers.BuildControllerContext(TestHelpers.CreateUnauthenticatedPrincipal());
    }
 
    private static QueueController CreateController(ControllerContext ctx)

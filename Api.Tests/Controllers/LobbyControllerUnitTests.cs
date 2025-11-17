@@ -4,12 +4,9 @@ using Api.Controllers;
 using Api.Models;
 using Api.Services;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Moq;
-
-
 namespace Api.Tests.Controllers;
 
 public class LobbyControllerUnitTests
@@ -18,40 +15,17 @@ public class LobbyControllerUnitTests
 
    private static ControllerContext AuthenticatedContext(Guid userId, string userName = "tester")
    {
-      var claims = new List<Claim>
-         {
-            new Claim(ClaimTypes.Name, userName),
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
-         };
-
-      var identity = new ClaimsIdentity(claims, "Test");
-      var user = new ClaimsPrincipal(identity);
-
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = user }
-      };
+      return TestHelpers.BuildControllerContext(TestHelpers.CreateClaimsPrincipal(userName, "Guest", userId));
    }
-
    private static ControllerContext NoNameContext()
    {
-      var user = new ClaimsPrincipal();
-
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = user }
-      };
+      return TestHelpers.BuildControllerContext(new ClaimsPrincipal());
    }
-
    private static ControllerContext UnauthenticatedContext()
    {
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) }
-      };
+      return TestHelpers.BuildControllerContext(TestHelpers.CreateUnauthenticatedPrincipal());
    }
 
-   // Helpers
    private static LobbyController CreateController(ILobbyService service, ControllerContext ctx)
    {
       return new(service) { ControllerContext = ctx };
@@ -70,7 +44,6 @@ public class LobbyControllerUnitTests
       }
    }
 
-   // Data sources
    public static IEnumerable<object[]> UnauthorizedContexts()
    {
       yield return new object[] { UnauthenticatedContext() };

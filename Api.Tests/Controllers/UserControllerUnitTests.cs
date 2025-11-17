@@ -1,13 +1,9 @@
 using System.Security.Claims;
-
 using Api.Controllers;
 using Api.Models;
 using Api.Services;
 using Api.Entities;
-
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
 using Moq;
 
 namespace Api.Tests.Controllers;
@@ -22,48 +18,51 @@ public class UserControllerUnitTests
    }
    private static ControllerContext NoNameContext()
    {
-      var user = new ClaimsPrincipal();
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = user }
-      };
+      return TestHelpers.BuildControllerContext(new ClaimsPrincipal());
    }
    private static ControllerContext NoNameButIdContext(Guid userId)
    {
-      var claims = new[]
-      {
-         new Claim(ClaimTypes.NameIdentifier, userId.ToString())
-      };
-
-      var identity = new ClaimsIdentity(claims, "Test");
-      var user = new ClaimsPrincipal(identity);
-
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = user }
-      };
+      return TestHelpers.BuildControllerContext(TestHelpers.CreatePrincipalWithIdOnly(userId));
    }
    private static ControllerContext AuthenticatedContext(Guid userId, string userName = "guest")
    {
-      var claims = new[]
-      {
-         new Claim(ClaimTypes.Name, userName),
-         new Claim(ClaimTypes.NameIdentifier, userId.ToString())
-      };
-
-      var identity = new ClaimsIdentity(claims, "Test");
-      var user = new ClaimsPrincipal(identity);
-
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = user }
-      };
+      return TestHelpers.BuildControllerContext(TestHelpers.CreateClaimsPrincipal(userName, "Guest", userId));
    }
 
    public static IEnumerable<object[]> UnauthorizedContexts()
    {
       yield return new object[] { UnauthenticatedContext() };
       yield return new object[] { NoNameContext() };
+   }
+
+   [Fact]
+   public void GuestCreate_ReturnsBadRequest_WhenNameMissing()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns((string?)null);
+      var controller = CreateController(mockAuth.Object);
+
+      var dto = new UserDto("", Guid.Empty);
+
+      var result = controller.GuestCreate(dto);
+
+      var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+      Assert.Equal("Name is required.", bad.Value);
+   }
+
+   [Fact]
+   public void GuestCreate_ReturnsOkWithToken_WhenServiceReturnsToken()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns("token-123");
+      var controller = CreateController(mockAuth.Object);
+
+      var dto = new UserDto("player", Guid.Empty);
+
+      var result = controller.GuestCreate(dto);
+
+      var ok = Assert.IsType<OkObjectResult>(result.Result);
+      Assert.Equal("token-123", ok.Value);
    }
 
    [Fact]
@@ -131,41 +130,9 @@ public class UserControllerUnitTests
 
    private static ControllerContext UnauthenticatedContext()
    {
-      return new ControllerContext
-      {
-         HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) }
-      };
+      return TestHelpers.BuildControllerContext(TestHelpers.CreateUnauthenticatedPrincipal());
    }
 
-   [Fact]
-   public void GuestCreate_ReturnsBadRequest_WhenNameMissing()
-   {
-      var mockAuth = new Mock<IAuthService>();
-      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns((string?)null);
-      var controller = CreateController(mockAuth.Object);
-
-      var dto = new UserDto("", Guid.Empty);
-
-      var result = controller.GuestCreate(dto);
-
-      var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
-      Assert.Equal("Name is required.", bad.Value);
-   }
-
-   [Fact]
-   public void GuestCreate_ReturnsOkWithToken_WhenServiceReturnsToken()
-   {
-      var mockAuth = new Mock<IAuthService>();
-      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns("token-123");
-      var controller = CreateController(mockAuth.Object);
-
-      var dto = new UserDto("player", Guid.Empty);
-
-      var result = controller.GuestCreate(dto);
-
-      var ok = Assert.IsType<OkObjectResult>(result.Result);
-      Assert.Equal("token-123", ok.Value);
-   }
 
    [Theory]
    [MemberData(nameof(UnauthorizedContexts))]

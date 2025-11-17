@@ -1,5 +1,4 @@
 using System.Text.Json;
-
 using Api.Services;
 using Api.Entities;
 
@@ -11,7 +10,7 @@ public class GameServiceUnitTests
    [Fact]
    public void StartGame_ReturnsFalse_WhenPlayersNullOrTooFew()
    {
-      var svc = new GameService();
+      var svc = (GameService)TestHelpers.CreateGameService();
 
       Assert.False(svc.StartGame("g1", "TicTacToe", null!));
 
@@ -22,7 +21,7 @@ public class GameServiceUnitTests
    [Fact]
    public void StartGame_ReturnsFalse_WhenGameIdExists()
    {
-      var svc = new GameService();
+      var svc = (GameService)TestHelpers.CreateGameService();
       var players = new List<User>
       {
          new Guest { Id = Guid.NewGuid(), Name = "a" },
@@ -31,17 +30,15 @@ public class GameServiceUnitTests
 
       var id = "dup";
       Assert.True(svc.StartGame(id, "TicTacToe", players));
-      // second start with same id should fail
       Assert.False(svc.StartGame(id, "TicTacToe", players));
 
-      // cleanup
       svc.RemoveGame(id);
    }
 
    [Fact]
    public void StartGame_ReturnsTrue_And_GetGameState_NotNull()
    {
-      var svc = new GameService();
+      var svc = (GameService)TestHelpers.CreateGameService();
       var players = new List<User>
       {
          new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "alice" },
@@ -55,7 +52,6 @@ public class GameServiceUnitTests
       var state = svc.GetGameState(id);
       Assert.NotNull(state);
 
-      // state should expose Board and PlayerTurn via anonymous object
       var boardProp = state!.GetType().GetProperty("Board");
       Assert.NotNull(boardProp);
 
@@ -63,16 +59,46 @@ public class GameServiceUnitTests
    }
 
    [Fact]
+   public void StartGame_ReturnsFalse_WhenFactoryThrows_And_LogsError()
+   {
+      var svc = (GameService)TestHelpers.CreateGameService();
+      var players = new List<User>
+         {
+            new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "alice" },
+            new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "bob" }
+         };
+
+      var id = Guid.NewGuid().ToString();
+
+      var sw = new StringWriter();
+      var originalOut = Console.Out;
+      try
+      {
+         Console.SetOut(sw);
+         var ok = svc.StartGame(id, "ThisGameTypeDoesNotExist", players);
+         Assert.False(ok);
+      }
+      finally
+      {
+         Console.SetOut(originalOut);
+      }
+
+      var output = sw.ToString();
+      Assert.Contains("Error starting game", output);
+      Assert.Null(svc.GetGameState(id));
+   }
+
+   [Fact]
    public void RemoveGame_ReturnsFalse_WhenNotExists()
    {
-      var svc = new GameService();
+      var svc = (GameService)TestHelpers.CreateGameService();
       Assert.False(svc.RemoveGame("no-such-game"));
    }
 
    [Fact]
    public void MakeMove_ReturnsFalse_WhenGameNotFound()
    {
-      var svc = new GameService();
+      var svc = (GameService)TestHelpers.CreateGameService();
       var fakeMove = JsonDocument.Parse("{}").RootElement;
       Assert.False(svc.MakeMove("missing", fakeMove, out var _));
    }
@@ -80,7 +106,7 @@ public class GameServiceUnitTests
    [Fact]
    public void MakeMove_TicTacToe_ValidMove_UpdatesState()
    {
-      var svc = new GameService();
+      var svc = (GameService)TestHelpers.CreateGameService();
       var p1 = new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "p1" };
       var p2 = new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "p2" };
       var players = new List<User> { p1, p2 };
@@ -88,7 +114,6 @@ public class GameServiceUnitTests
 
       Assert.True(svc.StartGame(id, "TicTacToe", players));
 
-      // create a move for player1 at (0,0)
       var moveJson = JsonSerializer.Serialize(new
       {
          PlayerId = p1.Id,
@@ -104,14 +129,13 @@ public class GameServiceUnitTests
       var boardProp = newState!.GetType().GetProperty("Board");
       Assert.NotNull(boardProp);
 
-      // cleanup
       svc.RemoveGame(id);
    }
 
    [Fact]
    public void GetGameState_ReturnsNull_WhenNotFound()
    {
-      var svc = new GameService();
+      var svc = (GameService)TestHelpers.CreateGameService();
       Assert.Null(svc.GetGameState("nope"));
    }
 }
