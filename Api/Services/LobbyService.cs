@@ -9,18 +9,6 @@ public class LobbyService() : ILobbyService
 {
    private static ConcurrentDictionary<string, MatchSession> _sessions = new();
 
-   public RoundInfoDto GetMatchRoundInfo(string code)
-   {
-      var session = _sessions[code];
-      var numberOfRnds = session?.NumberOfRounds;
-      var currentRnd = (session?.CurrentRound + 1) > numberOfRnds ? numberOfRnds : session?.CurrentRound + 1;
-      return new RoundInfoDto
-      (
-         currentRnd ?? 1,
-         numberOfRnds ?? 1
-      );
-   }
-
    public bool AddGameId(string code, Guid userId, string gameId = "")
    {
       if (string.IsNullOrEmpty(gameId))
@@ -70,7 +58,13 @@ public class LobbyService() : ILobbyService
 
       return new List<User>();
    }
+   public bool AreAllPlayersInLobby(string code)
+   {
+      if (!_sessions.TryGetValue(code, out var session))
+         return false;
 
+      return session.Players.All(p => !session._gameIdByUserId.ContainsKey(p.Id));
+   }
    public Task<bool> CreateMatch(string code)
    {
       if (!_sessions.ContainsKey(code))
@@ -193,5 +187,75 @@ public class LobbyService() : ILobbyService
       while (_sessions.ContainsKey(code));
 
       return code;
+   }
+
+   public RoundInfoDto GetMatchRoundInfo(string code)
+   {
+      if (!_sessions.TryGetValue(code, out var session) || session is null)
+      {
+         return new RoundInfoDto(1, 1);
+      }
+
+      var numberOfRounds = session.NumberOfRounds > 0 ? session.NumberOfRounds : 1;
+      var currentRound = session.CurrentRound + 1;
+      if (currentRound > numberOfRounds) currentRound = numberOfRounds;
+
+      return new RoundInfoDto(currentRound, numberOfRounds);
+   }
+
+   public void MarkGameAsEnded(string code, string gameId)
+   {
+      if (_sessions.TryGetValue(code, out var session))
+      {
+         var round = session.CurrentRound;
+
+         if (!session.EndedGamesByRound.TryGetValue(round, out var endedSet))
+         {
+            endedSet = new HashSet<string>();
+            session.EndedGamesByRound[round] = endedSet;
+         }
+
+         lock (endedSet)
+         {
+            endedSet.Add(gameId);
+         }
+
+         var playersToRemove = session._gameIdByUserId
+             .Where(kvp => kvp.Value == gameId)
+             .Select(kvp => kvp.Key)
+             .ToList();
+
+         foreach (var playerId in playersToRemove)
+            session._gameIdByUserId.Remove(playerId);
+
+         session.InGame = false;
+      }
+   }
+
+
+   public bool AreAllGamesEnded(string code)
+   {
+      if (_sessions.TryGetValue(code, out var session))
+      {
+         var round = session.CurrentRound;
+         if (!session.EndedGamesByRound.TryGetValue(round, out var endedSet))
+            return false;
+
+         var allGameIds = session._gameIdByUserId.Values
+             .Where(id => id.Contains($"_R{round}"))
+             .Distinct()
+             .ToList();
+
+         return allGameIds.All(id => endedSet.Contains(id));
+      }
+      return false;
+   }
+
+   public void ResetRoundEndTracking(string code)
+   {
+      if (_sessions.TryGetValue(code, out var session))
+      {
+         session.EndedGamesByRound[session.CurrentRound] = new HashSet<string>();
+      }
    }
 }
