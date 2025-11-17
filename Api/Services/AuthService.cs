@@ -93,25 +93,6 @@ public class AuthService(DatabaseContext context, IConfiguration configuration) 
       var handler = new JwtSecurityTokenHandler();
       var tokenString = handler.WriteToken(tokenDescriptor);
 
-      var filePath = Path.Combine(AppContext.BaseDirectory, "tokens.txt");
-      Console.WriteLine($"Storing token for user {user.Name} at {filePath}");
-      using (var stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
-      using (var writer = new StreamWriter(stream, Encoding.UTF8))
-      {
-         writer.WriteLine(tokenString);
-      }
-
-      string? lastToken = null;
-      using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-      using (var reader = new StreamReader(stream, Encoding.UTF8))
-      {
-         string? line;
-         while ((line = reader.ReadLine()) != null)
-         {
-            lastToken = line;
-         }
-      }
-
-      return lastToken ?? string.Empty;
+      return tokenString;
    }
 }
