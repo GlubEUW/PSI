@@ -10,6 +10,8 @@ namespace Api.Tests.Controllers;
 
 public class QueueControllerUnitTests
 {
+   private static readonly string _joined = "Joined";
+
    private static ControllerContext AuthenticatedContext(Guid userId, string userName = "tester")
    {
       var claims = new[]
@@ -35,31 +37,24 @@ public class QueueControllerUnitTests
       };
    }
 
-   [Fact]
-   public void JoinQueue_ReturnsOk_WhenUnauthenticated()
+   private static QueueController CreateController(ControllerContext ctx)
    {
-      var controller = new QueueController()
-      {
-         ControllerContext = UnauthenticatedContext()
-      };
-
-      var result = controller.JoinQueue();
-
-      var ok = Assert.IsType<OkObjectResult>(result);
-      Assert.Equal("Joined", ok.Value as string);
+      return new QueueController { ControllerContext = ctx };
    }
 
-   [Fact]
-   public void JoinQueue_ReturnsOk_WhenAuthenticated()
+   public static IEnumerable<object[]> AnyContexts()
    {
-      var controller = new QueueController()
-      {
-         ControllerContext = AuthenticatedContext(Guid.NewGuid())
-      };
+      yield return new object[] { UnauthenticatedContext() };
+      yield return new object[] { AuthenticatedContext(Guid.NewGuid()) };
+   }
 
+   [Theory]
+   [MemberData(nameof(AnyContexts))]
+   public void JoinQueue_ReturnsOk_ForAnyContext(ControllerContext ctx)
+   {
+      var controller = CreateController(ctx);
       var result = controller.JoinQueue();
-
       var ok = Assert.IsType<OkObjectResult>(result);
-      Assert.Equal("Joined", ok.Value as string);
+      Assert.Equal(_joined, ok.Value as string);
    }
 }

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Api.Controllers;
 using Api.Models;
 using Api.Services;
+using Api.Entities;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,35 @@ namespace Api.Tests.Controllers;
 
 public class UserControllerUnitTests
 {
+   private static UserController CreateController(IAuthService auth, ControllerContext? ctx = null)
+   {
+      var controller = new UserController(auth);
+      if (ctx is not null) controller.ControllerContext = ctx;
+      return controller;
+   }
+   private static ControllerContext NoNameContext()
+   {
+      var user = new ClaimsPrincipal();
+      return new ControllerContext
+      {
+         HttpContext = new DefaultHttpContext { User = user }
+      };
+   }
+   private static ControllerContext NoNameButIdContext(Guid userId)
+   {
+      var claims = new[]
+      {
+         new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+      };
+
+      var identity = new ClaimsIdentity(claims, "Test");
+      var user = new ClaimsPrincipal(identity);
+
+      return new ControllerContext
+      {
+         HttpContext = new DefaultHttpContext { User = user }
+      };
+   }
    private static ControllerContext AuthenticatedContext(Guid userId, string userName = "guest")
    {
       var claims = new[]
@@ -30,6 +60,75 @@ public class UserControllerUnitTests
       };
    }
 
+   public static IEnumerable<object[]> UnauthorizedContexts()
+   {
+      yield return new object[] { UnauthenticatedContext() };
+      yield return new object[] { NoNameContext() };
+   }
+
+   [Fact]
+   public async Task Login_ReturnsBadRequest_WhenInvalidCredentials()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      mockAuth.Setup(a => a.LoginAsync(It.IsAny<UserDto>())).ReturnsAsync((string?)null);
+      var controller = CreateController(mockAuth.Object);
+
+      var dto = new UserDto("user", Guid.Empty);
+
+      var result = await controller.Login(dto);
+
+      var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+      Assert.Equal("Invalid name or password.", bad.Value);
+   }
+
+   [Fact]
+   public async Task Login_ReturnsOkWithToken_WhenValid()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      mockAuth.Setup(a => a.LoginAsync(It.IsAny<UserDto>())).ReturnsAsync("token-xyz");
+      var controller = CreateController(mockAuth.Object);
+
+      var dto = new UserDto("user", Guid.Empty);
+
+      var result = await controller.Login(dto);
+
+      var ok = Assert.IsType<OkObjectResult>(result.Result);
+      Assert.Equal("token-xyz", ok.Value);
+   }
+
+   [Fact]
+   public async Task Register_ReturnsBadRequest_WhenNameExists()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      mockAuth.Setup(a => a.RegisterAsync(It.IsAny<UserDto>())).ReturnsAsync((RegisteredUser?)null);
+      var controller = CreateController(mockAuth.Object);
+
+      var dto = new UserDto("existing", Guid.Empty);
+
+      var result = await controller.Register(dto);
+
+      var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+      Assert.Equal("Name already exists.", bad.Value);
+   }
+
+   [Fact]
+   public async Task Register_ReturnsOkWithUser_WhenCreated()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      var created = new RegisteredUser { Id = Guid.NewGuid(), Name = "new-user" };
+      mockAuth.Setup(a => a.RegisterAsync(It.IsAny<UserDto>())).ReturnsAsync(created);
+      var controller = CreateController(mockAuth.Object);
+
+      var dto = new UserDto("new-user", Guid.Empty);
+
+      var result = await controller.Register(dto);
+
+      var ok = Assert.IsType<OkObjectResult>(result.Result);
+      var returned = Assert.IsType<RegisteredUser>(ok.Value);
+      Assert.Equal(created.Id, returned.Id);
+      Assert.Equal(created.Name, returned.Name);
+   }
+
    private static ControllerContext UnauthenticatedContext()
    {
       return new ControllerContext
@@ -43,8 +142,7 @@ public class UserControllerUnitTests
    {
       var mockAuth = new Mock<IAuthService>();
       mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns((string?)null);
-
-      var controller = new UserController(mockAuth.Object);
+      var controller = CreateController(mockAuth.Object);
 
       var dto = new UserDto("", Guid.Empty);
 
@@ -59,8 +157,7 @@ public class UserControllerUnitTests
    {
       var mockAuth = new Mock<IAuthService>();
       mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns("token-123");
-
-      var controller = new UserController(mockAuth.Object);
+      var controller = CreateController(mockAuth.Object);
 
       var dto = new UserDto("player", Guid.Empty);
 
@@ -70,14 +167,21 @@ public class UserControllerUnitTests
       Assert.Equal("token-123", ok.Value);
    }
 
-   [Fact]
-   public void GetGuestInfo_Unauthorized_ReturnsUnauthorized()
+   [Theory]
+   [MemberData(nameof(UnauthorizedContexts))]
+   public void GetGuestInfo_Unauthorized_ReturnsUnauthorized(ControllerContext ctx)
    {
       var mockAuth = new Mock<IAuthService>();
-      var controller = new UserController(mockAuth.Object)
-      {
-         ControllerContext = UnauthenticatedContext()
-      };
+      var controller = CreateController(mockAuth.Object, ctx);
+      var result = controller.GetUserInfo();
+      Assert.IsType<UnauthorizedResult>(result.Result);
+   }
+
+   [Fact]
+   public void GetGuestInfo_NoNameClaim_ReturnsUnauthorized()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      var controller = CreateController(mockAuth.Object, NoNameButIdContext(Guid.NewGuid()));
 
       var result = controller.GetUserInfo();
 
@@ -91,10 +195,7 @@ public class UserControllerUnitTests
       var userName = "guest-user";
 
       var mockAuth = new Mock<IAuthService>();
-      var controller = new UserController(mockAuth.Object)
-      {
-         ControllerContext = AuthenticatedContext(userId, userName)
-      };
+      var controller = CreateController(mockAuth.Object, AuthenticatedContext(userId, userName));
 
       var result = controller.GetUserInfo();
 

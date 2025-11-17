@@ -242,4 +242,19 @@ public class LobbyControllerUnitTests
       var result = await controller.CreateLobbyWithSettings(dto);
       Assert.Equal("1234", ReadResultProp(result, "Code"));
    }
+
+   [Fact]
+   public async Task CreateLobbyWithSettings_ValidRequestWithGamesListMultipleGames_ReturnsOkWithCode()
+   {
+      var mock = new Mock<ILobbyService>();
+      mock.Setup(s => s.CreateLobbyWithSettings(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<List<string>>()))
+         .ReturnsAsync("1234");
+
+      var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
+
+      var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "TicTacToe", "RockPaperScissors" } };
+
+      var result = await controller.CreateLobbyWithSettings(dto);
+      Assert.Equal("1234", ReadResultProp(result, "Code"));
+   }
 }
