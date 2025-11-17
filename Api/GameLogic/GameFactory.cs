@@ -7,7 +7,8 @@ public static class GameFactory
    public static readonly HashSet<string> ValidGameTypes = new()
    {
       "TicTacToe",
-      "RockPaperScissors"
+      "RockPaperScissors",
+      "ConnectFour"
    };
    public static IGame CreateGame(string gameType, List<User> players)
    {
@@ -15,6 +16,7 @@ public static class GameFactory
       {
          "TicTacToe" => new TicTacToeGame(players),
          "RockPaperScissors" => new RockPaperScissorsGame(players),
+         "ConnectFour" => new ConnectFourGame(players),
          _ => throw new ArgumentException($"Unknown game type: {gameType}")
       };
    }

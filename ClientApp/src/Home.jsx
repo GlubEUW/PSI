@@ -193,6 +193,7 @@ function Home() {
                            >
                               <option value="TicTacToe">Tic Tac Toe</option>
                               <option value="RockPaperScissors">Rock Paper Scissors</option>
+                              <option value="ConnectFour">Connect Four</option>
                            </select>
                         </div>
                      );
