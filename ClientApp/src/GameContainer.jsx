@@ -1,10 +1,12 @@
 import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import TicTacToe from "./TicTacToe.jsx";
 import RockPaperScissors from "./RockPaperScissors.jsx";
+import ConnectFour from "./ConnectFour.jsx";
 
 const gameComponents = {
    TicTacToe: TicTacToe,
-   RockPaperScissors: RockPaperScissors
+   RockPaperScissors: RockPaperScissors,
+   ConnectFour: ConnectFour
 };
 
 function GameContainer() {
