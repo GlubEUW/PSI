@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Api.Entities;
+using Api.Exceptions;
 
 namespace Api.GameLogic;
 
@@ -58,13 +59,13 @@ public class TicTacToeGame : IGame
    private bool ApplyMove(Guid playerId, int x, int y)
    {
       if (Winner is not null)
-         return false;
+         throw new InvalidMoveException("Game already has a winner", playerId);
 
       if (Board[x][y] != (int)State.Empty)
-         return false;
+         throw new InvalidMoveException($"Cell ({x}, {y}) is already occupied", playerId);
 
       if (playerId != PlayerTurn)
-         return false;
+         throw new InvalidMoveException("Not player's turn", playerId);
 
       Board[x][y] = (int)PlayerSigns[playerId];
 

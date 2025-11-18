@@ -58,6 +58,10 @@ function LobbyPage() {
 
                const playerInfo = await conn.invoke("GetPlayers", code);
                setPlayers(playerInfo);
+
+               if (message.includes("Invalid move") || message.includes("Error")) {
+                  setMessage(`Connected to lobby ${code}`);
+               }
             } catch {
                setPlayers([]);
             }

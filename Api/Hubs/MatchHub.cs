@@ -4,6 +4,8 @@ using System.Security.Claims;
 using Api.Services;
 using Api.Entities;
 using Api.Models;
+using Api.Exceptions;
+using Api.Utils;
 
 namespace Api.Hubs;
 
@@ -175,38 +177,64 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
 
    public async Task MakeMove(JsonElement moveData)
    {
-      var code = Context.Items[ContextKeys.Code] as string
-          ?? throw new InvalidOperationException("Code not found in context");
-
-      var user = Context.Items[ContextKeys.User] as User
-          ?? throw new InvalidOperationException("User not found in context");
-
-      var session = _lobbyService.GetMatchSession(code)
-          ?? throw new InvalidOperationException($"Match session not found for code: {code}");
-
-      if (!_lobbyService.TryGetGameId(code, user.Id, out var gameId) || gameId is null)
+      try
       {
-         await Clients.Caller.SendAsync("Error", "You are not currently in an active game.");
-         return;
+         var code = Context.Items[ContextKeys.Code] as string
+             ?? throw new InvalidOperationException("Code not found in context");
+
+         var user = Context.Items[ContextKeys.User] as User
+             ?? throw new InvalidOperationException("User not found in context");
+
+         var session = _lobbyService.GetMatchSession(code)
+             ?? throw new InvalidOperationException($"Match session not found for code: {code}");
+
+         if (!_lobbyService.TryGetGameId(code, user.Id, out var gameId) || gameId is null)
+         {
+            throw new GameNotFoundException(gameId ?? "unknown");
+         }
+
+         if (!_gameService.MakeMove(gameId, moveData, out var newState))
+         {
+            throw new GameException("Failed to make move", gameId);
+         }
+
+         var targetGroup = session.PlayerGroups.FirstOrDefault(g => g.Any(p => p.Id == user.Id)) ?? throw new PlayerNotFoundException(user.Id, code);
+
+         var notifyTasks = targetGroup.Select(p =>
+             Clients.Group(p.Id.ToString()).SendAsync("GameUpdate", newState)
+         );
+
+         await Task.WhenAll(notifyTasks);
       }
-
-      if (!_gameService.MakeMove(gameId, moveData, out var newState))
-         return;
-
-      var targetGroup = session.PlayerGroups.FirstOrDefault(g => g.Any(p => p.Id == user.Id));
-      if (targetGroup is null)
+      catch (InvalidMoveException ex)
       {
-         await Clients.Caller.SendAsync("Error", "Your player group could not be found.");
-         return;
+         if (ex.Message.Contains("Game already has a winner") ||
+            ex.Message.Contains("Game already finished") ||
+            ex.Message.Contains("Not player's turn"))
+         {
+            ExceptionLogger.LogException(ex, "MakeMove - Post-game move attempt (silently ignored)");
+            return;
+         }
+
+         ExceptionLogger.LogException(ex, "MakeMove - Invalid move attempted");
+         await Clients.Caller.SendAsync("Error", ex.Message);
       }
-
-      var notifyTasks = targetGroup.Select(p =>
-          Clients.Group(p.Id.ToString()).SendAsync("GameUpdate", newState)
-      );
-
-      await Task.WhenAll(notifyTasks);
+      catch (GameNotFoundException ex)
+      {
+         ExceptionLogger.LogException(ex, "MakeMove - Game not found");
+         await Clients.Caller.SendAsync("Error", "Game session not found");
+      }
+      catch (PlayerNotFoundException ex)
+      {
+         ExceptionLogger.LogException(ex, "MakeMove - Player not found");
+         await Clients.Caller.SendAsync("Error", "Player not found in game");
+      }
+      catch (Exception ex)
+      {
+         ExceptionLogger.LogException(ex, "MakeMove - Unexpected error");
+         await Clients.Caller.SendAsync("Error", "An unexpected error occurred");
+      }
    }
-
 
 
    public async Task EndGame(string gameId)

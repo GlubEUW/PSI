@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Api.Services;
 using Api.Data;
 using Api.GameLogic;
+using Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +92,8 @@ builder.Services.AddSingleton<ILobbyService, LobbyService>();
 builder.Services.AddSingleton<IGameFactory, GameFactory>();
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionLoggingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowClient");
