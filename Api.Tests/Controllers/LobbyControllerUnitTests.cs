@@ -28,7 +28,7 @@ public class LobbyControllerUnitTests
 
    private static LobbyController CreateController(ILobbyService service, ControllerContext ctx)
    {
-      return new(service) { ControllerContext = ctx };
+      return new(service, new Api.GameLogic.GameFactory()) { ControllerContext = ctx };
    }
 
    private static string? ReadResultProp(IActionResult result, string propName)
