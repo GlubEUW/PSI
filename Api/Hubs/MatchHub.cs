@@ -122,7 +122,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
 
       var selectedGameType = session.GamesList[session.CurrentRound];
       var players = _lobbyService.GetPlayersInLobby(code);
-      var (playerGroups, unmatchedPlayers) = _gameService.CreatePlayerGroups(players, playersPerGame: 2);
+      var (playerGroups, unmatchedPlayers) = _gameService.CreateGroups<User>(players, itemsPerGroup: 2);
 
       foreach (var unmatchedPlayer in unmatchedPlayers)
       {
