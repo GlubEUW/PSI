@@ -5,10 +5,10 @@ using Api.GameLogic;
 
 namespace Api.Services;
 
-public class LobbyService() : ILobbyService
+public class LobbyService(IGameFactory gameFactory) : ILobbyService
 {
    private static ConcurrentDictionary<string, MatchSession> _sessions = new();
-
+   private readonly IGameFactory _gameFactory = gameFactory;
    public bool AddGameId(string code, Guid userId, string gameId = "")
    {
       if (string.IsNullOrEmpty(gameId))
@@ -163,7 +163,7 @@ public class LobbyService() : ILobbyService
 
    private List<string> GenerateRandomGames(int count)
    {
-      var availableGames = GameFactory.ValidGameTypes.ToArray();
+      var availableGames = _gameFactory.ValidGameTypes.ToArray();
       var random = new Random();
       var games = new List<string>();
 

@@ -6,10 +6,10 @@ using Api.GameLogic;
 
 namespace Api.Services;
 
-public class GameService : IGameService
+public class GameService(IGameFactory gameFactory) : IGameService
 {
    private static readonly ConcurrentDictionary<string, IGame> _games = new();
-
+   private readonly IGameFactory _gameFactory = gameFactory;
    public bool StartGame(string gameId, string gameType, List<User> players)
    {
       if (players == null || players.Count < 2)
@@ -18,7 +18,7 @@ public class GameService : IGameService
          return false;
       try
       {
-         _games[gameId] = GameFactory.CreateGame(gameType, players);
+         _games[gameId] = _gameFactory.CreateGame(gameType, players);
          Console.WriteLine($"Game {gameId} started with type {gameType}");
          return true;
       }
