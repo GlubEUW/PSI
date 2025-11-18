@@ -9,9 +9,10 @@ namespace Api.Controllers;
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
-public class LobbyController(ILobbyService lobbyService) : ControllerBase
+public class LobbyController(ILobbyService lobbyService, IGameFactory gameFactory) : ControllerBase
 {
    private readonly ILobbyService _lobbyService = lobbyService;
+   private readonly IGameFactory _gameFactory = gameFactory;
 
    [HttpPost("{code}/canjoin")]
    public ActionResult CanJoinMatch(string code)
@@ -62,7 +63,7 @@ public class LobbyController(ILobbyService lobbyService) : ControllerBase
             if (string.IsNullOrWhiteSpace(gameName))
                return BadRequest(new { Message = "Game name cannot be empty." });
 
-            if (!GameFactory.ValidGameTypes.Contains(gameName))
+            if (!_gameFactory.ValidGameTypes.Contains(gameName))
                return BadRequest(new { Message = $"Invalid game: {gameName}." });
          }
       }

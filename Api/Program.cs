@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Api.Services;
 using Api.Data;
+using Api.GameLogic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +88,7 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<ILobbyService, LobbyService>();
+builder.Services.AddSingleton<IGameFactory, GameFactory>();
 
 var app = builder.Build();
 

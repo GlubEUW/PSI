@@ -2,15 +2,18 @@ using Api.Entities;
 
 namespace Api.GameLogic;
 
-public static class GameFactory
+public class GameFactory : IGameFactory
 {
-   public static readonly HashSet<string> ValidGameTypes = new()
-   {
-      "TicTacToe",
-      "RockPaperScissors",
-      "ConnectFour"
-   };
-   public static IGame CreateGame(string gameType, List<User> players)
+   private readonly HashSet<string> _validGameTypes = new()
+    {
+        "TicTacToe",
+        "RockPaperScissors",
+        "ConnectFour"
+    };
+
+   public IReadOnlySet<string> ValidGameTypes => _validGameTypes;
+
+   public IGame CreateGame(string gameType, List<User> players)
    {
       return gameType switch
       {
