@@ -8,7 +8,13 @@ public class UserService(DatabaseContext context) : IUserService
 {
    public User CreateUser(string name, Guid id, string role)
    {
-      return (role == "Guest") ? new Guest() : new RegisteredUser()
+      return (role == "Guest") ?
+      new Guest()
+      {
+         Name = name,
+         Id = id
+      }
+      : new RegisteredUser()
       {
          Name = name,
          Id = id
@@ -72,4 +78,6 @@ public class UserService(DatabaseContext context) : IUserService
 
       return user;
    }
+}
+
 }
