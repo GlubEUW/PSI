@@ -54,30 +54,33 @@ public class GameService(IGameFactory gameFactory) : IGameService
       return _games.TryGetValue(gameId, out var game) ? game.GetState() : null;
    }
 
-   public (List<List<User>> pairedGroups, List<User> unmatchedPlayers) CreatePlayerGroups(List<User> players, int playersPerGame = 2)
+   public (List<List<TItem>> groupedItems, List<TItem> ungroupedItems) CreateGroups<TItem>(
+       List<TItem> items,
+       int itemsPerGroup = 2,
+       bool shuffle = true) where TItem : class, IComparable<TItem>
    {
-      var playerGroups = new List<List<User>>();
-      var currentGroup = new List<User>();
-      var pair = 0;
+      var groups = new List<List<TItem>>();
+      var currentGroup = new List<TItem>();
+      var count = 0;
 
-      var random = new Random();
-      var shuffledPlayers = players.OrderBy(_ => random.Next()).ToList();
+      var processedItems = shuffle
+          ? items.OrderBy(_ => Random.Shared.Next()).ToList()
+          : items;
 
-      foreach (var player in shuffledPlayers)
+      foreach (var item in processedItems)
       {
-         currentGroup.Add(player);
-         pair++;
+         currentGroup.Add(item);
+         count++;
 
-         if (pair == playersPerGame)
+         if (count == itemsPerGroup)
          {
-            playerGroups.Add(currentGroup);
-            currentGroup = new List<User>();
-            pair = 0;
+            groups.Add(currentGroup);
+            currentGroup = new List<TItem>();
+            count = 0;
          }
       }
 
-      var unmatchedPlayers = currentGroup.Count > 0 ? currentGroup : new List<User>();
-
-      return (playerGroups, unmatchedPlayers);
+      var remaining = currentGroup.Count > 0 ? currentGroup : new List<TItem>();
+      return (groups, remaining);
    }
 }

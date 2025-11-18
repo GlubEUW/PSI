@@ -10,5 +10,8 @@ public interface IGameService
    public bool RemoveGame(string gameId);
    public bool MakeMove(string gameId, JsonElement data, out object? newState);
    public object? GetGameState(string gameId);
-   public (List<List<User>> pairedGroups, List<User> unmatchedPlayers) CreatePlayerGroups(List<User> players, int playersPerGame = 2);
+   public (List<List<TItem>> groupedItems, List<TItem> ungroupedItems) CreateGroups<TItem>(
+    List<TItem> items,
+    int itemsPerGroup = 2,
+    bool shuffle = true) where TItem : class, IComparable<TItem>;
 }
