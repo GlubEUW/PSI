@@ -13,6 +13,8 @@ function LobbyPage() {
    const [connection, setConnection] = useState(null);
    const [players, setPlayers] = useState([{ name: "", wins: 0 }]);
    const [message, setMessage] = useState("");
+   const [matchResult, setMatchResult] = useState(null);
+   const [showWinnerScreen, setShowWinnerScreen] = useState(false);
 
    const connectedRef = useRef(false);
 
@@ -85,6 +87,11 @@ function LobbyPage() {
             });
          });
 
+         conn.on("MatchOver", (data) => {
+            setMatchResult(data);
+            setShowWinnerScreen(true);
+         });
+
          try {
             await conn.start();
             setConnection(conn);
@@ -128,14 +135,80 @@ function LobbyPage() {
       <>
          <Outlet context={outletContext} />
          {!window.location.pathname.includes('/game') && (
-            <div>
+            <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
                <h2>Lobby {code}</h2>
                <p>Your name is: {user.name}</p>
                <p>{message}</p>
+               {showWinnerScreen && matchResult ? (
+                  <div style={{
+                     padding: "20px 0",
+                     marginBottom: "20px",
+                     borderTop: "2px solid #e5e7eb",
+                     borderBottom: "2px solid #e5e7eb"
+                  }}>
+                     <h2 style={{
+                        fontSize: "22px",
+                        fontWeight: "600",
+                        color: "#ffffffff",
+                        marginBottom: "8px"
+                     }}>
+                        Match Complete
+                     </h2>
 
-               <button onClick={() => startMatch()} className="normal-button">Start Match</button>
+                     <p style={{
+                        fontSize: "16px",
+                        color: matchResult.isTie ? "#f59e0b" : "#10b981",
+                        fontWeight: "500",
+                        marginBottom: "16px"
+                     }}>
+                        {matchResult.result}
+                     </p>
 
-               <p>Round {currentRound}/{totalRounds}</p>
+                     <div style={{ marginBottom: "12px" }}>
+                        {matchResult.players && matchResult.players.map((player, index) => (
+                           <div
+                              key={index}
+                              style={{
+                                 display: "flex",
+                                 justifyContent: "space-between",
+                                 alignItems: "center",
+                                 padding: "10px 12px",
+                                 marginBottom: "6px",
+                                 borderLeft: "2px solid #e5e7eb",
+                                 borderRadius: "4px",
+                                 borderTop: "2px solid #e5e7eb",
+                                 borderBottom: "2px solid #e5e7eb",
+                                 borderRight: "2px solid #e5e7eb"
+
+                              }}
+                           >
+                              <span style={{
+                                 fontSize: "15px",
+                                 fontWeight: index === 0 ? "600" : "400",
+                                 color: "#ffffffff"
+                              }}>
+                                 {index + 1}. {player.Name || player.name}
+                              </span>
+                              <span style={{
+                                 fontSize: "15px",
+                                 fontWeight: "600",
+                                 color: "#10b981"
+                              }}>
+                                 {player.Wins ?? player.wins ?? 0}
+                              </span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               ) : (
+                  <>
+                     <button onClick={() => startMatch()} className="normal-button">
+                        Start Match
+                     </button>
+
+                     <p>Round {currentRound}/{totalRounds}</p>
+                  </>
+               )}
                <h3>Players in Lobby:</h3>
                <ul>
                   {players.map((player, idx) => (
@@ -144,7 +217,10 @@ function LobbyPage() {
                      </li>
                   ))}
                </ul>
-               <button onClick={() => quitLobby()} className="normal-button">Quit Lobby</button>
+
+               <button onClick={() => quitLobby()} className="normal-button">
+                  Quit Lobby
+               </button>
             </div>
          )}
       </>

@@ -219,9 +219,31 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
 
       if (_lobbyService.AreAllGamesEnded(code))
       {
-         var roundInfo = _lobbyService.GetMatchRoundInfo(code);
-         await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
-         await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
+         var session = _lobbyService.GetMatchSession(code);
+
+         if (session != null && session.CurrentRound >= session.GamesList.Count)
+         {
+            var players = _lobbyService.GetPlayersInLobby(code);
+            var maxWins = players.Max(p => p.Wins);
+            var winners = players.Where(p => p.Wins == maxWins).ToList();
+
+            await Clients.Group(code).SendAsync("MatchOver", new
+            {
+               winner = winners.Count == 1 ? winners[0].Name : null,
+               isTie = winners.Count > 1,
+               result = winners.Count > 1
+                  ? $"It's a tie! {string.Join(" and ", winners.Select(w => w.Name))} both have {maxWins} wins!"
+                  : $"{winners[0].Name} wins the match with {maxWins} wins!",
+               players = players.Select(p => new { p.Name, p.Wins })
+                  .OrderByDescending(p => p.Wins).ToList()
+            });
+         }
+         else
+         {
+            var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+            await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+            await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
+         }
       }
       else
       {
