@@ -8,17 +8,11 @@ public class UserService(DatabaseContext context) : IUserService
 {
    public User CreateUser(string name, Guid id, string role)
    {
-      return (role == "Guest")
-         ? new Guest
-         {
-            Name = name,
-            Id = id
-         }
-         : new RegisteredUser
-         {
-            Name = name,
-            Id = id
-         };
+      return (role == "Guest") ? new Guest() : new RegisteredUser()
+      {
+         Name = name,
+         Id = id
+      };
    }
    public async Task LoadUserStatsAsync(User user)
    {
