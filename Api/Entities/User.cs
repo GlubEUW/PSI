@@ -9,7 +9,7 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
 {
    public Guid Id { get; set; } = Guid.Empty;
    public string Name { get; set; } = string.Empty;
-   public int TotalWins { get; set; } = 0;
+   public int Wins { get; set; } = 0;
    [NotMapped]
    public Dictionary<GameType, GameStats> PlayedAndWonGamesByType { get; set; }
       = Enum.GetValues<GameType>()
@@ -48,7 +48,7 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
       if (other is null)
          return 1;
 
-      return TotalWins.CompareTo(other.TotalWins);
+      return Wins.CompareTo(other.Wins);
    }
 }
 

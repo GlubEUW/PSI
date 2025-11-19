@@ -38,7 +38,7 @@ public class RockPaperScissorsGame : IGame
       {
          Players,
          Result,
-         WinCounts = Players.Select(p => p.TotalWins).ToList()
+         WinCounts = Players.Select(p => p.Wins).ToList()
       };
    }
 
@@ -75,14 +75,14 @@ public class RockPaperScissorsGame : IGame
           (c1 == RockPaperScissorsChoice.Paper && c2 == RockPaperScissorsChoice.Rock) ||
           (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper))
       {
-         Players[0].TotalWins++;
+         Players[0].Wins++;
          Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
          Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
          Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
          return $"{Players[0].Name} wins!";
       }
 
-      Players[1].TotalWins++;
+      Players[1].Wins++;
       Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
       Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
       Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;

@@ -99,7 +99,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService, IUse
    public Task<List<PlayerInfoDto>> GetPlayers(string code)
    {
       var players = _lobbyService.GetPlayersInLobby(code);
-      var playerDtos = players.Select(p => new PlayerInfoDto(p.Name, p.TotalWins)).ToList();
+      var playerDtos = players.Select(p => new PlayerInfoDto(p.Name, p.Wins)).ToList();
       return Task.FromResult(playerDtos);
    }
 
