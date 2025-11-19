@@ -43,7 +43,7 @@ public class TicTacToeGame : IGame
          Board,
          PlayerTurn = currentPlayer?.Name,
          Winner,
-         WinCounts = Players.Select(p => p.Wins).ToList()
+         WinCounts = Players.Select(p => p.TotalWins).ToList()
       };
    }
 
@@ -73,12 +73,18 @@ public class TicTacToeGame : IGame
       if (Winner == "X")
       {
          Winner = Players[0].Name;
-         Players[0].Wins++;
+         Players[0].TotalWins++;
+         Players[0].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].Wins++;
+         Players[0].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
+         Players[1].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
       }
       else if (Winner == "O")
       {
          Winner = Players[1].Name;
-         Players[1].Wins++;
+         Players[1].TotalWins++;
+         Players[1].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].Wins++;
+         Players[0].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
+         Players[1].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
       }
 
       PlayerTurn = PlayerSigns.FirstOtherKey(playerId);

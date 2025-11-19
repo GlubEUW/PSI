@@ -53,7 +53,7 @@ public class LobbyService() : ILobbyService
 
    public List<User> GetPlayersInLobby(string code)
    {
-      if (_sessions.TryGetValue(code, out var session) && session is not null) // LINQ Usage
+      if (_sessions.TryGetValue(code, out var session) && session is not null)
          return session.Players;
 
       return new List<User>();

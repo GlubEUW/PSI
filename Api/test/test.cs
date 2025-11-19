@@ -21,7 +21,7 @@ public class TestController(DatabaseContext context) : ControllerBase
          {
             Id = Guid.NewGuid(),
             Name = "TestUser_" + DateTime.UtcNow.Ticks,
-            Wins = 5
+            TotalWins = 5
          };
 
          await _context.Users.AddAsync(user);
@@ -34,7 +34,7 @@ public class TestController(DatabaseContext context) : ControllerBase
             {
                user.Id,
                user.Name,
-               user.Wins
+               user.TotalWins
             }
          });
       }
@@ -58,7 +58,7 @@ public class TestController(DatabaseContext context) : ControllerBase
             {
                u.Id,
                u.Name,
-               u.Wins
+               u.TotalWins
             })
          });
       }

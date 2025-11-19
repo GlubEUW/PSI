@@ -4,12 +4,8 @@ namespace Api.Services;
 
 public interface IUserService
 {
-   public static User CreateUser(string name, Guid id, string role)
-   {
-      return (role == "Guest") ? new Guest() : new RegisteredUser()
-      {
-         Name = name,
-         Id = id
-      };
-   }
+   public User CreateUser(string name, Guid id, string role);
+   public Task LoadUserStatsAsync(User user);
+   public Task SaveUserStatsAsync(User user);
+   public Task<User?> GetUserByIdAsync(Guid id);
 }

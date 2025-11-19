@@ -7,7 +7,7 @@ using Api.Models;
 
 namespace Api.Hubs;
 
-public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hub
+public class MatchHub(ILobbyService lobbyService, IGameService gameService, IUserService userService) : Hub
 {
    private enum ContextKeys
    {
@@ -16,6 +16,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
    }
    private readonly ILobbyService _lobbyService = lobbyService;
    private readonly IGameService _gameService = gameService;
+   private readonly IUserService _userService = userService;
 
    public override async Task OnConnectedAsync()
    {
@@ -45,7 +46,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          return;
       }
 
-      User user = UserService.CreateUser(userName, Guid.Parse(userId), userRole);
+      User user = _userService.CreateUser(userName, Guid.Parse(userId), userRole);
 
       var joined = await _lobbyService.JoinMatch(code, user);
       if (joined is not null)
@@ -54,6 +55,8 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
          Context.Abort();
          return;
       }
+
+      await _userService.LoadUserStatsAsync(user);
 
       Context.Items.Add(ContextKeys.Code, code);
       Context.Items.Add(ContextKeys.User, user);
@@ -75,7 +78,11 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       {
 
          Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
+
+         await _userService.SaveUserStatsAsync(user);
+
          await _lobbyService.LeaveMatch(code, user.Id);
+
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.Id.ToString());
 
@@ -92,8 +99,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
    public Task<List<PlayerInfoDto>> GetPlayers(string code)
    {
       var players = _lobbyService.GetPlayersInLobby(code);
-      var playerNames = players.Select(p => p.Name).ToList();
-      var playerDtos = players.Select(p => new PlayerInfoDto(p.Name, p.Wins)).ToList();
+      var playerDtos = players.Select(p => new PlayerInfoDto(p.Name, p.TotalWins)).ToList();
       return Task.FromResult(playerDtos);
    }
 
