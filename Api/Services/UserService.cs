@@ -79,5 +79,3 @@ public class UserService(DatabaseContext context) : IUserService
       return user;
    }
 }
-
-}
