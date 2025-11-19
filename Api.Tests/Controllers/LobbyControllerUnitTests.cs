@@ -28,7 +28,7 @@ public class LobbyControllerUnitTests
 
    private static LobbyController CreateController(ILobbyService service, ControllerContext ctx)
    {
-      return new(service, new Api.GameLogic.GameFactory()) { ControllerContext = ctx };
+      return new(service, new Api.Tests.TestDoubles.TestGameFactory()) { ControllerContext = ctx };
    }
 
    private static string? ReadResultProp(IActionResult result, string propName)
@@ -210,7 +210,7 @@ public class LobbyControllerUnitTests
 
       var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
 
-      var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "TicTacToe" } };
+      var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "gameType1" } };
 
       var result = await controller.CreateLobbyWithSettings(dto);
       Assert.Equal("1234", ReadResultProp(result, "Code"));
@@ -225,7 +225,7 @@ public class LobbyControllerUnitTests
 
       var controller = CreateController(mock.Object, AuthenticatedContext(Guid.NewGuid()));
 
-      var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "TicTacToe", "RockPaperScissors" } };
+      var dto = new CreateLobbyDto { NumberOfRounds = 1, NumberOfPlayers = 2, RandomGames = false, GamesList = new List<string> { "gameType1", "gameType2" } };
 
       var result = await controller.CreateLobbyWithSettings(dto);
       Assert.Equal("1234", ReadResultProp(result, "Code"));

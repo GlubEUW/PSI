@@ -8,7 +8,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public void AddGameId_ReturnsFalse_WhenSessionMissing()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var userId = Guid.NewGuid();
       var added = svc.AddGameId("missing", userId, "g0");
       Assert.False(added);
@@ -60,7 +60,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public void RemoveGameId_ReturnsFalse_WhenCodeOrUserIdNull()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var userId = Guid.NewGuid();
 
       Assert.False(svc.RemoveGameId(null, userId));
@@ -70,7 +70,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public void RemoveGameId_ReturnsFalse_WhenSessionMissing()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var userId = Guid.NewGuid();
       Assert.False(svc.RemoveGameId("missing", userId));
    }
@@ -78,7 +78,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public async Task TryGetGameId_ReturnsFalse_WhenCodeNull_OrSessionMissing_OrMappingMissing()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var userId = Guid.NewGuid();
 
       Assert.False(svc.TryGetGameId(null, userId, out var gid1));
@@ -96,7 +96,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public async Task CreateMatch_ReturnsTrueThenFalse_OnDuplicate()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var code = Guid.NewGuid().ToString("N").Substring(0, 6);
       var first = await svc.CreateMatch(code);
       var second = await svc.CreateMatch(code);
@@ -107,7 +107,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public async Task JoinMatch_ReturnsGameDoesNotExist_WhenNoSession()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var res = await svc.JoinMatch("missing", new Guest { Id = Guid.NewGuid(), Name = "x" });
       Assert.Equal("Game does not exist.", res);
    }
@@ -142,7 +142,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public async Task LeaveMatch_ReturnsFalse_WhenSessionMissing()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var res = await svc.LeaveMatch("missing", Guid.NewGuid());
       Assert.False(res);
    }
@@ -180,7 +180,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public void CanJoinLobby_NoSession_ReturnsGameDoesNotExist()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var msg = svc.CanJoinLobby("missing", Guid.NewGuid());
       Assert.Equal("Game does not exist.", msg);
    }
@@ -221,7 +221,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public async Task CreateLobbyWithSettings_UsesProvidedGamesList_WhenRandomFalse()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var games = new List<string> { "TicTacToe", "RockPaperScissors" };
       var code = await svc.CreateLobbyWithSettings(2, 2, false, games);
 
@@ -232,7 +232,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public async Task CreateLobbyWithSettings_RandomGames_GeneratesCorrectCount_And_ValidTypes()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var code = await svc.CreateLobbyWithSettings(2, 3, true, null);
       var session = svc.GetMatchSession(code)!;
       Assert.Equal(3, session.GamesList.Count);
@@ -242,7 +242,7 @@ public class LobbyServiceUnitTests
    [Fact]
    public async Task GetMatchRoundInfo_Defaults_WhenSessionMissing_And_ClampsCurrentRound()
    {
-      var svc = new LobbyService(new Api.GameLogic.GameFactory());
+      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var info = svc.GetMatchRoundInfo("missing");
       Assert.Equal(1, info.CurrentRound);
       Assert.Equal(1, info.TotalRounds);

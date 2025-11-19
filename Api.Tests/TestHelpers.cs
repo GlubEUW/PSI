@@ -63,12 +63,13 @@ public static class TestHelpers
 
    public static IGameService CreateGameService()
    {
-      return new GameService(new Api.GameLogic.GameFactory());
+      // Use a custom test game factory to decouple tests from production game logic
+      return new GameService(new Api.Tests.TestDoubles.TestGameFactory());
    }
 
    public static async Task<(ILobbyService lobby, string code)> CreateLobbyAsync(int numberOfPlayers = 2, int numberOfRounds = 1, bool randomGames = true, List<string>? gamesList = null)
    {
-      var lobby = new LobbyService(new Api.GameLogic.GameFactory());
+      var lobby = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var code = await lobby.CreateLobbyWithSettings(numberOfPlayers, numberOfRounds, randomGames, gamesList);
       return (lobby, code);
    }

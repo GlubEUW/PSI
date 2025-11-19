@@ -12,10 +12,10 @@ public class GameServiceUnitTests
    {
       var svc = (GameService)TestHelpers.CreateGameService();
 
-      Assert.False(svc.StartGame("g1", "TicTacToe", null!));
+      Assert.False(svc.StartGame("g1", "gameType1", null!));
 
       var onePlayer = new List<User> { new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "p1" } };
-      Assert.False(svc.StartGame("g2", "TicTacToe", onePlayer));
+      Assert.False(svc.StartGame("g2", "gameType1", onePlayer));
    }
 
    [Fact]
@@ -29,8 +29,8 @@ public class GameServiceUnitTests
       };
 
       var id = "dup";
-      Assert.True(svc.StartGame(id, "TicTacToe", players));
-      Assert.False(svc.StartGame(id, "TicTacToe", players));
+      Assert.True(svc.StartGame(id, "gameType1", players));
+      Assert.False(svc.StartGame(id, "gameType1", players));
 
       svc.RemoveGame(id);
    }
@@ -41,12 +41,12 @@ public class GameServiceUnitTests
       var svc = (GameService)TestHelpers.CreateGameService();
       var players = new List<User>
       {
-         new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "alice" },
-         new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "bob" }
+         new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "player1" },
+         new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "player2" }
       };
 
       var id = Guid.NewGuid().ToString();
-      var ok = svc.StartGame(id, "TicTacToe", players);
+      var ok = svc.StartGame(id, "gameType1", players);
       Assert.True(ok);
 
       var state = svc.GetGameState(id);
@@ -64,8 +64,8 @@ public class GameServiceUnitTests
       var svc = (GameService)TestHelpers.CreateGameService();
       var players = new List<User>
          {
-            new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "alice" },
-            new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "bob" }
+            new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "player1" },
+            new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "player2" }
          };
 
       var id = Guid.NewGuid().ToString();
@@ -107,12 +107,12 @@ public class GameServiceUnitTests
    public void MakeMove_TicTacToe_ValidMove_UpdatesState()
    {
       var svc = (GameService)TestHelpers.CreateGameService();
-      var p1 = new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "p1" };
-      var p2 = new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "p2" };
+      var p1 = new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "player1" };
+      var p2 = new Api.Entities.Guest { Id = Guid.NewGuid(), Name = "player2" };
       var players = new List<User> { p1, p2 };
       var id = Guid.NewGuid().ToString();
 
-      Assert.True(svc.StartGame(id, "TicTacToe", players));
+      Assert.True(svc.StartGame(id, "gameType1", players));
 
       var moveJson = JsonSerializer.Serialize(new
       {
