@@ -10,13 +10,9 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Api.Tests.Hubs;
 
-public class MatchHubGameFlowIntegrationTests : IClassFixture<CustomWebApplicationFactory>
+public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
-   private readonly CustomWebApplicationFactory _factory;
-   public MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factory)
-   {
-      _factory = factory;
-   }
+   private readonly CustomWebApplicationFactory _factory = factory;
 
    private static void AddAuthHeaders(HttpClient client, Guid id, string name, string role = "Guest")
    {
