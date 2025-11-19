@@ -46,7 +46,7 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
 
       const timer = setTimeout(() => {
          returnToLobby();
-      }, 5000);
+      }, 3000);
 
       return () => clearTimeout(timer);
    }, [winner]);
@@ -79,14 +79,14 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
    return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
          <h2>Tic Tac Toe</h2>
-         {winner ? 
+         {winner ?
             (<div style={{ marginBottom: "20px" }}>
                <h3>Winner: {winner}</h3>
-               <button onClick={returnToLobby} className="normal-button">Back To Lobby</button>
+               <p>You will return to the lobby shortly.</p>
             </div>
-         ) : (
-            <h3>Current turn: {playerTurn}</h3>
-         )}
+            ) : (
+               <h3>Current turn: {playerTurn}</h3>
+            )}
          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 60px)", gap: "5px" }}>
             {board.map((row, i) =>
                row.map((cell, j) => (

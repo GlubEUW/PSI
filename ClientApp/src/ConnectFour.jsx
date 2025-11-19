@@ -22,7 +22,7 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
       };
 
       connection.on("GameUpdate", handleGameUpdate);
-      
+
       connection.invoke("GetGameState", gameId)
          .then(state => {
             console.log("Connect Four initial state:", state);
@@ -44,7 +44,7 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
 
       const timer = setTimeout(() => {
          returnToLobby();
-      }, 5000);
+      }, 3000);
 
       return () => clearTimeout(timer);
    }, [winner]);
@@ -102,13 +102,11 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
    return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
          <h2>Connect Four</h2>
-         
+
          {winner ? (
             <div style={{ marginBottom: "20px" }}>
-               <h3 style={{ color: "green" }}>Winner: {winner}! 🎉</h3>
-               <button onClick={returnToLobby} className="normal-button">
-                  Back To Lobby
-               </button>
+               <h3 style={{ color: "green" }}>Winner: {winner}!</h3>
+               <p>You will return to the lobby shortly.</p>
             </div>
          ) : (
             <h3>Current turn: {playerTurn}</h3>
@@ -160,16 +158,16 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
                            transition: "transform 0.2s",
                            transform:
                               !winner &&
-                              rowIndex === 0 &&
-                              hoveredColumn === colIndex &&
-                              canDropInColumn(colIndex)
+                                 rowIndex === 0 &&
+                                 hoveredColumn === colIndex &&
+                                 canDropInColumn(colIndex)
                                  ? "scale(1.1)"
                                  : "scale(1)",
                            outline:
                               !winner &&
-                              rowIndex === 0 &&
-                              hoveredColumn === colIndex &&
-                              canDropInColumn(colIndex)
+                                 rowIndex === 0 &&
+                                 hoveredColumn === colIndex &&
+                                 canDropInColumn(colIndex)
                                  ? "4px solid white"
                                  : "none"
                         }}
