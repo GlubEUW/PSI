@@ -84,19 +84,19 @@ public class ConnectFourGameUnitTests
    public void Diagonal_PositiveSlope_Win_For_First_Player()
    {
       var (game, p1, p2) = CreateGame();
-      // Helper aliases
+
       var R = (int)DiscColor.Red;
       var Y = (int)DiscColor.Yellow;
 
-      // Build a board with three red discs on a positive-slope diagonal:
-      // (row,col): (5,0)=R, (4,1)=R, (3,2)=R
-      // Ensure gravity: fill cells below target (2,3) in column 3
+
+
+
       game.Board[5][0] = R;
       game.Board[5][1] = Y; game.Board[4][1] = R;
       game.Board[5][2] = Y; game.Board[4][2] = Y; game.Board[3][2] = R;
       game.Board[5][3] = Y; game.Board[4][3] = Y; game.Board[3][3] = Y; // below (2,3)
 
-      // It's p1's turn; dropping in column 3 should land at row 2 and complete the diagonal
+
       game.PlayerTurn = p1.Id;
       Assert.True(game.MakeMove(Move(p1.Id, 3)));
 
@@ -113,9 +113,9 @@ public class ConnectFourGameUnitTests
       var R = (int)DiscColor.Red;
       var Y = (int)DiscColor.Yellow;
 
-      // Build a board with three red discs on a negative-slope diagonal:
-      // (row,col): (5,6)=R, (4,5)=R, (3,4)=R
-      // Ensure gravity: fill cells below target (2,3) in column 3
+
+
+
       game.Board[5][6] = R;
       game.Board[5][5] = Y; game.Board[4][5] = R;
       game.Board[5][4] = Y; game.Board[4][4] = Y; game.Board[3][4] = R;
@@ -137,7 +137,7 @@ public class ConnectFourGameUnitTests
       var R = (int)DiscColor.Red;
       var Y = (int)DiscColor.Yellow;
 
-      // Fill the board in a checkerboard pattern with (0,0) left empty
+
       for (var r = 0; r < 6; r++)
       {
          for (var c = 0; c < 7; c++)
@@ -147,7 +147,7 @@ public class ConnectFourGameUnitTests
          }
       }
 
-      // Last move by p1 into column 0 drops at row 0 without forming a connect four.
+
       game.PlayerTurn = p1.Id;
       Assert.True(game.MakeMove(Move(p1.Id, 0)));
 

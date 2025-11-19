@@ -3,8 +3,6 @@ using System.Text.Json;
 using Api.Entities;
 using Api.GameLogic;
 
-using Xunit;
-
 namespace Api.Tests.GameLogic;
 
 public class RockPaperScissorsGameUnitTests

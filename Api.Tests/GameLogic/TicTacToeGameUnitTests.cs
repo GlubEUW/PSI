@@ -52,13 +52,13 @@ public class TicTacToeGameUnitTests
    {
       var (game, p1, p2) = CreateGame();
 
-      // Wrong player first
+
       Assert.False(game.MakeMove(Move(p2.Id, 0, 0)));
-      // Correct player
+
       Assert.True(game.MakeMove(Move(p1.Id, 0, 0)));
-      // Cell already occupied
+
       Assert.False(game.MakeMove(Move(p2.Id, 0, 0)));
-      // Correct alternate move
+
       Assert.True(game.MakeMove(Move(p2.Id, 1, 1)));
    }
 
@@ -66,7 +66,7 @@ public class TicTacToeGameUnitTests
    public void X_Wins_Row_And_Wins_Incremented()
    {
       var (game, p1, p2) = CreateGame();
-      // X: (0,0), O: (1,0), X: (0,1), O: (1,1), X: (0,2)
+
       Assert.True(game.MakeMove(Move(p1.Id, 0, 0)));
       Assert.True(game.MakeMove(Move(p2.Id, 1, 0)));
       Assert.True(game.MakeMove(Move(p1.Id, 0, 1)));
@@ -78,7 +78,7 @@ public class TicTacToeGameUnitTests
       Assert.Equal("Player1", winner);
       Assert.Equal(1, game.Players[0].Wins);
 
-      // No more moves allowed after win
+
       Assert.False(game.MakeMove(Move(p2.Id, 2, 2)));
    }
 
@@ -86,7 +86,7 @@ public class TicTacToeGameUnitTests
    public void Draw_After_Filling_Board_No_Winner()
    {
       var (game, p1, p2) = CreateGame();
-      // Sequence that results in a draw
+
       var seq = new (Guid player, int x, int y)[]
       {
             (p1.Id,0,0),(p2.Id,0,1),(p1.Id,0,2),

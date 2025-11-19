@@ -300,7 +300,7 @@ public class MatchHubUnitTests
 
       var clients = new Mock<IHubCallerClients>();
       var unmatchedProxy = SetupGroup(clients, p3.Id.ToString());
-      // also needed for match started notifications
+
       clients.Setup(c => c.Group(p1.Id.ToString())).Returns(new Mock<ISingleClientProxy>().Object);
       clients.Setup(c => c.Group(p2.Id.ToString())).Returns(new Mock<ISingleClientProxy>().Object);
 
@@ -381,7 +381,7 @@ public class MatchHubUnitTests
    public async Task MakeMove_NoGameId_SendsErrorToCaller()
    {
       var (hub, lobbyMock, gameMock) = CreateHub();
-      var mockContext = BuildContext(MakeItems("CODEX", TestHelpers.BuildGuest("Bob")));
+      var mockContext = BuildContext(MakeItems("CODEX", TestHelpers.BuildGuest("Player2")));
 
       lobbyMock.Setup(s => s.GetMatchSession("CODEX")).Returns(new MatchSession { Code = "CODEX", PlayerGroups = new List<List<User>>() });
       string? outIdNull = null;

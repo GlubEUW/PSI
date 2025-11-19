@@ -63,7 +63,7 @@ public static class TestHelpers
 
    public static IGameService CreateGameService()
    {
-      // Use a custom test game factory to decouple tests from production game logic
+
       return new GameService(new Api.Tests.TestDoubles.TestGameFactory());
    }
 
