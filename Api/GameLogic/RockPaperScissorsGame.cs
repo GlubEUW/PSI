@@ -63,7 +63,6 @@ public class RockPaperScissorsGame : IGame
 
    private string? DetermineWinner()
    {
-      // var players = PlayerChoices.Keys.ToList();
       var p1 = Players[0].Id;
       var p2 = Players[1].Id;
       var c1 = PlayerChoices[p1];
@@ -77,10 +76,16 @@ public class RockPaperScissorsGame : IGame
           (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper))
       {
          Players[0].Wins++;
+         Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
+         Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
+         Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
          return $"{Players[0].Name} wins!";
       }
 
       Players[1].Wins++;
+      Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
+      Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
+      Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
       return $"{Players[1].Name} wins!";
    }
 }

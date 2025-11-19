@@ -41,3 +41,14 @@ export async function GetUser(token) {
    });
    return response;
 }
+
+export async function GetGameStats(token) {
+   const response = await fetch("http://localhost:5243/api/user/gameStats", {
+      method: "GET",
+      headers: {
+         "Content-Type": "application/json",
+         "Authorization": "Bearer " + token
+      }
+   });
+   return response;
+}

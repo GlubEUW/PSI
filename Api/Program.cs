@@ -87,6 +87,7 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
     ));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<ILobbyService, LobbyService>();
 builder.Services.AddSingleton<IGameFactory, GameFactory>();

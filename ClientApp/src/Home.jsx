@@ -36,6 +36,10 @@ function Home() {
       navigate("/queue");
    };
 
+   const handleProfileNavigate = async () => {
+      navigate("/profile");
+   }
+
    const handleLobbyJoin = async () => {
       const token = localStorage.getItem("userToken");
 
@@ -107,6 +111,9 @@ function Home() {
       <div style={{ padding: "20px" }}>
          <h1>Home Page</h1>
 
+         <div style={{ marginBottom: "30px" }}>
+            <button onClick={handleProfileNavigate} className="normal-button">Profile</button>
+         </div>
          <div style={{ marginBottom: "30px" }}>
             <button onClick={handleQueueJoin} className="normal-button">Queue</button>
          </div>
