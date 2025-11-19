@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Api.Enums;
-using Api.Models;
+// using Api.Models;
 
 namespace Api.Entities;
 
@@ -9,6 +9,7 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
 {
    public Guid Id { get; set; } = Guid.Empty;
    public string Name { get; set; } = string.Empty;
+   [NotMapped]
    public int Wins { get; set; } = 0;
    [NotMapped]
    public Dictionary<GameType, GameStats> PlayedAndWonGamesByType { get; set; }
@@ -21,27 +22,27 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
       public int GamesPlayed { get; set; } = 0;
    }
 
-   public GameStatsDto ToGameStatsDto()
-   {
-      return new GameStatsDto
-      {
-         UserId = Id,
-         TotalWins = PlayedAndWonGamesByType.Values.Sum(gs => gs.Wins),
-         TotalGamesPlayed = PlayedAndWonGamesByType.Values.Sum(gs => gs.GamesPlayed),
-         TicTacToeWins = PlayedAndWonGamesByType[GameType.TicTacToe].Wins,
-         TicTacToeGamesPlayed = PlayedAndWonGamesByType[GameType.TicTacToe].GamesPlayed,
-         RockPaperScissorsWins = PlayedAndWonGamesByType[GameType.RockPaperScissors].Wins,
-         RockPaperScissorsGamesPlayed = PlayedAndWonGamesByType[GameType.RockPaperScissors].GamesPlayed
-      };
-   }
+   // public GameStatsDto ToGameStatsDto()
+   // {
+   //    return new GameStatsDto
+   //    {
+   //       UserId = Id,
+   //       TotalWins = PlayedAndWonGamesByType.Values.Sum(gs => gs.Wins),
+   //       TotalGamesPlayed = PlayedAndWonGamesByType.Values.Sum(gs => gs.GamesPlayed),
+   //       TicTacToeWins = PlayedAndWonGamesByType[GameType.TicTacToe].Wins,
+   //       TicTacToeGamesPlayed = PlayedAndWonGamesByType[GameType.TicTacToe].GamesPlayed,
+   //       RockPaperScissorsWins = PlayedAndWonGamesByType[GameType.RockPaperScissors].Wins,
+   //       RockPaperScissorsGamesPlayed = PlayedAndWonGamesByType[GameType.RockPaperScissors].GamesPlayed
+   //    };
+   // }
 
-   public void LoadFromGameStatsDto(GameStatsDto data)
-   {
-      PlayedAndWonGamesByType[GameType.TicTacToe].Wins = data.TicTacToeWins;
-      PlayedAndWonGamesByType[GameType.TicTacToe].GamesPlayed = data.TicTacToeGamesPlayed;
-      PlayedAndWonGamesByType[GameType.RockPaperScissors].Wins = data.RockPaperScissorsWins;
-      PlayedAndWonGamesByType[GameType.RockPaperScissors].GamesPlayed = data.RockPaperScissorsGamesPlayed;
-   }
+   // public void LoadFromGameStatsDto(GameStatsDto data)
+   // {
+   //    PlayedAndWonGamesByType[GameType.TicTacToe].Wins = data.TicTacToeWins;
+   //    PlayedAndWonGamesByType[GameType.TicTacToe].GamesPlayed = data.TicTacToeGamesPlayed;
+   //    PlayedAndWonGamesByType[GameType.RockPaperScissors].Wins = data.RockPaperScissorsWins;
+   //    PlayedAndWonGamesByType[GameType.RockPaperScissors].GamesPlayed = data.RockPaperScissorsGamesPlayed;
+   // }
 
    public int CompareTo(User? other) // FIXME: Compare data from database, not saved in user during session
    {

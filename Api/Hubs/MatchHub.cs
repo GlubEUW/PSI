@@ -56,7 +56,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService, IUse
          return;
       }
 
-      await _userService.LoadUserStatsAsync(user);
+      // await _userService.LoadUserStatsAsync(user);
 
       Context.Items.Add(ContextKeys.Code, code);
       Context.Items.Add(ContextKeys.User, user);
@@ -78,8 +78,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService, IUse
       {
 
          Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
-
-         await _userService.SaveUserStatsAsync(user);
 
          await _lobbyService.LeaveMatch(code, user.Id);
 
@@ -130,6 +128,8 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService, IUse
       var players = _lobbyService.GetPlayersInLobby(code);
       var (playerGroups, unmatchedPlayers) = _gameService.CreatePlayerGroups(players, playersPerGame: 2);
 
+
+
       foreach (var unmatchedPlayer in unmatchedPlayers)
       {
          await Clients.Group(unmatchedPlayer.Id.ToString()).SendAsync("NoPairing");
@@ -157,6 +157,8 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService, IUse
       session.PlayerGroups = playerGroups;
       session.InGame = true;
       _lobbyService.ResetRoundEndTracking(code);
+      _lobbyService.SaveMatch(code);
+      _lobbyService.SaveRounds(code);
 
       i = 0;
       foreach (var (gameId, group) in gameInfos)

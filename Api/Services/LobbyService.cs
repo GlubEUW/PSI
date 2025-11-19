@@ -2,10 +2,11 @@ using System.Collections.Concurrent;
 using Api.Models;
 using Api.Entities;
 using Api.GameLogic;
+using Api.Data;
 
 namespace Api.Services;
 
-public class LobbyService() : ILobbyService
+public class LobbyService(DatabaseContext context) : ILobbyService
 {
    private static ConcurrentDictionary<string, MatchSession> _sessions = new();
 
@@ -64,20 +65,6 @@ public class LobbyService() : ILobbyService
          return false;
 
       return session.Players.All(p => !session._gameIdByUserId.ContainsKey(p.Id));
-   }
-   public Task<bool> CreateMatch(string code)
-   {
-      if (!_sessions.ContainsKey(code))
-      {
-         _sessions[code] = new MatchSession
-         {
-            Code = code,
-            Players = new List<User>(2),
-            InGame = false
-         };
-         return Task.FromResult(true);
-      }
-      return Task.FromResult(false);
    }
 
    public Task<string?> JoinMatch(string code, User user)
@@ -257,5 +244,38 @@ public class LobbyService() : ILobbyService
       {
          session.EndedGamesByRound[session.CurrentRound] = new HashSet<string>();
       }
+   }
+   public void SaveMatch(string code)
+   {
+      if (_sessions.TryGetValue(code, out var session) && session is not null)
+      {
+         var match = context.Matches.Add(new Match());
+         Console.WriteLine($"Saving match with ID: {match.Entity.Id}");
+         session.Id = match.Entity.Id;
+         context.SaveChanges();
+         return;
+      }
+
+      throw new Exception("Match session not found.");
+   }
+
+   public void SaveRounds(string code)
+   {
+      if (_sessions.TryGetValue(code, out var session) && session is not null)
+      {
+         foreach (var group in session.PlayerGroups)
+         {
+            context.Rounds.Add(new Round
+            {
+               MatchId = session.Id,
+               GameType = session.GameType,
+               RoundNumber = round.RoundNumber
+            });
+         }
+         context.SaveChanges();
+         return;
+      }
+
+      throw new Exception("Match session not found.");
    }
 }

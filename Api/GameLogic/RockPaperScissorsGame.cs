@@ -50,8 +50,9 @@ public class RockPaperScissorsGame : IGame
          PlayerChoices[move.PlayerId] = move.Choice;
 
          // Check if both players made a choice
-         if (PlayerChoices.Count == 2 && !PlayerChoices.ContainsValue(RockPaperScissorsChoice.None))
-            Result = DetermineWinner();
+         if (PlayerChoices.Count == 2 && !PlayerChoices.ContainsValue(RockPaperScissorsChoice.None) &&
+             DetermineWinner() is not null)
+            Winner = DetermineWinner().Id;
 
          return true;
       }
@@ -61,7 +62,7 @@ public class RockPaperScissorsGame : IGame
       }
    }
 
-   private string? DetermineWinner()
+   private User? DetermineWinner()
    {
       var p1 = Players[0].Id;
       var p2 = Players[1].Id;
@@ -69,23 +70,20 @@ public class RockPaperScissorsGame : IGame
       var c2 = PlayerChoices[p2];
 
       if (c1 == c2)
-         return "Draw!";
+         return null;
 
       if ((c1 == RockPaperScissorsChoice.Rock && c2 == RockPaperScissorsChoice.Scissors) ||
           (c1 == RockPaperScissorsChoice.Paper && c2 == RockPaperScissorsChoice.Rock) ||
           (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper))
       {
          Players[0].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
-         return $"{Players[0].Name} wins!";
+         return Players[0];
       }
 
       Players[1].Wins++;
       Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
       Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
       Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
-      return $"{Players[1].Name} wins!";
+      return Players[1];
    }
 }

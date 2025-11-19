@@ -56,28 +56,28 @@ public class UserController(IAuthService authService, IUserService userService) 
       return Ok(user);
    }
 
-   [Authorize]
-   [HttpGet("gameStats")]
-   public async Task<ActionResult<GameStatsDto>> GetGameStats()
-   {
-      var name = User.Identity?.Name;
-      var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
-      var roleClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role);
+   // [Authorize]
+   // [HttpGet("gameStats")]
+   // public async Task<ActionResult<GameStatsDto>> GetGameStats()
+   // {
+   //    var name = User.Identity?.Name;
+   //    var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
+   //    var roleClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role);
 
-      if (name is null
-         || idClaim is null
-         || !Guid.TryParse(idClaim.Value, out var id)
-         || roleClaim?.Value is not "RegisteredUser")
-      {
-         return Unauthorized();
-      }
+   //    if (name is null
+   //       || idClaim is null
+   //       || !Guid.TryParse(idClaim.Value, out var id)
+   //       || roleClaim?.Value is not "RegisteredUser")
+   //    {
+   //       return Unauthorized();
+   //    }
 
-      var user = await userService.GetUserByIdAsync(id);
-      if (user is null)
-         return NotFound();
+   //    var user = await userService.GetUserByIdAsync(id);
+   //    if (user is null)
+   //       return NotFound();
 
-      var statsDto = user.ToGameStatsDto();
-      statsDto.Name = user.Name;
-      return Ok(statsDto);
-   }
+   //    var statsDto = user.ToGameStatsDto();
+   //    statsDto.Name = user.Name;
+   //    return Ok(statsDto);
+   // }
 }
