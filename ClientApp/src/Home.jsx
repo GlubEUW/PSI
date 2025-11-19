@@ -114,9 +114,9 @@ function Home() {
          <div style={{ marginBottom: "30px" }}>
             <button onClick={handleProfileNavigate} className="normal-button">Profile</button>
          </div>
-         <div style={{ marginBottom: "30px" }}>
+         {/* <div style={{ marginBottom: "30px" }}>
             <button onClick={handleQueueJoin} className="normal-button">Queue</button>
-         </div>
+         </div> */}
 
          <hr />
 

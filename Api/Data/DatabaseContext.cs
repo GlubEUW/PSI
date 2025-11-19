@@ -11,6 +11,8 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
 
    protected override void OnModelCreating(ModelBuilder modelBuilder)
    {
+      modelBuilder.HasDefaultSchema("public1");
+      base.OnModelCreating(modelBuilder);
       modelBuilder.Entity<GameStatsDto>()
          .HasKey(gs => gs.UserId);
    }

@@ -31,7 +31,9 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
          TicTacToeWins = PlayedAndWonGamesByType[GameType.TicTacToe].Wins,
          TicTacToeGamesPlayed = PlayedAndWonGamesByType[GameType.TicTacToe].GamesPlayed,
          RockPaperScissorsWins = PlayedAndWonGamesByType[GameType.RockPaperScissors].Wins,
-         RockPaperScissorsGamesPlayed = PlayedAndWonGamesByType[GameType.RockPaperScissors].GamesPlayed
+         RockPaperScissorsGamesPlayed = PlayedAndWonGamesByType[GameType.RockPaperScissors].GamesPlayed,
+         ConnectFourWins = PlayedAndWonGamesByType[GameType.ConnectFour].Wins,
+         ConnectFourGamesPlayed = PlayedAndWonGamesByType[GameType.ConnectFour].GamesPlayed
       };
    }
 
@@ -41,6 +43,8 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
       PlayedAndWonGamesByType[GameType.TicTacToe].GamesPlayed = data.TicTacToeGamesPlayed;
       PlayedAndWonGamesByType[GameType.RockPaperScissors].Wins = data.RockPaperScissorsWins;
       PlayedAndWonGamesByType[GameType.RockPaperScissors].GamesPlayed = data.RockPaperScissorsGamesPlayed;
+      PlayedAndWonGamesByType[GameType.ConnectFour].Wins = data.ConnectFourWins;
+      PlayedAndWonGamesByType[GameType.ConnectFour].GamesPlayed = data.ConnectFourGamesPlayed;
    }
 
    public int CompareTo(User? other) // FIXME: Compare data from database, not saved in user during session

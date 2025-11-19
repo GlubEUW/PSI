@@ -18,4 +18,7 @@ public class GameStatsDto
 
    public int RockPaperScissorsWins { get; set; } = 0;
    public int RockPaperScissorsGamesPlayed { get; set; } = 0;
+
+   public int ConnectFourWins { get; set; } = 0;
+   public int ConnectFourGamesPlayed { get; set; } = 0;
 }

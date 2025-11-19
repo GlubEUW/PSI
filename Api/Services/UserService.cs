@@ -55,6 +55,8 @@ public class UserService(DatabaseContext context) : IUserService
          existing.TicTacToeGamesPlayed = statsData.TicTacToeGamesPlayed;
          existing.RockPaperScissorsWins = statsData.RockPaperScissorsWins;
          existing.RockPaperScissorsGamesPlayed = statsData.RockPaperScissorsGamesPlayed;
+         existing.ConnectFourWins = statsData.ConnectFourWins;
+         existing.ConnectFourGamesPlayed = statsData.ConnectFourGamesPlayed;
       }
       else
          context.GameStats.Add(statsData);

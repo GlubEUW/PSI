@@ -12,14 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20251113203105_AddPasswordHash")]
-    partial class AddPasswordHash
+    [Migration("20251119130511_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("public1")
                 .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -44,7 +45,42 @@ namespace Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", "public1");
+                });
+
+            modelBuilder.Entity("Api.Models.GameStatsDto", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ConnectFourGamesPlayed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ConnectFourWins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RockPaperScissorsGamesPlayed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RockPaperScissorsWins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TicTacToeGamesPlayed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TicTacToeWins")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalGamesPlayed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalWins")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("GameStats", "public1");
                 });
 #pragma warning restore 612, 618
         }

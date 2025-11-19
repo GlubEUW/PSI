@@ -65,20 +65,6 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
 
       return session.Players.All(p => !session._gameIdByUserId.ContainsKey(p.Id));
    }
-   public Task<bool> CreateMatch(string code)
-   {
-      if (!_sessions.ContainsKey(code))
-      {
-         _sessions[code] = new MatchSession
-         {
-            Code = code,
-            Players = new List<User>(2),
-            InGame = false
-         };
-         return Task.FromResult(true);
-      }
-      return Task.FromResult(false);
-   }
 
    public Task<string?> JoinMatch(string code, User user)
    {
