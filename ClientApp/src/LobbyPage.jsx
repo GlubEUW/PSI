@@ -58,7 +58,6 @@ function LobbyPage() {
 
                const playerInfo = await conn.invoke("GetPlayers", code);
                setPlayers(playerInfo);
-
             } catch {
                setPlayers([]);
             }

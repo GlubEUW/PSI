@@ -59,13 +59,16 @@ public class TicTacToeGame : IGame
    private bool ApplyMove(Guid playerId, int x, int y)
    {
       if (Winner is not null)
-         throw new InvalidMoveException("Game already has a winner", playerId);
+         return false;
+
+      if (playerId != PlayerTurn)
+         return false;
+
+      if (x < 0 || x >= 3 || y < 0 || y >= 3)
+         throw new InvalidMoveException($"Cell ({x}, {y}) is out of bounds (valid: 0-2)", playerId);
 
       if (Board[x][y] != (int)State.Empty)
          throw new InvalidMoveException($"Cell ({x}, {y}) is already occupied", playerId);
-
-      if (playerId != PlayerTurn)
-         throw new InvalidMoveException("Not player's turn", playerId);
 
       Board[x][y] = (int)PlayerSigns[playerId];
 

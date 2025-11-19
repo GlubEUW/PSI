@@ -65,10 +65,10 @@ public class ConnectFourGame : IGame
     private bool ApplyMove(Guid playerId, int column)
     {
         if (Winner is not null)
-            throw new InvalidMoveException("Game already has a winner", playerId);
+            return false;
 
         if (playerId != PlayerTurn)
-            throw new InvalidMoveException($"Not player's turn", playerId);
+            return false;
 
         if (column < 0 || column >= 7)
             throw new InvalidMoveException($"Column {column} is out of bounds (valid: 0-6)", playerId);
