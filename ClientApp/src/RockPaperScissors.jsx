@@ -38,7 +38,7 @@ function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
 
       const timer = setTimeout(() => {
          returnToLobby();
-      }, 5000);
+      }, 3000);
 
       return () => clearTimeout(timer);
    }, [game.result]);
@@ -71,7 +71,7 @@ function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
          {game.result ? (
             <div>
                <h3 style={{ color: "green" }}>{game.result}</h3>
-               <button onClick={returnToLobby} className="normal-button">Back To Lobby</button>
+               <p>You will return to the lobby shortly.</p>
             </div>
          ) : (
             <h3>Your choice: {myChoice || "None"}</h3>
