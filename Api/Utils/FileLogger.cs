@@ -65,18 +65,10 @@ public static class ExceptionLogger
                 logBuilder.Append($" | Reason: {invalidMove.Reason}");
             }
         }
-        else if (exception is LobbyException lobbyEx)
+        else if (exception is PlayerNotFoundException playerEx)
         {
-            logBuilder.Append($" | LobbyCode: {lobbyEx.LobbyCode ?? "N/A"}");
-
-            if (lobbyEx is LobbyFullException lobbyFull)
-            {
-                logBuilder.Append($" | Capacity: {lobbyFull.CurrentPlayers}/{lobbyFull.MaxPlayers}");
-            }
-            else if (lobbyEx is PlayerNotFoundException playerNotFound)
-            {
-                logBuilder.Append($" | PlayerId: {playerNotFound.PlayerId}");
-            }
+            logBuilder.Append($" | PlayerId: {playerEx.PlayerId}");
+            logBuilder.Append($" | Context: {playerEx.Context ?? "N/A"}");
         }
 
         logBuilder.Append($" | StackTrace: {stackTrace}");

@@ -28,10 +28,8 @@ public class ExceptionLoggingMiddleware(RequestDelegate next)
         {
             InvalidMoveException => (StatusCodes.Status400BadRequest, exception.Message),
             GameNotFoundException => (StatusCodes.Status404NotFound, exception.Message),
-            LobbyFullException => (StatusCodes.Status409Conflict, exception.Message),
             PlayerNotFoundException => (StatusCodes.Status404NotFound, exception.Message),
             GameException => (StatusCodes.Status400BadRequest, exception.Message),
-            LobbyException => (StatusCodes.Status400BadRequest, exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
         };
 

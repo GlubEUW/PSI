@@ -195,7 +195,7 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
 
          if (!_gameService.MakeMove(gameId, moveData, out var newState))
          {
-            throw new GameException("Failed to make move", gameId);
+            return;
          }
 
          var targetGroup = session.PlayerGroups.FirstOrDefault(g => g.Any(p => p.Id == user.Id)) ?? throw new PlayerNotFoundException(user.Id, code);
@@ -208,14 +208,6 @@ public class MatchHub(ILobbyService lobbyService, IGameService gameService) : Hu
       }
       catch (InvalidMoveException ex)
       {
-         if (ex.Message.Contains("Game already has a winner") ||
-            ex.Message.Contains("Game already finished") ||
-            ex.Message.Contains("Not player's turn"))
-         {
-            ExceptionLogger.LogException(ex, "MakeMove - Post-game move attempt (silently ignored)");
-            return;
-         }
-
          ExceptionLogger.LogException(ex, "MakeMove - Invalid move attempted");
          await Clients.Caller.SendAsync("Error", ex.Message);
       }
