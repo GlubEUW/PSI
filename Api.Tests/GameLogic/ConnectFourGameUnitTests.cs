@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using Api.Entities;
 using Api.GameLogic;
+using Api.Exceptions;
 
 namespace Api.Tests.GameLogic;
 
@@ -26,8 +27,8 @@ public class ConnectFourGameUnitTests
    {
       var (game, p1, p2) = CreateGame();
       Assert.False(game.MakeMove(Move(p2.Id, 0)));
-      Assert.False(game.MakeMove(Move(p1.Id, -1)));
-      Assert.False(game.MakeMove(Move(p1.Id, 7)));
+      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1.Id, -1)));
+      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1.Id, 7)));
       Assert.True(game.MakeMove(Move(p1.Id, 0)));
    }
 
@@ -40,7 +41,7 @@ public class ConnectFourGameUnitTests
          Assert.True(game.MakeMove(Move(p1.Id, 0)));
          Assert.True(game.MakeMove(Move(p2.Id, 0)));
       }
-      Assert.False(game.MakeMove(Move(p1.Id, 0)));
+      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1.Id, 0)));
    }
 
    [Fact]

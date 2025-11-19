@@ -10,9 +10,10 @@ namespace Api.Tests.Controllers;
 
 public class UserControllerUnitTests
 {
-   private static UserController CreateController(IAuthService auth, ControllerContext? ctx = null)
+   private static UserController CreateController(IAuthService auth, IUserService? userService = null, ControllerContext? ctx = null)
    {
-      var controller = new UserController(auth);
+      var usr = userService ?? new Mock<IUserService>().Object;
+      var controller = new UserController(auth, usr);
       if (ctx is not null) controller.ControllerContext = ctx;
       return controller;
    }
@@ -106,7 +107,7 @@ public class UserControllerUnitTests
 
       var result = await controller.Register(dto);
 
-      var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+      var bad = Assert.IsType<BadRequestObjectResult>(result);
       Assert.Equal("Name already exists.", bad.Value);
    }
 
@@ -122,10 +123,7 @@ public class UserControllerUnitTests
 
       var result = await controller.Register(dto);
 
-      var ok = Assert.IsType<OkObjectResult>(result.Result);
-      var returned = Assert.IsType<RegisteredUser>(ok.Value);
-      Assert.Equal(created.Id, returned.Id);
-      Assert.Equal(created.Name, returned.Name);
+      Assert.IsType<OkResult>(result);
    }
 
    private static ControllerContext UnauthenticatedContext()
@@ -139,7 +137,7 @@ public class UserControllerUnitTests
    public void GetGuestInfo_Unauthorized_ReturnsUnauthorized(ControllerContext ctx)
    {
       var mockAuth = new Mock<IAuthService>();
-      var controller = CreateController(mockAuth.Object, ctx);
+      var controller = CreateController(mockAuth.Object, null, ctx);
       var result = controller.GetUserInfo();
       Assert.IsType<UnauthorizedResult>(result.Result);
    }
@@ -148,7 +146,7 @@ public class UserControllerUnitTests
    public void GetGuestInfo_NoNameClaim_ReturnsUnauthorized()
    {
       var mockAuth = new Mock<IAuthService>();
-      var controller = CreateController(mockAuth.Object, NoNameButIdContext(Guid.NewGuid()));
+      var controller = CreateController(mockAuth.Object, null, NoNameButIdContext(Guid.NewGuid()));
 
       var result = controller.GetUserInfo();
 
@@ -162,7 +160,7 @@ public class UserControllerUnitTests
       var userName = "guest-user";
 
       var mockAuth = new Mock<IAuthService>();
-      var controller = CreateController(mockAuth.Object, AuthenticatedContext(userId, userName));
+      var controller = CreateController(mockAuth.Object, null, AuthenticatedContext(userId, userName));
 
       var result = controller.GetUserInfo();
 

@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using Api.Entities;
 using Api.GameLogic;
+using Api.Exceptions;
 
 using Xunit;
 
@@ -57,7 +58,7 @@ public class TicTacToeGameUnitTests
 
       Assert.True(game.MakeMove(Move(p1.Id, 0, 0)));
 
-      Assert.False(game.MakeMove(Move(p2.Id, 0, 0)));
+      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p2.Id, 0, 0)));
 
       Assert.True(game.MakeMove(Move(p2.Id, 1, 1)));
    }

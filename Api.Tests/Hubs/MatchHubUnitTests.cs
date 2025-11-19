@@ -15,7 +15,8 @@ public class MatchHubUnitTests
    {
       var lobbyMock = new Mock<ILobbyService>();
       var gameMock = new Mock<IGameService>();
-      var hub = new MatchHub(lobbyMock.Object, gameMock.Object);
+      var userSvc = new Mock<IUserService>();
+      var hub = new MatchHub(lobbyMock.Object, gameMock.Object, userSvc.Object);
       return (hub, lobbyMock, gameMock);
    }
 
@@ -88,7 +89,7 @@ public class MatchHubUnitTests
       await hub.MakeMove(json.RootElement);
 
       caller.Verify(p => p.SendCoreAsync("Error",
-         It.Is<object[]>(o => o.Length == 1 && (string)o[0] == "Your player group could not be found."),
+         It.Is<object[]>(o => o.Length == 1 && (string)o[0] == "Player not found in game"),
          It.IsAny<CancellationToken>()), Times.Once);
    }
 
@@ -218,8 +219,8 @@ public class MatchHubUnitTests
       lobbyMock.Setup(s => s.AddGameId("C4", It.IsAny<Guid>(), It.IsAny<string>())).Returns(true);
       lobbyMock.Setup(s => s.ResetRoundEndTracking("C4"));
 
-      gameMock.Setup(s => s.CreatePlayerGroups(It.Is<List<User>>(l => l.Count == 2), 2))
-              .Returns((new List<List<User>> { new() { p1, p2 } }, new List<User>()));
+      gameMock.Setup(s => s.CreateGroups<User>(It.Is<List<User>>(l => l.Count == 2), 2, true))
+         .Returns((new List<List<User>> { new() { p1, p2 } }, new List<User>()));
       gameMock.Setup(s => s.StartGame(It.IsAny<string>(), "TicTacToe", It.IsAny<List<User>>())).Returns(true);
       var stateObj = new { ok = true } as object;
       gameMock.Setup(s => s.GetGameState(It.IsAny<string>())).Returns(stateObj);
@@ -261,7 +262,7 @@ public class MatchHubUnitTests
       lobbyMock.Setup(s => s.GetPlayersInLobby("C5")).Returns(new List<User> { a, b, c, d });
 
       var groups = new List<List<User>> { new() { a, b }, new() { c, d } };
-      gameMock.Setup(s => s.CreatePlayerGroups(It.IsAny<List<User>>(), 2)).Returns((groups, new List<User>()));
+      gameMock.Setup(s => s.CreateGroups<User>(It.IsAny<List<User>>(), 2, true)).Returns((groups, new List<User>()));
       var seq = new MockSequence();
       gameMock.InSequence(seq).Setup(s => s.StartGame(It.IsAny<string>(), "TicTacToe", groups[0])).Returns(true);
       gameMock.InSequence(seq).Setup(s => s.StartGame(It.IsAny<string>(), "TicTacToe", groups[1])).Returns(false);
@@ -294,7 +295,7 @@ public class MatchHubUnitTests
 
       var groups = new List<List<User>> { new() { p1, p2 } };
       var unmatched = new List<User> { p3 };
-      gameMock.Setup(s => s.CreatePlayerGroups(It.IsAny<List<User>>(), 2)).Returns((groups, unmatched));
+      gameMock.Setup(s => s.CreateGroups<User>(It.IsAny<List<User>>(), 2, true)).Returns((groups, unmatched));
       gameMock.Setup(s => s.StartGame(It.IsAny<string>(), "TicTacToe", groups[0])).Returns(true);
       gameMock.Setup(s => s.GetGameState(It.IsAny<string>())).Returns(new { state = 1 });
 

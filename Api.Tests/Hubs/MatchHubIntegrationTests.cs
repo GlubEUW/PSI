@@ -48,9 +48,9 @@ public class MatchHubIntegrationTests(CustomWebApplicationFactory factory) : ICl
       connection.On<string>("Error", msg => tcsError.TrySetResult(msg));
 
       await connection.StartAsync();
-      var msg = await Task.WhenAny(tcsError.Task, Task.Delay(TimeSpan.FromSeconds(3)));
+      await Task.WhenAny(tcsError.Task, Task.Delay(TimeSpan.FromSeconds(3)));
       Assert.True(tcsError.Task.IsCompleted, "Expected Error message before timeout");
-      Assert.Equal("Invalid connection parameters.", tcsError.Task.Result);
+      Assert.Equal("Invalid connection parameters.", await tcsError.Task);
 
       await connection.DisposeAsync();
    }
@@ -60,7 +60,7 @@ public class MatchHubIntegrationTests(CustomWebApplicationFactory factory) : ICl
    {
 
       var client = _factory.CreateClient();
-      AddAuthHeaders(client, name: "Alice");
+      AddAuthHeaders(client, name: "Player1");
       var req = new CreateLobbyDto { NumberOfPlayers = 2, NumberOfRounds = 1, RandomGames = true };
       var resp = await client.PostAsJsonAsync("api/Lobby/create", req);
       resp.EnsureSuccessStatusCode();
@@ -69,7 +69,7 @@ public class MatchHubIntegrationTests(CustomWebApplicationFactory factory) : ICl
       Assert.False(string.IsNullOrWhiteSpace(code));
 
       var url = _factory.Server.BaseAddress + $"matchHub?code={code}";
-      var connection = BuildConnection(url, name: "Alice");
+      var connection = BuildConnection(url, name: "Player1");
       var tcsPlayers = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
 
       connection.On<JsonElement>("PlayersUpdated", payload => tcsPlayers.TrySetResult(payload));
