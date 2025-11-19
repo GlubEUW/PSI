@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Api.Entities;
+using Api.Exceptions;
 
 namespace Api.GameLogic;
 
@@ -70,7 +71,7 @@ public class ConnectFourGame : IGame
             return false;
 
         if (column < 0 || column >= 7)
-            return false;
+            throw new InvalidMoveException($"Column {column} is out of bounds (valid: 0-6)", playerId);
 
         var row = -1;
         for (var r = 5; r >= 0; r--)
@@ -83,7 +84,7 @@ public class ConnectFourGame : IGame
         }
 
         if (row == -1)
-            return false;
+            throw new InvalidMoveException($"Column {column} is full", playerId);
 
         Board[row][column] = (int)PlayerColors[playerId];
 

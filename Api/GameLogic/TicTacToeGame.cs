@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Api.Entities;
+using Api.Exceptions;
 
 namespace Api.GameLogic;
 
@@ -60,11 +61,14 @@ public class TicTacToeGame : IGame
       if (Winner is not null)
          return false;
 
-      if (Board[x][y] != (int)State.Empty)
-         return false;
-
       if (playerId != PlayerTurn)
          return false;
+
+      if (x < 0 || x >= 3 || y < 0 || y >= 3)
+         throw new InvalidMoveException($"Cell ({x}, {y}) is out of bounds (valid: 0-2)", playerId);
+
+      if (Board[x][y] != (int)State.Empty)
+         throw new InvalidMoveException($"Cell ({x}, {y}) is already occupied", playerId);
 
       Board[x][y] = (int)PlayerSigns[playerId];
 
