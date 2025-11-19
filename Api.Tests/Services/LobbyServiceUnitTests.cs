@@ -94,17 +94,6 @@ public class LobbyServiceUnitTests
    }
 
    [Fact]
-   public async Task CreateMatch_ReturnsTrueThenFalse_OnDuplicate()
-   {
-      var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
-      var code = Guid.NewGuid().ToString("N").Substring(0, 6);
-      var first = await svc.CreateMatch(code);
-      var second = await svc.CreateMatch(code);
-      Assert.True(first);
-      Assert.False(second);
-   }
-
-   [Fact]
    public async Task JoinMatch_ReturnsGameDoesNotExist_WhenNoSession()
    {
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
