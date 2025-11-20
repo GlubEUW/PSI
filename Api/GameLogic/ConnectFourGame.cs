@@ -83,7 +83,7 @@ public class ConnectFourGame : IGame
       }
 
       if (row == -1)
-         throw new InvalidMoveException($"Column {column} is full", playerId);
+         return false;
 
       Board[row][column] = (int)PlayerColors[playerId];
 
