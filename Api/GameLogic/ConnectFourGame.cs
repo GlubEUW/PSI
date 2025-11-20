@@ -54,7 +54,14 @@ public class ConnectFourGame : IGame
 
    public bool MakeMove(JsonElement moveData)
    {
+      if (Winner is not null)
+         return false;
+
+
       if (!moveData.TryDeserialize(out ConnectFourMove move))
+         throw new MoveNotDeserialized(moveData);
+
+      if (move.PlayerId != PlayerTurn.Id)
          return false;
 
       return ApplyMove(move.PlayerId, move.Column);
@@ -62,12 +69,6 @@ public class ConnectFourGame : IGame
 
    private bool ApplyMove(Guid playerId, int column)
    {
-      if (Winner is not null)
-         return false;
-
-      if (playerId != PlayerTurn)
-         return false;
-
       if (column < 0 || column >= 7)
          throw new InvalidMoveException($"Column {column} is out of bounds (valid: 0-6)", playerId);
 
