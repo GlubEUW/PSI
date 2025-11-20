@@ -1,10 +1,13 @@
 using System.Text.Json;
 
+using Api.Enums;
+
 namespace Api.GameLogic;
 
 public interface IGame
 {
-   public string GameType { get; }
+   //potentialy public Guid winner { get; }
+   public GameType GameType { get; }
    public object GetState();
    public bool MakeMove(JsonElement moveData);
 }

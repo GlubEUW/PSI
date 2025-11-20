@@ -1,40 +1,40 @@
 using System.Text.Json;
 
 using Api.Entities;
+using Api.Enums;
 using Api.Exceptions;
 
 namespace Api.GameLogic;
 
-public enum DiscColor
-{
-   Empty = 0,
-   Red = 1,
-   Yellow = 2
-}
-
-public struct ConnectFourMove
-{
-   required public Guid PlayerId { get; set; }
-   public int Column { get; set; }
-}
-
 public class ConnectFourGame : IGame
 {
-   public string GameType => "ConnectFour";
+   private enum _discColor
+   {
+      Empty = 0,
+      Red = 1,
+      Yellow = 2
+   }
+   private struct ConnectFourMove
+   {
+      required public Guid PlayerId { get; set; }
+      public int Column { get; set; }
+   }
 
-   public List<User> Players { get; set; }
-   public Dictionary<Guid, DiscColor> PlayerColors { get; set; } = new();
-   public int[][] Board { get; set; } = new int[6][];
-   public Guid? PlayerTurn { get; set; }
-   public string? Winner { get; set; } = null;
+   private List<User> Players { get; set; }
+   private Dictionary<User, _discColor> PlayerColors { get; set; } = new();
+   private int[][] Board { get; set; } = new int[6][];
+   private User PlayerTurn { get; set; }
+   private User? Winner { get; set; } = null;
+
+   public GameType GameType => GameType.ConnectFour;
 
    public ConnectFourGame(List<User> players)
    {
       Players = players;
-      PlayerTurn = players[0].Id;
+      PlayerTurn = players[0];
 
-      PlayerColors[Players[0].Id] = DiscColor.Red;
-      PlayerColors[Players[1].Id] = DiscColor.Yellow;
+      PlayerColors[Players[0]] = _discColor.Red;
+      PlayerColors[Players[1]] = _discColor.Yellow;
 
       for (var i = 0; i < 6; i++)
       {
@@ -44,13 +44,11 @@ public class ConnectFourGame : IGame
 
    public object GetState()
    {
-      var currentPlayer = Players.FirstOrDefault(p => p.Id == PlayerTurn);
       return new
       {
          Board,
-         PlayerTurn = currentPlayer?.Name,
-         Winner,
-         WinCounts = Players.Select(p => p.Wins).ToList()
+         PlayerTurn,
+         Winner
       };
    }
 
