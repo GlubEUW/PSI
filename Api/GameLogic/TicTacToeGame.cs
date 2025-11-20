@@ -1,68 +1,70 @@
 using System.Text.Json;
 
-using Api.Entities;
+using Api.Enums;
 using Api.Exceptions;
 
 namespace Api.GameLogic;
 
-public enum State
-{
-   Empty,
-   X,
-   O
-}
-
-public struct TicTacToeMove
-{
-   required public Guid PlayerId { get; set; }
-   public int X { get; set; }
-   public int Y { get; set; }
-}
-
 public class TicTacToeGame : IGame
 {
-   public string GameType => "TicTacToe";
-   public List<User> Players { get; set; }
-   public Dictionary<Guid, State> PlayerSigns { get; set; } = new();
-   public int[][] Board { get; set; } = new int[3][] { new int[3], new int[3], new int[3] };
-   public Guid? PlayerTurn { get; set; }
-   public string? Winner { get; set; } = null;
-
-   public TicTacToeGame(List<User> players)
+   private enum State
    {
-      Players = players;
-      PlayerTurn = players[0].Id;
-      PlayerSigns[Players[0].Id] = State.X;
-      PlayerSigns[Players[1].Id] = State.O;
+      Empty,
+      X,
+      O
+   }
+
+   private struct TicTacToeMove
+   {
+      required public Guid PlayerId { get; set; }
+      public int X { get; set; }
+      public int Y { get; set; }
+   }
+   public GameType GameType => GameType.TicTacToe;
+   private Dictionary<Guid, State> PlayerSigns { get; set; } = new();
+   private Dictionary<State, Guid> SignsPlayer { get; set; } = new();
+   private int[][] Board { get; set; } = [new int[3], new int[3], new int[3]];
+   private Guid PlayerTurn { get; set; }
+   private Guid? Winner { get; set; } = null;
+
+   public TicTacToeGame(List<Guid> players)
+   {
+      SignsPlayer[State.X] = players[0];
+      SignsPlayer[State.O] = players[1];
+
+      PlayerSigns[SignsPlayer[State.X]] = State.X;
+      PlayerSigns[SignsPlayer[State.O]] = State.O;
+
+      PlayerTurn = players[0];
    }
 
    public object GetState()
    {
-      var currentPlayer = Players.FirstOrDefault(p => p.Id == PlayerTurn);
+      var currentPlayer = SignsPlayer.FirstOrDefault(p => p.Value == PlayerTurn).Value;
       return new
       {
          Board,
-         PlayerTurn = currentPlayer?.Name,
-         Winner,
-         WinCounts = Players.Select(p => p.Wins).ToList()
+         PlayerTurn = currentPlayer,
+         Winner
       };
    }
 
    public bool MakeMove(JsonElement moveData)
    {
-      if (!moveData.TryDeserialize(out TicTacToeMove move))
-         return false;
-
-      return ApplyMove(move.PlayerId, move.X, move.Y);
-   }
-
-   private bool ApplyMove(Guid playerId, int x, int y)
-   {
       if (Winner is not null)
          return false;
 
-      if (playerId != PlayerTurn)
+      if (!moveData.TryDeserialize(out TicTacToeMove move))
+         throw new MoveNotDeserialized(moveData);
+
+      if (move.PlayerId != PlayerTurn)
          return false;
+
+      return TryMove(move.PlayerId, move.X, move.Y);
+   }
+
+   private bool TryMove(Guid playerId, int x, int y)
+   {
 
       if (x < 0 || x >= 3 || y < 0 || y >= 3)
          throw new InvalidMoveException($"Cell ({x}, {y}) is out of bounds (valid: 0-2)", playerId);
@@ -76,26 +78,18 @@ public class TicTacToeGame : IGame
 
       if (Winner == "X")
       {
-         Winner = Players[0].Name;
-         Players[0].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
+         Winner = Players[0];
       }
       else if (Winner == "O")
       {
-         Winner = Players[1].Name;
-         Players[1].Wins++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.TicTacToe].GamesPlayed++;
+         Winner = Players[1];
       }
 
       PlayerTurn = PlayerSigns.FirstOtherKey(playerId);
       return true;
    }
 
-   private void CheckWinner()
+   private State? CheckWinner()
    {
       foreach (var s in new[] { State.X, State.O })
       {
@@ -103,19 +97,18 @@ public class TicTacToeGame : IGame
          {
             if (Board.IsRowEqual(i, s) || Board.IsColumnEqual(i, s))
             {
-               Winner = s.ToString();
-               return;
+               return s;
             }
          }
          if (Board.IsDiagonalEqual(s))
          {
-            Winner = s.ToString();
-            return;
+            return s;
          }
       }
 
       if (Board.IsBoardFull())
-         Winner = "Draw";
+         return State.Empty;
+      return null;
    }
 }
 
