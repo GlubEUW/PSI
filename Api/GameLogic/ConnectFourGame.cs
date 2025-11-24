@@ -25,7 +25,7 @@ public class ConnectFourGame : IGame
 
    private readonly User[] _players = new User[2];
    private int _turnIndex;
-   private User? Winner { get; set; }
+   public User? Winner { get; set; }
    private Color[][] _board = new Color[_rows][];
 
    public GameType GameType => GameType.ConnectFour;

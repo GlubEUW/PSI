@@ -24,7 +24,7 @@ public class TicTacToeGame : IGame
    private readonly User[] _players = new User[2];
    private int _turnIndex;
    private Mark[][] _board = new Mark[3][];
-   private User? _winner;
+   public User? Winner { get; set; }
 
    public TicTacToeGame(List<User> players)
    {
@@ -49,12 +49,12 @@ public class TicTacToeGame : IGame
          for (var c = 0; c < 3; c++) row[c] = (int)_board[r][c];
          boardOut[r] = row;
       }
-      return new { Board = boardOut, PlayerTurn = _players[_turnIndex], Winner = _winner };
+      return new { Board = boardOut, PlayerTurn = _players[_turnIndex], Winner };
    }
 
    public bool MakeMove(JsonElement moveData)
    {
-      if (_winner is not null) return false;
+      if (Winner is not null) return false;
       TicTacToeMove move;
       try { move = JsonSerializer.Deserialize<TicTacToeMove>(moveData.GetRawText()); }
       catch (JsonException) { throw new MoveNotDeserialized(moveData); }
@@ -69,9 +69,9 @@ public class TicTacToeGame : IGame
       var mark = _turnIndex == 0 ? Mark.X : Mark.O;
       _board[x][y] = mark;
       var result = EvaluateWinner(x, y);
-      if (result == Mark.X) _winner = _players[(int)Mark.X];
-      else if (result == Mark.O) _winner = _players[(int)Mark.O];
-      else if (result == Mark.Empty) _winner = null;
+      if (result == Mark.X) Winner = _players[(int)Mark.X];
+      else if (result == Mark.O) Winner = _players[(int)Mark.O];
+      else if (result == Mark.Empty) Winner = null;
       _turnIndex ^= 1;
       return true;
    }

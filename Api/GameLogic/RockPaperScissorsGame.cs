@@ -21,7 +21,7 @@ public class RockPaperScissorsGame : IGame
    public GameType GameType => GameType.RockPaperScissors;
    private readonly User[] _players = new User[2];
    private RockPaperScissorsChoice?[] _choices = new RockPaperScissorsChoice?[2];
-   private User? Winner { get; set; }
+   public User? Winner { get; set; }
    public string? Result { get; set; }
 
    public RockPaperScissorsGame(List<User> players)
