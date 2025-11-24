@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using Api.Entities;
 using Api.Enums;
 
 namespace Api.GameLogic;
@@ -14,16 +15,16 @@ public class RockPaperScissorsGame : IGame
    }
    private struct RockPaperScissorsMove
    {
-      public required Guid PlayerId { get; set; }
+      public required User Player { get; set; }
       public RockPaperScissorsChoice Choice { get; set; }
    }
    public GameType GameType => GameType.RockPaperScissors;
-   private readonly Guid[] _players = new Guid[2];
+   private readonly User[] _players = new User[2];
    private RockPaperScissorsChoice?[] _choices = new RockPaperScissorsChoice?[2];
-   private Guid? Winner { get; set; }
+   private User? Winner { get; set; }
    public string? Result { get; set; }
 
-   public RockPaperScissorsGame(List<Guid> players)
+   public RockPaperScissorsGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("RockPaperScissors requires exactly 2 players.");
       _players[0] = players[0];
@@ -42,7 +43,7 @@ public class RockPaperScissorsGame : IGame
       RockPaperScissorsMove move;
       try { move = moveData.Deserialize<RockPaperScissorsMove>(); }
       catch (JsonException) { return false; }
-      var idx = move.PlayerId == _players[0] ? 0 : (move.PlayerId == _players[1] ? 1 : -1);
+      var idx = move.Player == _players[0] ? 0 : (move.Player == _players[1] ? 1 : -1);
       if (idx < 0) return false;
       _choices[idx] = move.Choice;
       if (_choices[0].HasValue && _choices[1].HasValue) Result = DetermineWinner();

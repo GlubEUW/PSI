@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using Api.Entities;
 using Api.Enums;
 using Api.Exceptions;
 
@@ -15,21 +16,21 @@ public class ConnectFourGame : IGame
    }
    private record struct ConnectFourMove
    {
-      required public Guid PlayerId { get; set; }
+      required public User Player { get; set; }
       public int Column { get; set; }
    }
 
    private static readonly int _rows = 6;
    private static readonly int _cols = 7;
 
-   private readonly Guid[] _players = new Guid[2];
+   private readonly User[] _players = new User[2];
    private int _turnIndex;
-   private Guid? Winner { get; set; }
+   private User? Winner { get; set; }
    private Color[][] _board = new Color[_rows][];
 
    public GameType GameType => GameType.ConnectFour;
 
-   public ConnectFourGame(List<Guid> players)
+   public ConnectFourGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("ConnectFour requires exactly 2 players.");
       _players[0] = players[0];
@@ -54,17 +55,17 @@ public class ConnectFourGame : IGame
       ConnectFourMove move;
       try { move = JsonSerializer.Deserialize<ConnectFourMove>(moveData.GetRawText()); }
       catch (JsonException) { throw new MoveNotDeserialized(moveData); }
-      if (move.PlayerId != _players[_turnIndex]) return false;
-      return ApplyMove(move.PlayerId, move.Column);
+      if (move.Player != _players[_turnIndex]) return false;
+      return ApplyMove(move.Player, move.Column);
    }
 
-   private bool ApplyMove(Guid playerId, int column)
+   private bool ApplyMove(User player, int column)
    {
-      if ((uint)column >= _cols) throw new InvalidMoveException($"Column {column} is out of bounds (valid: 0-{_cols - 1})", playerId);
+      if ((uint)column >= _cols) throw new InvalidMoveException($"Column {column} is out of bounds (valid: 0-{_cols - 1})", player.Id);
       var row = _rows - 1;
       while (row >= 0 && _board[row][column] != Color.Empty) row--;
       if (row < 0) return false;
-      var color = playerId == _players[0] ? Color.Red : Color.Yellow;
+      var color = player == _players[0] ? Color.Red : Color.Yellow;
       _board[row][column] = color;
       var winnerColor = EvaluateWinner(row, column);
       if (winnerColor == Color.Red) Winner = _players[0];

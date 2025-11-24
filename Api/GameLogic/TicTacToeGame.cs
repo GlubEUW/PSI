@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using Api.Entities;
 using Api.Enums;
 using Api.Exceptions;
 
@@ -15,21 +16,21 @@ public class TicTacToeGame : IGame
    }
    private record struct TicTacToeMove
    {
-      public required Guid PlayerId { get; set; }
+      public required User Player { get; set; }
       public int X { get; set; }
       public int Y { get; set; }
    }
    public GameType GameType => GameType.TicTacToe;
-   private readonly Guid[] _players = new Guid[2];
+   private readonly User[] _players = new User[2];
    private int _turnIndex;
    private Mark[][] _board = new Mark[3][];
-   private Guid? _winner;
+   private User? _winner;
 
-   public TicTacToeGame(List<Guid> players)
+   public TicTacToeGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("TicTacToe requires exactly 2 players.");
-      _players[0] = players[0];
-      _players[1] = players[1];
+      _players[(int)Mark.X] = players[0];
+      _players[(int)Mark.O] = players[1];
       _turnIndex = 0;
       for (var r = 0; r < 3; r++)
       {
@@ -57,19 +58,19 @@ public class TicTacToeGame : IGame
       TicTacToeMove move;
       try { move = JsonSerializer.Deserialize<TicTacToeMove>(moveData.GetRawText()); }
       catch (JsonException) { throw new MoveNotDeserialized(moveData); }
-      if (move.PlayerId != _players[_turnIndex]) return false;
-      return ApplyMove(move.PlayerId, move.X, move.Y);
+      if (move.Player != _players[_turnIndex]) return false;
+      return ApplyMove(move.Player, move.X, move.Y);
    }
 
-   private bool ApplyMove(Guid playerId, int x, int y)
+   private bool ApplyMove(User player, int x, int y)
    {
-      if ((uint)x >= 3 || (uint)y >= 3) throw new InvalidMoveException($"Cell ({x}, {y}) is out of bounds (valid: 0-2)", playerId);
-      if (_board[x][y] != Mark.Empty) throw new InvalidMoveException($"Cell ({x}, {y}) is already occupied", playerId);
+      if ((uint)x >= 3 || (uint)y >= 3) throw new InvalidMoveException($"Cell ({x}, {y}) is out of bounds (valid: 0-2)", player.Id);
+      if (_board[x][y] != Mark.Empty) throw new InvalidMoveException($"Cell ({x}, {y}) is already occupied", player.Id);
       var mark = _turnIndex == 0 ? Mark.X : Mark.O;
       _board[x][y] = mark;
       var result = EvaluateWinner(x, y);
-      if (result == Mark.X) _winner = _players[0];
-      else if (result == Mark.O) _winner = _players[1];
+      if (result == Mark.X) _winner = _players[(int)Mark.X];
+      else if (result == Mark.O) _winner = _players[(int)Mark.O];
       else if (result == Mark.Empty) _winner = null;
       _turnIndex ^= 1;
       return true;

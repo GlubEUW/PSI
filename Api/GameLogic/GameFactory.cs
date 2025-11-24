@@ -17,9 +17,9 @@ public class GameFactory : IGameFactory
    {
       return gameType switch
       {
-         "TicTacToe" => new TicTacToeGame(players.Select(p => p.Id).ToList()),
-         "RockPaperScissors" => new RockPaperScissorsGame(players.Select(p => p.Id).ToList()),
-         "ConnectFour" => new ConnectFourGame(players.Select(p => p.Id).ToList()),
+         "TicTacToe" => new TicTacToeGame(players),
+         "RockPaperScissors" => new RockPaperScissorsGame(players),
+         "ConnectFour" => new ConnectFourGame(players),
          _ => throw new ArgumentException($"Unknown game type: {gameType}")
       };
    }
