@@ -7,150 +7,98 @@ namespace Api.GameLogic;
 
 public class TicTacToeGame : IGame
 {
-   private enum State
+   private enum Mark
    {
-      Empty,
-      X,
-      O
+      X = 0,
+      O = 1,
+      Empty = 2
    }
-
-   private struct TicTacToeMove
+   private record struct TicTacToeMove
    {
-      required public Guid PlayerId { get; set; }
+      public required Guid PlayerId { get; set; }
       public int X { get; set; }
       public int Y { get; set; }
    }
    public GameType GameType => GameType.TicTacToe;
-   private Dictionary<Guid, State> PlayerSigns { get; set; } = new();
-   private Dictionary<State, Guid> SignsPlayer { get; set; } = new();
-   private int[][] Board { get; set; } = [new int[3], new int[3], new int[3]];
-   private Guid PlayerTurn { get; set; }
-   private Guid? Winner { get; set; } = null;
+   private readonly Guid[] _players = new Guid[2];
+   private int _turnIndex;
+   private Mark[][] _board = new Mark[3][];
+   private Guid? _winner;
 
    public TicTacToeGame(List<Guid> players)
    {
-      SignsPlayer[State.X] = players[0];
-      SignsPlayer[State.O] = players[1];
-
-      PlayerSigns[SignsPlayer[State.X]] = State.X;
-      PlayerSigns[SignsPlayer[State.O]] = State.O;
-
-      PlayerTurn = players[0];
+      if (players.Count != 2) throw new InvalidOperationException("TicTacToe requires exactly 2 players.");
+      _players[0] = players[0];
+      _players[1] = players[1];
+      _turnIndex = 0;
+      for (var r = 0; r < 3; r++)
+      {
+         var row = new Mark[3];
+         for (var c = 0; c < 3; c++) row[c] = Mark.Empty;
+         _board[r] = row;
+      }
    }
 
    public object GetState()
    {
-      var currentPlayer = SignsPlayer.FirstOrDefault(p => p.Value == PlayerTurn).Value;
-      return new
+      var boardOut = new int[3][];
+      for (var r = 0; r < 3; r++)
       {
-         Board,
-         PlayerTurn = currentPlayer,
-         Winner
-      };
+         var row = new int[3];
+         for (var c = 0; c < 3; c++) row[c] = (int)_board[r][c];
+         boardOut[r] = row;
+      }
+      return new { Board = boardOut, PlayerTurn = _players[_turnIndex], Winner = _winner };
    }
 
    public bool MakeMove(JsonElement moveData)
    {
-      if (Winner is not null)
-         return false;
-
-      if (!moveData.TryDeserialize(out TicTacToeMove move))
-         throw new MoveNotDeserialized(moveData);
-
-      if (move.PlayerId != PlayerTurn)
-         return false;
-
-      return TryMove(move.PlayerId, move.X, move.Y);
+      if (_winner is not null) return false;
+      TicTacToeMove move;
+      try { move = JsonSerializer.Deserialize<TicTacToeMove>(moveData.GetRawText()); }
+      catch (JsonException) { throw new MoveNotDeserialized(moveData); }
+      if (move.PlayerId != _players[_turnIndex]) return false;
+      return ApplyMove(move.PlayerId, move.X, move.Y);
    }
 
-   private bool TryMove(Guid playerId, int x, int y)
+   private bool ApplyMove(Guid playerId, int x, int y)
    {
-
-      if (x < 0 || x >= 3 || y < 0 || y >= 3)
-         throw new InvalidMoveException($"Cell ({x}, {y}) is out of bounds (valid: 0-2)", playerId);
-
-      if (Board[x][y] != (int)State.Empty)
-         throw new InvalidMoveException($"Cell ({x}, {y}) is already occupied", playerId);
-
-      Board[x][y] = (int)PlayerSigns[playerId];
-
-      CheckWinner();
-
-      if (Winner == "X")
-      {
-         Winner = Players[0];
-      }
-      else if (Winner == "O")
-      {
-         Winner = Players[1];
-      }
-
-      PlayerTurn = PlayerSigns.FirstOtherKey(playerId);
+      if ((uint)x >= 3 || (uint)y >= 3) throw new InvalidMoveException($"Cell ({x}, {y}) is out of bounds (valid: 0-2)", playerId);
+      if (_board[x][y] != Mark.Empty) throw new InvalidMoveException($"Cell ({x}, {y}) is already occupied", playerId);
+      var mark = _turnIndex == 0 ? Mark.X : Mark.O;
+      _board[x][y] = mark;
+      var result = EvaluateWinner(x, y);
+      if (result == Mark.X) _winner = _players[0];
+      else if (result == Mark.O) _winner = _players[1];
+      else if (result == Mark.Empty) _winner = null;
+      _turnIndex ^= 1;
       return true;
    }
 
-   private State? CheckWinner()
+   private Mark? EvaluateWinner(int x, int y)
    {
-      foreach (var s in new[] { State.X, State.O })
-      {
-         for (var i = 0; i < 3; i++)
-         {
-            if (Board.IsRowEqual(i, s) || Board.IsColumnEqual(i, s))
-            {
-               return s;
-            }
-         }
-         if (Board.IsDiagonalEqual(s))
-         {
-            return s;
-         }
-      }
-
-      if (Board.IsBoardFull())
-         return State.Empty;
-      return null;
-   }
-}
-
-public static class TicTacToeExtensions
-{
-   public static bool IsRowEqual(this int[][] board, int row, State s)
-   {
-      return board[row].All(cell => cell == (int)s);
+      var mark = _board[x][y];
+      if (mark == Mark.Empty) return null;
+      if (RowWin(x, mark) || ColWin(y, mark) || DiagWin(mark)) return mark;
+      return IsBoardFull() ? Mark.Empty : null;
    }
 
-   public static bool IsColumnEqual(this int[][] board, int col, State s)
+   private bool RowWin(int row, Mark mark)
    {
-      return board.All(row => row[col] == (int)s);
+      for (var c = 0; c < 3; c++) if (_board[row][c] != mark) return false; return true;
    }
-
-   public static bool IsDiagonalEqual(this int[][] board, State s)
+   private bool ColWin(int col, Mark mark)
    {
-      return (board[0][0] == (int)s && board[1][1] == (int)s && board[2][2] == (int)s) ||
-             (board[0][2] == (int)s && board[1][1] == (int)s && board[2][0] == (int)s);
+      for (var r = 0; r < 3; r++) if (_board[r][col] != mark) return false; return true;
    }
-
-   public static bool IsBoardFull(this int[][] board)
+   private bool DiagWin(Mark mark)
    {
-      return board.All(row => row.All(cell => cell != (int)State.Empty));
+      var a = _board[0][0] == mark && _board[1][1] == mark && _board[2][2] == mark;
+      var b = _board[0][2] == mark && _board[1][1] == mark && _board[2][0] == mark;
+      return a || b;
    }
-
-   public static TKey FirstOtherKey<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey keyToExclude) where TKey : notnull
+   private bool IsBoardFull()
    {
-      return dict.Keys.First(k => !k.Equals(keyToExclude));
-   }
-
-   public static bool TryDeserialize<T>(this JsonElement element, out T? result)
-   {
-      try
-      {
-         result = element.Deserialize<T>();
-         return true;
-      }
-      catch (JsonException)
-      {
-         result = default;
-         return false;
-      }
+      for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) if (_board[r][c] == Mark.Empty) return false; return true;
    }
 }
