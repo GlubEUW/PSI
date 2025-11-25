@@ -7,6 +7,13 @@ namespace Api.Tests.GameLogic;
 
 public class RockPaperScissorsGameUnitTests
 {
+   public enum RockPaperScissorsChoice
+   {
+      Rock = 0,
+      Paper = 1,
+      Scissors = 2
+   }
+
    private static JsonElement Move(User player, RockPaperScissorsChoice choice)
    {
       var payload = new { Player = player, Choice = choice };
