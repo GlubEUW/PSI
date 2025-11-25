@@ -1,9 +1,10 @@
 using Api.Entities;
+using Api.Enums;
 
 namespace Api.GameLogic;
 
 public interface IGameFactory
 {
-   public IReadOnlySet<string> ValidGameTypes { get; }
-   public IGame CreateGame(string gameType, List<User> players);
+   public IReadOnlySet<GameType> ValidGameTypes { get; }
+   public IGame CreateGame(GameType gameType, List<User> players);
 }
