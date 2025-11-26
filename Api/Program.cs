@@ -91,6 +91,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<ILobbyService, LobbyService>();
 builder.Services.AddSingleton<IGameFactory, GameFactory>();
+builder.Services.AddSingleton<TournamentStore>();
 
 var app = builder.Build();
 

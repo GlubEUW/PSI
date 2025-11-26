@@ -9,7 +9,5 @@ public interface ITournamentService
    public bool RemoveGameId(string? code, Guid? userId);
    public bool TryGetGameId(string? code, Guid userId, out string? gameId);
    public TournamentSession? GetTournamentSession(string code);
-   public void MarkGameAsEnded(string code, string gameId);
    public bool AreAllGamesEnded(string code);
-   public void ResetRoundEndTracking(string code);
 }
