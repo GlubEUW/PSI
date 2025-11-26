@@ -9,7 +9,7 @@ using Api.Utils;
 
 namespace Api.Hubs;
 
-public class MatchHub(ILobbyService lobbyService, IGameService gameService, IUserService userService) : Hub
+public class TournamentHub(ILobbyService lobbyService, IGameService gameService, IUserService userService) : Hub
 {
    private enum ContextKeys
    {
