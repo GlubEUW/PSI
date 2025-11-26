@@ -103,15 +103,21 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
       var session = _tournamentService.GetTournamentSession(code) ?? throw new ArgumentNullException();
 
+      if (session.TournamentStarted)
+      {
+         await Clients.Caller.SendAsync("Error", "The tournament has already started.");
+         throw new InvalidOperationException("Tournament already started.");
+      }
+   }
+
+   public async Task StartRound()
+   {
+      var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
+      var session = _tournamentService.GetTournamentSession(code) ?? throw new ArgumentNullException();
+
       if (!_lobbyService.AreAllPlayersInLobby(code))
       {
          await Clients.Caller.SendAsync("Error", "Not all players have returned to the lobby yet.");
-         return;
-      }
-
-      if (session.TournamentStarted)
-      {
-         await Clients.Caller.SendAsync("Error", "A game is still in progress.");
          return;
       }
 
