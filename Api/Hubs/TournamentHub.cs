@@ -1,15 +1,14 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Text.Json;
-using System.Security.Claims;
-using Api.Services;
 using Api.Entities;
 using Api.Models;
 using Api.Exceptions;
 using Api.Utils;
+using Api.Services;
 
 namespace Api.Hubs;
 
-public class TournamentHub(ILobbyService lobbyService, IGameService gameService, IUserService userService) : Hub
+public class TournamentHub(ILobbyService lobbyService, IGameService gameService, IUserService userService, ICurrentUserAccessor currentUserAccessor) : Hub
 {
    private enum ContextKeys
    {
@@ -19,6 +18,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
    private readonly ILobbyService _lobbyService = lobbyService;
    private readonly IGameService _gameService = gameService;
    private readonly IUserService _userService = userService;
+   private readonly ICurrentUserAccessor _currentUserAccessor = currentUserAccessor;
 
    public override async Task OnConnectedAsync()
    {
@@ -37,18 +37,13 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          return;
       }
 
-      var userName = Context.User?.Identity?.Name;
-      var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-      var userRole = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
-
-      if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(userRole))
+      var user = _currentUserAccessor.GetCurrentUser(Context); ;
+      if (user is null)
       {
          await Clients.Caller.SendAsync("Error", "User not authenticated.");
          Context.Abort();
          return;
       }
-
-      User user = _userService.CreateUser(userName, Guid.Parse(userId), userRole);
 
       var joined = await _lobbyService.JoinMatch(code, user);
       if (joined is not null)
@@ -57,8 +52,6 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          Context.Abort();
          return;
       }
-
-      await _userService.LoadUserStatsAsync(user);
 
       Context.Items.Add(ContextKeys.Code, code);
       Context.Items.Add(ContextKeys.User, user);
