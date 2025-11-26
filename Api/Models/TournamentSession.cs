@@ -3,7 +3,7 @@ using Api.Entities;
 using System.Collections.Concurrent;
 namespace Api.Models;
 
-public class MatchSession
+public class TournamentSession
 {
    public required string Code { get; set; }
    public List<User> Players { get; set; } = new();
