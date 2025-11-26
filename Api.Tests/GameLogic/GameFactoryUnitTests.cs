@@ -1,4 +1,5 @@
 using Api.Entities;
+using Api.Enums;
 using Api.GameLogic;
 
 namespace Api.Tests.GameLogic;
@@ -9,16 +10,16 @@ public class GameFactoryUnitTests
    public void ValidGameTypes_Contains_All()
    {
       var factory = new GameFactory();
-      Assert.Contains("TicTacToe", factory.ValidGameTypes);
-      Assert.Contains("RockPaperScissors", factory.ValidGameTypes);
-      Assert.Contains("ConnectFour", factory.ValidGameTypes);
+      Assert.Contains(GameType.TicTacToe, factory.ValidGameTypes);
+      Assert.Contains(GameType.RockPaperScissors, factory.ValidGameTypes);
+      Assert.Contains(GameType.ConnectFour, factory.ValidGameTypes);
    }
 
    [Theory]
-   [InlineData("TicTacToe", typeof(TicTacToeGame))]
-   [InlineData("RockPaperScissors", typeof(RockPaperScissorsGame))]
-   [InlineData("ConnectFour", typeof(ConnectFourGame))]
-   public void CreateGame_Returns_Correct_Type(string type, Type expected)
+   [InlineData(GameType.TicTacToe, typeof(TicTacToeGame))]
+   [InlineData(GameType.RockPaperScissors, typeof(RockPaperScissorsGame))]
+   [InlineData(GameType.ConnectFour, typeof(ConnectFourGame))]
+   public void CreateGame_Returns_Correct_Type(GameType type, Type expected)
    {
       var players = new List<User> { new Guest { Name = "A" }, new Guest { Name = "B" } };
       var factory = new GameFactory();
@@ -32,6 +33,6 @@ public class GameFactoryUnitTests
    {
       var players = new List<User> { new Guest { Name = "A" }, new Guest { Name = "B" } };
       var factory = new GameFactory();
-      Assert.Throws<ArgumentException>(() => factory.CreateGame("UnknownType", players));
+      Assert.Throws<ArgumentException>(() => factory.CreateGame((GameType)999, players));
    }
 }

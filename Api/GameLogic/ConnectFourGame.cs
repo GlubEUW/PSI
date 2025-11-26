@@ -1,177 +1,103 @@
 using System.Text.Json;
 
 using Api.Entities;
+using Api.Enums;
 using Api.Exceptions;
 
 namespace Api.GameLogic;
 
-public enum DiscColor
-{
-   Empty = 0,
-   Red = 1,
-   Yellow = 2
-}
-
-public struct ConnectFourMove
-{
-   required public Guid PlayerId { get; set; }
-   public int Column { get; set; }
-}
-
 public class ConnectFourGame : IGame
 {
-   public string GameType => "ConnectFour";
+   private enum Color
+   {
+      Red = 0,
+      Yellow = 1,
+      Empty = 2
+   }
+   private record struct ConnectFourMove
+   {
+      required public User Player { get; set; }
+      public int Column { get; set; }
+   }
 
-   public List<User> Players { get; set; }
-   public Dictionary<Guid, DiscColor> PlayerColors { get; set; } = new();
-   public int[][] Board { get; set; } = new int[6][];
-   public Guid? PlayerTurn { get; set; }
-   public string? Winner { get; set; } = null;
+   private static readonly int _rows = 6;
+   private static readonly int _cols = 7;
+
+   private readonly User[] _players = new User[2];
+   private int _turnIndex;
+   public User? Winner { get; set; }
+   private Color[][] _board = new Color[_rows][];
+
+   public GameType GameType => GameType.ConnectFour;
 
    public ConnectFourGame(List<User> players)
    {
-      Players = players;
-      PlayerTurn = players[0].Id;
-
-      PlayerColors[Players[0].Id] = DiscColor.Red;
-      PlayerColors[Players[1].Id] = DiscColor.Yellow;
-
-      for (var i = 0; i < 6; i++)
+      if (players.Count != 2) throw new InvalidOperationException("ConnectFour requires exactly 2 players.");
+      _players[0] = players[0];
+      _players[1] = players[1];
+      _turnIndex = 0;
+      for (var r = 0; r < _rows; r++)
       {
-         Board[i] = new int[7];
+         var rowArr = new Color[_cols];
+         for (var c = 0; c < _cols; c++) rowArr[c] = Color.Empty;
+         _board[r] = rowArr;
       }
    }
 
    public object GetState()
    {
-      var currentPlayer = Players.FirstOrDefault(p => p.Id == PlayerTurn);
-      return new
-      {
-         Board,
-         PlayerTurn = currentPlayer?.Name,
-         Winner,
-         WinCounts = Players.Select(p => p.Wins).ToList()
-      };
+      return new { Board = _board, PlayerTurn = _players[_turnIndex], Winner };
    }
 
    public bool MakeMove(JsonElement moveData)
    {
-      if (!moveData.TryDeserialize(out ConnectFourMove move))
-         return false;
-
-      return ApplyMove(move.PlayerId, move.Column);
+      if (Winner is not null) return false;
+      ConnectFourMove move;
+      try { move = JsonSerializer.Deserialize<ConnectFourMove>(moveData.GetRawText()); }
+      catch (JsonException) { throw new MoveNotDeserialized(moveData); }
+      if (move.Player != _players[_turnIndex]) return false;
+      return ApplyMove(move.Player, move.Column);
    }
 
-   private bool ApplyMove(Guid playerId, int column)
+   private bool ApplyMove(User player, int column)
    {
-      if (Winner is not null)
-         return false;
-
-      if (playerId != PlayerTurn)
-         return false;
-
-      if (column < 0 || column >= 7)
-         throw new InvalidMoveException($"Column {column} is out of bounds (valid: 0-6)", playerId);
-
-      var row = -1;
-      for (var r = 5; r >= 0; r--)
-      {
-         if (Board[r][column] == (int)DiscColor.Empty)
-         {
-            row = r;
-            break;
-         }
-      }
-
-      if (row == -1)
-         throw new InvalidMoveException($"Column {column} is full", playerId);
-
-      Board[row][column] = (int)PlayerColors[playerId];
-
-      CheckWinner(row, column);
-
-      if (Winner == "Red")
-      {
-         Winner = Players[0].Name;
-         Players[0].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.ConnectFour].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.ConnectFour].GamesPlayed++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.ConnectFour].GamesPlayed++;
-      }
-      else if (Winner == "Yellow")
-      {
-         Winner = Players[1].Name;
-         Players[1].Wins++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.ConnectFour].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.ConnectFour].GamesPlayed++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.ConnectFour].GamesPlayed++;
-      }
-
-      PlayerTurn = PlayerColors.FirstOtherKey(playerId);
-
+      if ((uint)column >= _cols) throw new InvalidMoveException($"Column {column} is out of bounds (valid: 0-{_cols - 1})", player.Id);
+      var row = _rows - 1;
+      while (row >= 0 && _board[row][column] != Color.Empty) row--;
+      if (row < 0) return false;
+      var color = player == _players[0] ? Color.Red : Color.Yellow;
+      _board[row][column] = color;
+      var winnerColor = EvaluateWinner(row, column);
+      if (winnerColor == Color.Red) Winner = _players[0];
+      else if (winnerColor == Color.Yellow) Winner = _players[1];
+      else if (winnerColor == Color.Empty) Winner = null;
+      _turnIndex ^= 1;
       return true;
    }
 
-   private void CheckWinner(int lastRow, int lastCol)
+   private Color? EvaluateWinner(int row, int col)
    {
-      var color = Board[lastRow][lastCol];
-
-      if (CheckDirection(lastRow, lastCol, 0, 1, color) ||
-          CheckDirection(lastRow, lastCol, 0, -1, color))
-      {
-         Winner = ((DiscColor)color).ToString();
-         return;
-      }
-
-      if (CheckDirection(lastRow, lastCol, 1, 0, color) ||
-          CheckDirection(lastRow, lastCol, -1, 0, color))
-      {
-         Winner = ((DiscColor)color).ToString();
-         return;
-      }
-
-      if (CheckDirection(lastRow, lastCol, 1, 1, color) ||
-          CheckDirection(lastRow, lastCol, -1, -1, color))
-      {
-         Winner = ((DiscColor)color).ToString();
-         return;
-      }
-
-      if (CheckDirection(lastRow, lastCol, 1, -1, color) ||
-          CheckDirection(lastRow, lastCol, -1, 1, color))
-      {
-         Winner = ((DiscColor)color).ToString();
-         return;
-      }
-
-      if (Board.IsBoardFull())
-      {
-         Winner = "Draw";
-      }
+      var color = _board[row][col];
+      if (color == Color.Empty) return null;
+      if (HasLine(row, col, 0, 1, color) || HasLine(row, col, 1, 0, color) || HasLine(row, col, 1, 1, color) || HasLine(row, col, 1, -1, color)) return color;
+      return IsBoardFull() ? Color.Empty : null;
    }
 
-   private bool CheckDirection(int row, int col, int dRow, int dCol, int color)
+   private bool HasLine(int row, int col, int dRow, int dCol, Color color)
    {
       var count = 1;
+      for (var i = 1; i <= 3; i++) { var r = row + dRow * i; var c = col + dCol * i; if ((uint)r >= _rows || (uint)c >= _cols || _board[r][c] != color) break; if (++count == 4) return true; }
+      for (var i = 1; i <= 3; i++) { var r = row - dRow * i; var c = col - dCol * i; if ((uint)r >= _rows || (uint)c >= _cols || _board[r][c] != color) break; if (++count == 4) return true; }
+      return false;
+   }
 
-      var r = row + dRow;
-      var c = col + dCol;
-      while (r >= 0 && r < 6 && c >= 0 && c < 7 && Board[r][c] == color)
+   private bool IsBoardFull()
+   {
+      for (var r = 0; r < _rows; r++)
       {
-         count++;
-         r += dRow;
-         c += dCol;
+         var arr = _board[r];
+         for (var c = 0; c < _cols; c++) if (arr[c] == Color.Empty) return false;
       }
-
-      r = row - dRow;
-      c = col - dCol;
-      while (r >= 0 && r < 6 && c >= 0 && c < 7 && Board[r][c] == color)
-      {
-         count++;
-         r -= dRow;
-         c -= dCol;
-      }
-
-      return count >= 4;
+      return true;
    }
 }

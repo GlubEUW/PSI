@@ -1,91 +1,63 @@
 using System.Text.Json;
 
 using Api.Entities;
+using Api.Enums;
 
 namespace Api.GameLogic;
 
-public enum RockPaperScissorsChoice
-{
-   None = 0,
-   Rock = 1,
-   Paper = 2,
-   Scissors = 3
-}
-
-public struct RockPaperScissorsMove
-{
-   public required Guid PlayerId { get; set; }
-   public RockPaperScissorsChoice Choice { get; set; }
-}
 public class RockPaperScissorsGame : IGame
 {
-   public string GameType => "RockPaperScissors";
-   public List<User> Players { get; set; }
-   public Dictionary<Guid, RockPaperScissorsChoice> PlayerChoices { get; set; } = new();
-   public Guid? Winner { get; set; }
+   private enum RockPaperScissorsChoice
+   {
+      Rock = 0,
+      Paper = 1,
+      Scissors = 2
+   }
+   private struct RockPaperScissorsMove
+   {
+      public required User Player { get; set; }
+      public RockPaperScissorsChoice Choice { get; set; }
+   }
+   public GameType GameType => GameType.RockPaperScissors;
+   private readonly User[] _players = new User[2];
+   private RockPaperScissorsChoice?[] _choices = new RockPaperScissorsChoice?[2];
+   public User? Winner { get; set; }
    public string? Result { get; set; }
 
    public RockPaperScissorsGame(List<User> players)
    {
-      Players = players;
-      PlayerChoices[players[0].Id] = RockPaperScissorsChoice.None;
-      PlayerChoices[players[1].Id] = RockPaperScissorsChoice.None;
+      if (players.Count != 2) throw new InvalidOperationException("RockPaperScissors requires exactly 2 players.");
+      _players[0] = players[0];
+      _players[1] = players[1];
+      _choices[0] = null;
+      _choices[1] = null;
    }
 
    public object GetState()
    {
-      return new
-      {
-         Players,
-         Result,
-         WinCounts = Players.Select(p => p.Wins).ToList()
-      };
+      return new { Winner, Result };
    }
 
    public bool MakeMove(JsonElement moveData)
    {
-      try
-      {
-         var move = moveData.Deserialize<RockPaperScissorsMove>();
-         PlayerChoices[move.PlayerId] = move.Choice;
-
-         // Check if both players made a choice
-         if (PlayerChoices.Count == 2 && !PlayerChoices.ContainsValue(RockPaperScissorsChoice.None))
-            Result = DetermineWinner();
-
-         return true;
-      }
-      catch (JsonException)
-      {
-         return false;
-      }
+      RockPaperScissorsMove move;
+      try { move = moveData.Deserialize<RockPaperScissorsMove>(); }
+      catch (JsonException) { return false; }
+      var idx = move.Player == _players[0] ? 0 : (move.Player == _players[1] ? 1 : -1);
+      if (idx < 0) return false;
+      _choices[idx] = move.Choice;
+      if (_choices[0].HasValue && _choices[1].HasValue) Result = DetermineWinner();
+      return true;
    }
 
    private string? DetermineWinner()
    {
-      var p1 = Players[0].Id;
-      var p2 = Players[1].Id;
-      var c1 = PlayerChoices[p1];
-      var c2 = PlayerChoices[p2];
-
-      if (c1 == c2)
-         return "Draw!";
-
+      var c1 = _choices[0];
+      var c2 = _choices[1];
+      if (c1 == c2) return "Draw!";
       if ((c1 == RockPaperScissorsChoice.Rock && c2 == RockPaperScissorsChoice.Scissors) ||
           (c1 == RockPaperScissorsChoice.Paper && c2 == RockPaperScissorsChoice.Rock) ||
-          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper))
-      {
-         Players[0].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
-         Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
-         Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
-         return $"{Players[0].Name} wins!";
-      }
-
-      Players[1].Wins++;
-      Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].Wins++;
-      Players[0].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
-      Players[1].PlayedAndWonGamesByType[Enums.GameType.RockPaperScissors].GamesPlayed++;
-      return $"{Players[1].Name} wins!";
+          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper)) return $"{_players[0]} wins!";
+      return $"{_players[1]} wins!";
    }
 }
