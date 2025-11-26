@@ -15,7 +15,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
          gameId = code;
 
       if (_sessions.TryGetValue(code, out var session) && session is not null)
-         return session._gameIdByUserId.TryAdd(userId, gameId);
+         return session.GamesByPlayers.TryAdd(userId, gameId);
 
       return false;
    }
@@ -26,7 +26,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
          return false;
 
       if (_sessions.TryGetValue(code, out var session) && session is not null)
-         return session._gameIdByUserId.Remove((Guid)userId);
+         return session.GamesByPlayers.Remove((Guid)userId);
 
       return false;
    }
@@ -41,7 +41,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
 
       if (_sessions.TryGetValue(code, out var session) && session is not null)
       {
-         if (session._gameIdByUserId.TryGetValue(userId, out var gameID) && gameID is not null)
+         if (session.GamesByPlayers.TryGetValue(userId, out var gameID) && gameID is not null)
          {
             gameId = gameID;
             return true;
@@ -63,7 +63,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
       if (!_sessions.TryGetValue(code, out var session))
          return false;
 
-      return session.Players.All(p => !session._gameIdByUserId.ContainsKey(p.Id));
+      return session.Players.All(p => !session.GamesByPlayers.ContainsKey(p.Id));
    }
 
    public Task<string?> JoinMatch(string code, User user)
@@ -98,7 +98,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
    {
       if (_sessions.TryGetValue(code, out var session) && session != null)
       {
-         if (session.InGame)
+         if (session.TournamentStarted)
             return "Game already started.";
 
          if (session.Players.Count >= session.Players.Capacity)
@@ -132,9 +132,9 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
       {
          Code = code,
          Players = new List<User>(numberOfPlayers),
-         GamesList = finalGamesList,
+         GameTypesByRounds = finalGamesList,
          NumberOfRounds = numberOfRounds,
-         InGame = false
+         TournamentStarted = false
       };
       return Task.FromResult(code);
    }
@@ -206,15 +206,15 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
             endedSet.Add(gameId);
          }
 
-         var playersToRemove = session._gameIdByUserId
+         var playersToRemove = session.GamesByPlayers
              .Where(kvp => kvp.Value == gameId)
              .Select(kvp => kvp.Key)
              .ToList();
 
          foreach (var playerId in playersToRemove)
-            session._gameIdByUserId.Remove(playerId);
+            session.GamesByPlayers.Remove(playerId);
 
-         session.InGame = false;
+         session.TournamentStarted = false;
       }
    }
 
@@ -227,7 +227,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
          if (!session.EndedGamesByRound.TryGetValue(round, out var endedSet))
             return false;
 
-         var allGameIds = session._gameIdByUserId.Values
+         var allGameIds = session.GamesByPlayers.Values
              .Where(id => id.Contains($"_R{round}"))
              .Distinct()
              .ToList();

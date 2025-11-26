@@ -143,7 +143,7 @@ public class TournamentHubUnitTests
       var (hub, lobbyMock, gameMock) = CreateHub();
       var ctx = BuildContext(MakeItems("C1"));
 
-      var session = new TournamentSession { Code = "C1", GamesList = new List<string> { "TicTacToe" } };
+      var session = new TournamentSession { Code = "C1", GameTypesByRounds = new List<string> { "TicTacToe" } };
       lobbyMock.Setup(s => s.GetTournamentSession("C1")).Returns(session);
       lobbyMock.Setup(s => s.AreAllPlayersInLobby("C1")).Returns(false);
 
@@ -164,7 +164,7 @@ public class TournamentHubUnitTests
       var (hub, lobbyMock, _) = CreateHub();
       var ctx = BuildContext(MakeItems("C2"));
 
-      var session = new TournamentSession { Code = "C2", InGame = true, GamesList = new List<string> { "TicTacToe" } };
+      var session = new TournamentSession { Code = "C2", TournamentStarted = true, GameTypesByRounds = new List<string> { "TicTacToe" } };
       lobbyMock.Setup(s => s.GetTournamentSession("C2")).Returns(session);
       lobbyMock.Setup(s => s.AreAllPlayersInLobby("C2")).Returns(true);
 
@@ -185,7 +185,7 @@ public class TournamentHubUnitTests
       var (hub, lobbyMock, _) = CreateHub();
       var ctx = BuildContext(MakeItems("C3"));
 
-      var session = new TournamentSession { Code = "C3", CurrentRound = 1, GamesList = new List<string> { "TicTacToe" } };
+      var session = new TournamentSession { Code = "C3", CurrentRound = 1, GameTypesByRounds = new List<string> { "TicTacToe" } };
       lobbyMock.Setup(s => s.GetTournamentSession("C3")).Returns(session);
       lobbyMock.Setup(s => s.AreAllPlayersInLobby("C3")).Returns(true);
 
@@ -212,7 +212,7 @@ public class TournamentHubUnitTests
 
       var p1 = TestHelpers.BuildGuest("A");
       var p2 = TestHelpers.BuildGuest("B");
-      var session = new TournamentSession { Code = "C4", GamesList = new List<string> { "TicTacToe" }, PlayerGroups = new List<List<User>>() };
+      var session = new TournamentSession { Code = "C4", GameTypesByRounds = new List<string> { "TicTacToe" }, PlayerGroups = new List<List<User>>() };
       lobbyMock.Setup(s => s.GetTournamentSession("C4")).Returns(session);
       lobbyMock.Setup(s => s.AreAllPlayersInLobby("C4")).Returns(true);
       lobbyMock.Setup(s => s.GetPlayersInLobby("C4")).Returns(new List<User> { p1, p2 });
@@ -235,9 +235,9 @@ public class TournamentHubUnitTests
 
       await hub.StartMatch();
 
-      Assert.True(session.InGame);
+      Assert.True(session.TournamentStarted);
       Assert.Equal(1, session.CurrentRound);
-      Assert.Equal("TicTacToe", session.GameType);
+      Assert.Equal("TicTacToe", session.CurrentRoundGameType);
       Assert.Single(session.PlayerGroups);
 
       p1Proxy.Verify(p => p.SendCoreAsync("MatchStarted",
@@ -256,7 +256,7 @@ public class TournamentHubUnitTests
       var b = TestHelpers.BuildGuest("B");
       var c = TestHelpers.BuildGuest("C");
       var d = TestHelpers.BuildGuest("D");
-      var session = new TournamentSession { Code = "C5", GamesList = new List<string> { "TicTacToe" } };
+      var session = new TournamentSession { Code = "C5", GameTypesByRounds = new List<string> { "TicTacToe" } };
       lobbyMock.Setup(s => s.GetTournamentSession("C5")).Returns(session);
       lobbyMock.Setup(s => s.AreAllPlayersInLobby("C5")).Returns(true);
       lobbyMock.Setup(s => s.GetPlayersInLobby("C5")).Returns(new List<User> { a, b, c, d });
@@ -288,7 +288,7 @@ public class TournamentHubUnitTests
       var p1 = TestHelpers.BuildGuest("P1");
       var p2 = TestHelpers.BuildGuest("P2");
       var p3 = TestHelpers.BuildGuest("P3");
-      var session = new TournamentSession { Code = "C8", GamesList = new List<string> { "TicTacToe" } };
+      var session = new TournamentSession { Code = "C8", GameTypesByRounds = new List<string> { "TicTacToe" } };
       lobbyMock.Setup(s => s.GetTournamentSession("C8")).Returns(session);
       lobbyMock.Setup(s => s.AreAllPlayersInLobby("C8")).Returns(true);
       lobbyMock.Setup(s => s.GetPlayersInLobby("C8")).Returns(new List<User> { p1, p2, p3 });
