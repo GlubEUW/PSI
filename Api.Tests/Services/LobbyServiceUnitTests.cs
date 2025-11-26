@@ -97,7 +97,7 @@ public class LobbyServiceUnitTests
    public async Task JoinMatch_ReturnsGameDoesNotExist_WhenNoSession()
    {
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
-      var res = await svc.JoinMatch("missing", new Guest { Id = Guid.NewGuid(), Name = "x" });
+      var res = await svc.JoinTournament("missing", new Guest { Id = Guid.NewGuid(), Name = "x" });
       Assert.Equal("Game does not exist.", res);
    }
 
@@ -107,9 +107,9 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(1, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = id, Name = "p1" });
+      await svc.JoinTournament(code, new Guest { Id = id, Name = "p1" });
 
-      var res = await svc.JoinMatch(code, new Guest { Id = Guid.NewGuid(), Name = "p2" });
+      var res = await svc.JoinTournament(code, new Guest { Id = Guid.NewGuid(), Name = "p2" });
       Assert.Equal("Lobby is full.", res);
    }
 
@@ -119,7 +119,7 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      var err = await svc.JoinMatch(code, new Guest { Id = id, Name = "p" });
+      var err = await svc.JoinTournament(code, new Guest { Id = id, Name = "p" });
       Assert.Null(err);
       Assert.Contains(svc.GetPlayersInLobby(code), u => u.Id == id);
 
@@ -143,8 +143,8 @@ public class LobbyServiceUnitTests
       var svc = (LobbyService)lobby;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = a, Name = "a" });
-      await svc.JoinMatch(code, new Guest { Id = b, Name = "b" });
+      await svc.JoinTournament(code, new Guest { Id = a, Name = "a" });
+      await svc.JoinTournament(code, new Guest { Id = b, Name = "b" });
 
       var other = Guid.NewGuid();
       var result = await svc.LeaveMatch(code, other);
@@ -160,7 +160,7 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(1, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = id, Name = "p" });
+      await svc.JoinTournament(code, new Guest { Id = id, Name = "p" });
       var result = await svc.LeaveMatch(code, id);
       Assert.True(result);
       Assert.Null(svc.GetTournamentSession(code));
@@ -202,7 +202,7 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = id, Name = "p" });
+      await svc.JoinTournament(code, new Guest { Id = id, Name = "p" });
       var msg = svc.CanJoinLobby(code, id);
       Assert.Equal("Name already taken.", msg);
    }
@@ -232,7 +232,7 @@ public class LobbyServiceUnitTests
    public async Task GetMatchRoundInfo_Defaults_WhenSessionMissing_And_ClampsCurrentRound()
    {
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
-      var info = svc.GetMatchRoundInfo("missing");
+      var info = svc.GetTournamentRoundInfo("missing");
       Assert.Equal(1, info.CurrentRound);
       Assert.Equal(1, info.TotalRounds);
 
@@ -242,7 +242,7 @@ public class LobbyServiceUnitTests
       session.NumberOfRounds = 1;
       session.CurrentRound = 5;
 
-      var info2 = svc2.GetMatchRoundInfo(code);
+      var info2 = svc2.GetTournamentRoundInfo(code);
       Assert.Equal(1, info2.CurrentRound);
       Assert.Equal(1, info2.TotalRounds);
    }
@@ -256,7 +256,7 @@ public class LobbyServiceUnitTests
       session.NumberOfRounds = 2;
       session.CurrentRound = 1;
 
-      var info = svc.GetMatchRoundInfo(code);
+      var info = svc.GetTournamentRoundInfo(code);
       Assert.Equal(2, info.CurrentRound);
       Assert.Equal(2, info.TotalRounds);
    }
@@ -270,7 +270,7 @@ public class LobbyServiceUnitTests
       session.NumberOfRounds = 4;
       session.CurrentRound = 0;
 
-      var info = svc.GetMatchRoundInfo(code);
+      var info = svc.GetTournamentRoundInfo(code);
       Assert.Equal(1, info.CurrentRound);
       Assert.Equal(4, info.TotalRounds);
    }

@@ -45,7 +45,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          return;
       }
 
-      var joined = await _lobbyService.JoinMatch(code, user);
+      var joined = await _lobbyService.JoinTournament(code, user);
       if (joined is not null)
       {
          await Clients.Caller.SendAsync("Error", "Could not join the match.");
@@ -58,7 +58,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
       await Groups.AddToGroupAsync(Context.ConnectionId, user.Id.ToString());
 
-      var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+      var roundInfo = _lobbyService.GetTournamentRoundInfo(code);
       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       await base.OnConnectedAsync();
    }
@@ -78,7 +78,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.Id.ToString());
 
-         var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+         var roundInfo = _lobbyService.GetTournamentRoundInfo(code);
          await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       }
       else
@@ -235,7 +235,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
 
       if (_lobbyService.AreAllGamesEnded(code))
       {
-         var roundInfo = _lobbyService.GetMatchRoundInfo(code);
+         var roundInfo = _lobbyService.GetTournamentRoundInfo(code);
          await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
          await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
       }
