@@ -325,7 +325,7 @@ public class TournamentHubUnitTests
       hub.Clients = clients.Object;
 
       lobbyMock.Setup(s => s.AreAllGamesEnded("C6")).Returns(true);
-      lobbyMock.Setup(s => s.GetMatchRoundInfo("C6")).Returns(new RoundInfoDto(1, 2));
+      lobbyMock.Setup(s => s.GetTournamentRoundInfo("C6")).Returns(new RoundInfoDto(1, 2));
 
       await hub.EndGame("C6_G0_R0");
 

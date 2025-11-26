@@ -66,7 +66,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
       return session.Players.All(p => !session.GamesByPlayers.ContainsKey(p.Id));
    }
 
-   public Task<string?> JoinMatch(string code, User user)
+   public Task<string?> JoinTournament(string code, User user)
    {
       if (!_sessions.TryGetValue(code, out var session))
          return Task.FromResult<string?>("Game does not exist.");
@@ -175,7 +175,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
       return code;
    }
 
-   public RoundInfoDto GetMatchRoundInfo(string code)
+   public RoundInfoDto GetTournamentRoundInfo(string code)
    {
       if (!_sessions.TryGetValue(code, out var session) || session is null)
       {
