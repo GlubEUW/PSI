@@ -60,7 +60,6 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
 
       var roundInfo = _lobbyService.GetMatchRoundInfo(code);
       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
-      Console.WriteLine($"Player {user.Name} connected to lobby {code}");
       await base.OnConnectedAsync();
    }
 
@@ -73,8 +72,6 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
       {
 
          Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
-
-         await _userService.SaveUserStatsAsync(user);
 
          await _lobbyService.LeaveMatch(code, user.Id);
 
