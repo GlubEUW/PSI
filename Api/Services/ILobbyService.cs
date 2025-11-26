@@ -14,7 +14,7 @@ public interface ILobbyService
    public Task<bool> LeaveMatch(string code, Guid userId);
    public Task<string> CreateLobbyWithSettings(int numberOfPlayers, int numberOfRounds, bool randomGames, List<string>? gamesList);
    public string? CanJoinLobby(string code, Guid userId);
-   public MatchSession? GetMatchSession(string code);
+   public TournamentSession? GetTournamentSession(string code);
    public void MarkGameAsEnded(string code, string gameId);
    public bool AreAllGamesEnded(string code);
    public void ResetRoundEndTracking(string code);

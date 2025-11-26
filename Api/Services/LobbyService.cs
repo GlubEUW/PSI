@@ -7,7 +7,7 @@ namespace Api.Services;
 
 public class LobbyService(IGameFactory gameFactory) : ILobbyService
 {
-   private static ConcurrentDictionary<string, MatchSession> _sessions = new();
+   private static ConcurrentDictionary<string, TournamentSession> _sessions = new();
    private readonly IGameFactory _gameFactory = gameFactory;
    public bool AddGameId(string code, Guid userId, string gameId = "")
    {
@@ -128,7 +128,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
       else
          finalGamesList = gamesList;
 
-      _sessions[code] = new MatchSession
+      _sessions[code] = new TournamentSession
       {
          Code = code,
          Players = new List<User>(numberOfPlayers),
@@ -139,7 +139,7 @@ public class LobbyService(IGameFactory gameFactory) : ILobbyService
       return Task.FromResult(code);
    }
 
-   public MatchSession? GetMatchSession(string code)
+   public TournamentSession? GetTournamentSession(string code)
    {
       if (_sessions.TryGetValue(code, out var session))
          return session;

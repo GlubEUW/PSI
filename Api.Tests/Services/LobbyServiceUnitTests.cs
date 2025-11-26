@@ -163,7 +163,7 @@ public class LobbyServiceUnitTests
       await svc.JoinMatch(code, new Guest { Id = id, Name = "p" });
       var result = await svc.LeaveMatch(code, id);
       Assert.True(result);
-      Assert.Null(svc.GetMatchSession(code));
+      Assert.Null(svc.GetTournamentSession(code));
    }
 
    [Fact]
@@ -179,7 +179,7 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(1, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.Players.Add(new Guest { Id = Guid.NewGuid(), Name = "p1" });
       var msg = svc.CanJoinLobby(code, Guid.NewGuid());
       Assert.Equal("Lobby is full.", msg);
@@ -190,7 +190,7 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.InGame = true;
       var msg = svc.CanJoinLobby(code, Guid.NewGuid());
       Assert.Equal("Game already started.", msg);
@@ -214,7 +214,7 @@ public class LobbyServiceUnitTests
       var games = new List<string> { "TicTacToe", "RockPaperScissors" };
       var code = await svc.CreateLobbyWithSettings(2, 2, false, games);
 
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       Assert.Equal(games, session.GamesList);
    }
 
@@ -223,7 +223,7 @@ public class LobbyServiceUnitTests
    {
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var code = await svc.CreateLobbyWithSettings(2, 3, true, null);
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       Assert.Equal(3, session.GamesList.Count);
       Assert.All(session.GamesList, g => Assert.False(string.IsNullOrWhiteSpace(g)));
    }
@@ -238,7 +238,7 @@ public class LobbyServiceUnitTests
 
       var (lobby2, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc2 = (LobbyService)lobby2;
-      var session = svc2.GetMatchSession(code)!;
+      var session = svc2.GetTournamentSession(code)!;
       session.NumberOfRounds = 1;
       session.CurrentRound = 5;
 
@@ -252,7 +252,7 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.NumberOfRounds = 2;
       session.CurrentRound = 1;
 
@@ -266,7 +266,7 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.NumberOfRounds = 4;
       session.CurrentRound = 0;
 
@@ -287,7 +287,7 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.CurrentRound = 0;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
@@ -306,7 +306,7 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.CurrentRound = 0;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
