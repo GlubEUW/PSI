@@ -8,7 +8,7 @@ using Api.Services;
 
 namespace Api.Hubs;
 
-public class TournamentHub(ILobbyService lobbyService, IGameService gameService, IUserService userService, ICurrentUserAccessor currentUserAccessor) : Hub
+public class TournamentHub(ITournamentService tournamentService, ILobbyService lobbyService, IGameService gameService, IUserService userService, ICurrentUserAccessor currentUserAccessor) : Hub
 {
    private enum ContextKeys
    {
@@ -16,6 +16,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
       Code
    }
    private readonly ILobbyService _lobbyService = lobbyService;
+   private readonly ITournamentService _tournamentService = tournamentService;
    private readonly IGameService _gameService = gameService;
    private readonly IUserService _userService = userService;
    private readonly ICurrentUserAccessor _currentUserAccessor = currentUserAccessor;
@@ -45,7 +46,12 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          return;
       }
 
-      var joined = await _lobbyService.JoinTournament(code, user);
+      // This is not finished we also have to consider the cases where the user is already in a match
+      // and we want to log them back in to the same match
+      // Two things coud be happening here:
+      // 1. Someone is joining a tournament lobby as that user, in which case do not kick him out maybe ping him?
+      // 2. User is gone and we need to let him rejoin
+      var joined = await _lobbyService.JoinLobby(code, user);
       if (joined is not null)
       {
          await Clients.Caller.SendAsync("Error", "Could not join the match.");
@@ -58,7 +64,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
       await Groups.AddToGroupAsync(Context.ConnectionId, code);
       await Groups.AddToGroupAsync(Context.ConnectionId, user.Id.ToString());
 
-      var roundInfo = _lobbyService.GetTournamentRoundInfo(code);
+      var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       await base.OnConnectedAsync();
    }
@@ -70,15 +76,12 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
 
       if (!string.IsNullOrEmpty(code) && user is not null)
       {
-
-         Console.WriteLine($"Player {user.Name} disconnected from lobby {code}");
-
-         await _lobbyService.LeaveMatch(code, user.Id);
+         // await _tournamentService.LeaveTournament(code, user.Id);
 
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.Id.ToString());
 
-         var roundInfo = _lobbyService.GetTournamentRoundInfo(code);
+         var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
          await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
       }
       else
@@ -95,10 +98,10 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
       return Task.FromResult(playerDtos);
    }
 
-   public async Task StartMatch()
+   public async Task StartTournament()
    {
       var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
-      var session = _lobbyService.GetTournamentSession(code) ?? throw new ArgumentNullException();
+      var session = _tournamentService.GetTournamentSession(code) ?? throw new ArgumentNullException();
 
       if (!_lobbyService.AreAllPlayersInLobby(code))
       {
@@ -148,14 +151,14 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
       session.CurrentRoundGameType = selectedGameType;
       session.PlayerGroups = playerGroups;
       session.TournamentStarted = true;
-      _lobbyService.ResetRoundEndTracking(code);
+      _tournamentService.ResetRoundEndTracking(code);
 
       i = 0;
       foreach (var (gameId, group) in gameInfos)
       {
          foreach (var player in group)
          {
-            _lobbyService.AddGameId(code, player.Id, gameId);
+            _tournamentService.AddGameId(code, player.Id, gameId);
             await Clients.Group(player.Id.ToString()).SendAsync("MatchStarted", new
             {
                gameType = selectedGameType,
@@ -181,10 +184,10 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          var user = Context.Items[ContextKeys.User] as User
              ?? throw new InvalidOperationException("User not found in context");
 
-         var session = _lobbyService.GetTournamentSession(code)
+         var session = _tournamentService.GetTournamentSession(code)
              ?? throw new InvalidOperationException($"Match session not found for code: {code}");
 
-         if (!_lobbyService.TryGetGameId(code, user.Id, out var gameId) || gameId is null)
+         if (!_tournamentService.TryGetGameId(code, user.Id, out var gameId) || gameId is null)
          {
             throw new GameNotFoundException(gameId ?? "unknown");
          }
@@ -231,11 +234,11 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
           ?? throw new InvalidOperationException("Match code not found in context");
 
       _gameService.RemoveGame(gameId);
-      _lobbyService.MarkGameAsEnded(code, gameId);
+      _tournamentService.MarkGameAsEnded(code, gameId);
 
-      if (_lobbyService.AreAllGamesEnded(code))
+      if (_tournamentService.AreAllGamesEnded(code))
       {
-         var roundInfo = _lobbyService.GetTournamentRoundInfo(code);
+         var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
          await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
          await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
       }
