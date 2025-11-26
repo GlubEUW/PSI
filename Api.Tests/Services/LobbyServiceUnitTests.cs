@@ -191,7 +191,7 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
       var session = svc.GetTournamentSession(code)!;
-      session.InGame = true;
+      session.TournamentStarted = true;
       var msg = svc.CanJoinLobby(code, Guid.NewGuid());
       Assert.Equal("Game already started.", msg);
    }
@@ -215,7 +215,7 @@ public class LobbyServiceUnitTests
       var code = await svc.CreateLobbyWithSettings(2, 2, false, games);
 
       var session = svc.GetTournamentSession(code)!;
-      Assert.Equal(games, session.GamesList);
+      Assert.Equal(games, session.GameTypesByRounds);
    }
 
    [Fact]
@@ -224,8 +224,8 @@ public class LobbyServiceUnitTests
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var code = await svc.CreateLobbyWithSettings(2, 3, true, null);
       var session = svc.GetTournamentSession(code)!;
-      Assert.Equal(3, session.GamesList.Count);
-      Assert.All(session.GamesList, g => Assert.False(string.IsNullOrWhiteSpace(g)));
+      Assert.Equal(3, session.GameTypesByRounds.Count);
+      Assert.All(session.GameTypesByRounds, g => Assert.False(string.IsNullOrWhiteSpace(g)));
    }
 
    [Fact]
@@ -291,8 +291,8 @@ public class LobbyServiceUnitTests
       session.CurrentRound = 0;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
-      session._gameIdByUserId[a] = code + "_G0_R0";
-      session._gameIdByUserId[b] = code + "_G0_R0";
+      session.GamesByPlayers[a] = code + "_G0_R0";
+      session.GamesByPlayers[b] = code + "_G0_R0";
 
       svc.ResetRoundEndTracking(code);
       Assert.False(svc.AreAllGamesEnded(code));
@@ -310,8 +310,8 @@ public class LobbyServiceUnitTests
       session.CurrentRound = 0;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
-      session._gameIdByUserId[a] = code + "_G0_R0";
-      session._gameIdByUserId[b] = code + "_G0_R0";
+      session.GamesByPlayers[a] = code + "_G0_R0";
+      session.GamesByPlayers[b] = code + "_G0_R0";
 
       Assert.False(svc.AreAllGamesEnded(code));
 

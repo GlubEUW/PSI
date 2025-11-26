@@ -1,4 +1,6 @@
 using Api.Entities;
+using Api.Enums;
+using Api.GameLogic;
 
 using System.Collections.Concurrent;
 namespace Api.Models;
@@ -6,13 +8,10 @@ namespace Api.Models;
 public class TournamentSession
 {
    public required string Code { get; set; }
-   public List<User> Players { get; set; } = new();
-   public List<List<User>> PlayerGroups { get; set; } = new();
-   public string? GameType { get; set; }
-   public List<string> GamesList { get; set; } = new();
-   public int NumberOfRounds { get; set; } = 1;
-   public int CurrentRound { get; set; } = 0;
-   public bool InGame { get; set; }
-   public readonly Dictionary<Guid, string> _gameIdByUserId = new();
-   public ConcurrentDictionary<int, HashSet<string>> EndedGamesByRound { get; set; } = new();
+   public required int NumberOfRounds { get; set; } = 1;
+   public required int CurrentRound { get; set; } = 0;
+   public required bool TournamentStarted { get; set; } = false;
+   public List<User> Players { get; set; } = new List<User>();
+   public List<GameType> GameTypesByRounds { get; set; } = new();
+   public ConcurrentDictionary<User, IGame> GamesByPlayers = new();
 }

@@ -116,19 +116,19 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          return;
       }
 
-      if (session.InGame)
+      if (session.TournamentStarted)
       {
          await Clients.Caller.SendAsync("Error", "A game is still in progress.");
          return;
       }
 
-      if (session.CurrentRound >= session.GamesList.Count)
+      if (session.CurrentRound >= session.GameTypesByRounds.Count)
       {
          await Clients.Group(code).SendAsync("RoundsEnded");
          return;
       }
 
-      var selectedGameType = session.GamesList[session.CurrentRound];
+      var selectedGameType = session.GameTypesByRounds[session.CurrentRound];
       var players = _lobbyService.GetPlayersInLobby(code);
       var (playerGroups, unmatchedPlayers) = _gameService.CreateGroups<User>(players, itemsPerGroup: 2);
 
@@ -155,9 +155,9 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          i++;
       }
 
-      session.GameType = selectedGameType;
+      session.CurrentRoundGameType = selectedGameType;
       session.PlayerGroups = playerGroups;
-      session.InGame = true;
+      session.TournamentStarted = true;
       _lobbyService.ResetRoundEndTracking(code);
 
       i = 0;
