@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Api.Tests.Hubs;
 
-public class MatchHubIntegrationTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
+public class TournamentHubIntegrationTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
    private readonly CustomWebApplicationFactory _factory = factory;
 
@@ -42,7 +42,7 @@ public class MatchHubIntegrationTests(CustomWebApplicationFactory factory) : ICl
    [Fact]
    public async Task Connect_WithoutCode_SendsErrorAndCloses()
    {
-      var connection = BuildConnection(_factory.Server.BaseAddress + "matchHub");
+      var connection = BuildConnection(_factory.Server.BaseAddress + "TournamentHub");
       var tcsError = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
 
       connection.On<string>("Error", msg => tcsError.TrySetResult(msg));
@@ -68,7 +68,7 @@ public class MatchHubIntegrationTests(CustomWebApplicationFactory factory) : ICl
       var code = doc.RootElement.GetProperty("code").GetString();
       Assert.False(string.IsNullOrWhiteSpace(code));
 
-      var url = _factory.Server.BaseAddress + $"matchHub?code={code}";
+      var url = _factory.Server.BaseAddress + $"TournamentHub?code={code}";
       var connection = BuildConnection(url, name: "Player1");
       var tcsPlayers = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
 

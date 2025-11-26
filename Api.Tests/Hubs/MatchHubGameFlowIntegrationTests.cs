@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Api.Tests.Hubs;
 
-public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
+public class TournamentHubGameFlowIntegrationTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
    private readonly CustomWebApplicationFactory _factory = factory;
 
@@ -61,7 +61,7 @@ public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factor
    public async Task StartMatch_HappyPath_SendsMatchStarted_ToBothPlayers()
    {
       var (code, _) = await CreateLobbyAsync(_factory);
-      var url = _factory.Server.BaseAddress + $"matchHub?code={code}";
+      var url = _factory.Server.BaseAddress + $"TournamentHub?code={code}";
 
       var Player1Id = Guid.NewGuid();
       var Player2Id = Guid.NewGuid();
@@ -99,7 +99,7 @@ public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factor
    public async Task MakeMove_Then_EndGame_SendsGameUpdate_And_RoundEnded()
    {
       var (code, _) = await CreateLobbyAsync(_factory);
-      var url = _factory.Server.BaseAddress + $"matchHub?code={code}";
+      var url = _factory.Server.BaseAddress + $"TournamentHub?code={code}";
 
       var Player1Id = Guid.NewGuid();
       var Player2Id = Guid.NewGuid();

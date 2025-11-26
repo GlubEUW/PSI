@@ -108,7 +108,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
    public async Task StartMatch()
    {
       var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
-      var session = _lobbyService.GetMatchSession(code) ?? throw new ArgumentNullException();
+      var session = _lobbyService.GetTournamentSession(code) ?? throw new ArgumentNullException();
 
       if (!_lobbyService.AreAllPlayersInLobby(code))
       {
@@ -191,7 +191,7 @@ public class TournamentHub(ILobbyService lobbyService, IGameService gameService,
          var user = Context.Items[ContextKeys.User] as User
              ?? throw new InvalidOperationException("User not found in context");
 
-         var session = _lobbyService.GetMatchSession(code)
+         var session = _lobbyService.GetTournamentSession(code)
              ?? throw new InvalidOperationException($"Match session not found for code: {code}");
 
          if (!_lobbyService.TryGetGameId(code, user.Id, out var gameId) || gameId is null)
