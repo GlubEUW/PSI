@@ -7,6 +7,9 @@ namespace Api.GameLogic;
 
 public class RockPaperScissorsGame : IGame
 {
+   public User? Winner { get; private set; }
+   public bool GameOver { get; private set; } = false;
+   private string? Result { get; set; }
    private enum RockPaperScissorsChoice
    {
       Rock = 0,
@@ -21,9 +24,6 @@ public class RockPaperScissorsGame : IGame
    public GameType GameType => GameType.RockPaperScissors;
    private readonly User[] _players = new User[2];
    private RockPaperScissorsChoice?[] _choices = new RockPaperScissorsChoice?[2];
-   public User? Winner { get; set; }
-   public string? Result { get; set; }
-
    public RockPaperScissorsGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("RockPaperScissors requires exactly 2 players.");
@@ -35,7 +35,7 @@ public class RockPaperScissorsGame : IGame
 
    public object GetState()
    {
-      return new { Winner, Result };
+      return new { Winner, Result, GameOver };
    }
 
    public bool MakeMove(JsonElement moveData)
@@ -46,11 +46,15 @@ public class RockPaperScissorsGame : IGame
       var idx = move.Player == _players[0] ? 0 : (move.Player == _players[1] ? 1 : -1);
       if (idx < 0) return false;
       _choices[idx] = move.Choice;
-      if (_choices[0].HasValue && _choices[1].HasValue) Result = DetermineWinner();
+      if (_choices[0].HasValue && _choices[1].HasValue)
+      {
+         GameOver = true;
+         Result = EvaluateWinner();
+      }
       return true;
    }
 
-   private string? DetermineWinner()
+   private string? EvaluateWinner()
    {
       var c1 = _choices[0];
       var c2 = _choices[1];

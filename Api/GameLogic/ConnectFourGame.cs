@@ -8,6 +8,9 @@ namespace Api.GameLogic;
 
 public class ConnectFourGame : IGame
 {
+   public User? Winner { get; private set; }
+   public GameType GameType => GameType.ConnectFour;
+   public bool GameOver { get; private set; } = false;
    private enum Color
    {
       Red = 0,
@@ -25,11 +28,7 @@ public class ConnectFourGame : IGame
 
    private readonly User[] _players = new User[2];
    private int _turnIndex;
-   public User? Winner { get; set; }
    private Color[][] _board = new Color[_rows][];
-
-   public GameType GameType => GameType.ConnectFour;
-
    public ConnectFourGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("ConnectFour requires exactly 2 players.");
@@ -46,7 +45,7 @@ public class ConnectFourGame : IGame
 
    public object GetState()
    {
-      return new { Board = _board, PlayerTurn = _players[_turnIndex], Winner };
+      return new { Board = _board, PlayerTurn = _players[_turnIndex], Winner, GameOver };
    }
 
    public bool MakeMove(JsonElement moveData)
@@ -68,9 +67,13 @@ public class ConnectFourGame : IGame
       var color = player == _players[0] ? Color.Red : Color.Yellow;
       _board[row][column] = color;
       var winnerColor = EvaluateWinner(row, column);
-      if (winnerColor == Color.Red) Winner = _players[0];
-      else if (winnerColor == Color.Yellow) Winner = _players[1];
-      else if (winnerColor == Color.Empty) Winner = null;
+      if (winnerColor.HasValue)
+      {
+         GameOver = true;
+         if (winnerColor == Color.Red) Winner = _players[0];
+         else if (winnerColor == Color.Yellow) Winner = _players[1];
+         else if (winnerColor == Color.Empty) Winner = null;
+      }
       _turnIndex ^= 1;
       return true;
    }
