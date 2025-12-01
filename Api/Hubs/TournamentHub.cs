@@ -13,7 +13,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
    private enum ContextKeys
    {
       User,
-      Code
+      Session
    }
    private readonly ILobbyService _lobbyService = lobbyService;
    private readonly ITournamentService _tournamentService = tournamentService;
@@ -59,30 +59,31 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          return;
       }
 
-      Context.Items.Add(ContextKeys.Code, code);
+      var session = _tournamentService.GetTournamentSession(code) ?? throw new InvalidOperationException($"Match session not found for code: {code}");
+      Context.Items.Add(ContextKeys.Session, session);
       Context.Items.Add(ContextKeys.User, user);
-      await Groups.AddToGroupAsync(Context.ConnectionId, code);
+      await Groups.AddToGroupAsync(Context.ConnectionId, session.Code);
       await Groups.AddToGroupAsync(Context.ConnectionId, user.Id.ToString());
 
-      var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
-      await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+      var roundInfo = _tournamentService.GetTournamentRoundInfo(session.Code);
+      await Clients.Group(session.Code).SendAsync("PlayersUpdated", roundInfo);
       await base.OnConnectedAsync();
    }
 
    public override async Task OnDisconnectedAsync(Exception? exception)
    {
-      var code = Context.Items[ContextKeys.Code] as string;
+      var session = Context.Items[ContextKeys.Session] as TournamentSession;
       var user = Context.Items[ContextKeys.User] as User;
 
-      if (!string.IsNullOrEmpty(code) && user is not null)
+      if (session is not null && user is not null)
       {
          // await _tournamentService.LeaveTournament(code, user.Id);
 
-         await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
+         await Groups.RemoveFromGroupAsync(Context.ConnectionId, session.Code);
          await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.Id.ToString());
 
-         var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
-         await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+         var roundInfo = _tournamentService.GetTournamentRoundInfo(session.Code);
+         await Clients.Group(session.Code).SendAsync("PlayersUpdated", roundInfo);
       }
       else
       {
@@ -100,8 +101,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
 
    public async Task StartTournament()
    {
-      var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
-      var session = _tournamentService.GetTournamentSession(code) ?? throw new ArgumentNullException();
+      var session = Context.Items[ContextKeys.Session] as TournamentSession ?? throw new ArgumentNullException();
 
       if (session.TournamentStarted)
       {
@@ -112,101 +112,83 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
 
    public async Task StartRound()
    {
-      var code = Context.Items[ContextKeys.Code] as string ?? throw new ArgumentNullException();
-      var session = _tournamentService.GetTournamentSession(code) ?? throw new ArgumentNullException();
+      var session = Context.Items[ContextKeys.Session] as TournamentSession ?? throw new ArgumentNullException();
 
-      if (!_lobbyService.AreAllPlayersInLobby(code))
-      {
-         await Clients.Caller.SendAsync("Error", "Not all players have returned to the lobby yet.");
-         return;
-      }
+      // IMPLEMENT READY AND IF AT LEAST HALF OF THEM ARE READY START COUNTDOWN OF 5 SECONDS
+      // if (!_lobbyService.AreAllPlayersInLobby(code))
+      // {
+      //    await Clients.Caller.SendAsync("Error", "Not all players have returned to the lobby yet.");
+      //    return;
+      // }
 
       if (session.CurrentRound >= session.GameTypesByRounds.Count)
       {
-         await Clients.Group(code).SendAsync("RoundsEnded");
+         await Clients.Group(session.Code).SendAsync("RoundsEnded");
          return;
       }
 
       var selectedGameType = session.GameTypesByRounds[session.CurrentRound];
-      var players = _lobbyService.GetPlayersInLobby(code);
-      var (playerGroups, unmatchedPlayers) = _gameService.CreateGroups<User>(players, itemsPerGroup: 2);
+      var players = session.Players;
+      var (playerGroups, unmatchedPlayers) = _gameService.CreateGroups<User>(players, itemsPerGroup: 2); //WHYYYYYYY just add the static variable per iGAME
 
       foreach (var unmatchedPlayer in unmatchedPlayers)
       {
          await Clients.Group(unmatchedPlayer.Id.ToString()).SendAsync("NoPairing");
       }
 
-      var gameInfos = new List<(string gameId, List<User> group)>();
-      var i = 0;
       foreach (var group in playerGroups)
       {
-         var gameId = $"{code}_G{i}_R{session.CurrentRound}";
-         if (!_gameService.StartGame(gameId, selectedGameType, group))
+         var game = _gameService.StartGame(selectedGameType, group);
+         if (game is not null)
          {
-            foreach (var (createdGameId, _) in gameInfos)
+            foreach (var player in group)
             {
-               _gameService.RemoveGame(createdGameId);
+               session.GamesByPlayers[player] = game;
             }
-            await Clients.Caller.SendAsync("Error", "Failed to start the game.");
-            return;
          }
-         gameInfos.Add((gameId, group));
-         i++;
-      }
-
-      session.CurrentRoundGameType = selectedGameType;
-      session.PlayerGroups = playerGroups;
-      session.TournamentStarted = true;
-      _tournamentService.ResetRoundEndTracking(code);
-
-      i = 0;
-      foreach (var (gameId, group) in gameInfos)
-      {
-         foreach (var player in group)
+         else
          {
-            _tournamentService.AddGameId(code, player.Id, gameId);
-            await Clients.Group(player.Id.ToString()).SendAsync("MatchStarted", new
-            {
-               gameType = selectedGameType,
-               gameId,
-               playerIds = group.Select(p => p.Id),
-               initialState = _gameService.GetGameState(gameId),
-               round = session.CurrentRound + 1
-            });
+            throw new GameException("Failed to start game.");
          }
-         i++;
-
       }
-      session.CurrentRound++;
+
+      session.TournamentStarted = true;
+
+      foreach (var player in players)
+      {
+         var game = session.GamesByPlayers[player];
+         await Clients.Group(player.Id.ToString()).SendAsync("MatchStarted", new
+         {
+            gameType = selectedGameType,
+            playerIds = session.GamesByPlayers.Keys.Where(u => session.GamesByPlayers[u] == game).Select(u => u.Id).ToList(),
+            initialState = game.GetState(),
+            round = ++session.CurrentRound
+         });
+      }
    }
 
    public async Task MakeMove(JsonElement moveData)
    {
       try
       {
-         var code = Context.Items[ContextKeys.Code] as string
-             ?? throw new InvalidOperationException("Code not found in context");
+         var session = Context.Items[ContextKeys.Session] as TournamentSession
+               ?? throw new InvalidOperationException("Session not found in context");
 
          var user = Context.Items[ContextKeys.User] as User
-             ?? throw new InvalidOperationException("User not found in context");
+               ?? throw new InvalidOperationException("User not found in context");
 
-         var session = _tournamentService.GetTournamentSession(code)
-             ?? throw new InvalidOperationException($"Match session not found for code: {code}");
-
-         if (!_tournamentService.TryGetGameId(code, user.Id, out var gameId) || gameId is null)
-         {
-            throw new GameNotFoundException(gameId ?? "unknown");
-         }
-
-         if (!_gameService.MakeMove(gameId, moveData, out var newState))
+         var game = session.GamesByPlayers[user];
+         if (!game.MakeMove(moveData))
          {
             return;
          }
 
-         var targetGroup = session.PlayerGroups.FirstOrDefault(g => g.Any(p => p.Id == user.Id)) ?? throw new PlayerNotFoundException(user.Id, code);
+         // This LINq potentially slow but makeMove needs to be as fast as humanly possible,
+         // consider just having players from IGame I really dont want to open another Game branch rn
+         var targetGroup = session.GamesByPlayers.Keys.Where(u => session.GamesByPlayers[u] == game) ?? throw new PlayerNotFoundException(user.Id, session.Code);
 
          var notifyTasks = targetGroup.Select(p =>
-             Clients.Group(p.Id.ToString()).SendAsync("GameUpdate", newState)
+             Clients.Group(p.Id.ToString()).SendAsync("GameUpdate", game.GetState())
          );
 
          await Task.WhenAll(notifyTasks);
@@ -234,29 +216,35 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
    }
 
 
-   public async Task EndGame(string gameId)
+   // public async Task EndGame(string gameId)
+   // {
+   //    var code = Context.Items[ContextKeys.Code] as string
+   //        ?? throw new InvalidOperationException("Match code not found in context");
+
+   //    _gameService.RemoveGame(gameId);
+   //    _tournamentService.MarkGameAsEnded(code, gameId);
+
+   //    if (_tournamentService.AreAllGamesEnded(code))
+   //    {
+   //       var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
+   //       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
+   //       await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
+   //    }
+   //    else
+   //    {
+   //       await Clients.Group(gameId).SendAsync("GameEnded", new { gameId });
+   //    }
+   // }
+
+
+   public Task<object> GetGameState()
    {
-      var code = Context.Items[ContextKeys.Code] as string
-          ?? throw new InvalidOperationException("Match code not found in context");
-
-      _gameService.RemoveGame(gameId);
-      _tournamentService.MarkGameAsEnded(code, gameId);
-
-      if (_tournamentService.AreAllGamesEnded(code))
-      {
-         var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
-         await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
-         await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
-      }
-      else
-      {
-         await Clients.Group(gameId).SendAsync("GameEnded", new { gameId });
-      }
-   }
-
-
-   public Task<object?> GetGameState(string gameId)
-   {
-      return Task.FromResult(_gameService.GetGameState(gameId));
+      var session = Context.Items[ContextKeys.Session] as TournamentSession
+            ?? throw new InvalidOperationException("Session not found in context");
+      var user = Context.Items[ContextKeys.User] as User
+            ?? throw new InvalidOperationException("User not found in context");
+      var game = session.GamesByPlayers[user]
+            ?? throw new GameNotFoundException("Game not found for user in session");
+      return Task.FromResult(game.GetState());
    }
 }
