@@ -8,6 +8,9 @@ namespace Api.GameLogic;
 
 public class TicTacToeGame : IGame
 {
+   public User? Winner { get; private set; }
+   public GameType GameType => GameType.TicTacToe;
+   public bool GameOver { get; private set; } = false;
    private enum Mark
    {
       X = 0,
@@ -20,11 +23,9 @@ public class TicTacToeGame : IGame
       public int X { get; set; }
       public int Y { get; set; }
    }
-   public GameType GameType => GameType.TicTacToe;
    private readonly User[] _players = new User[2];
    private int _turnIndex;
    private Mark[][] _board = new Mark[3][];
-   public User? Winner { get; set; }
 
    public TicTacToeGame(List<User> players)
    {
@@ -49,7 +50,7 @@ public class TicTacToeGame : IGame
          for (var c = 0; c < 3; c++) row[c] = (int)_board[r][c];
          boardOut[r] = row;
       }
-      return new { Board = boardOut, PlayerTurn = _players[_turnIndex], Winner };
+      return new { Board = boardOut, PlayerTurn = _players[_turnIndex], Winner, GameOver };
    }
 
    public bool MakeMove(JsonElement moveData)
@@ -69,9 +70,13 @@ public class TicTacToeGame : IGame
       var mark = _turnIndex == 0 ? Mark.X : Mark.O;
       _board[x][y] = mark;
       var result = EvaluateWinner(x, y);
-      if (result == Mark.X) Winner = _players[(int)Mark.X];
-      else if (result == Mark.O) Winner = _players[(int)Mark.O];
-      else if (result == Mark.Empty) Winner = null;
+      if (result.HasValue)
+      {
+         GameOver = true;
+         if (result == Mark.X) Winner = _players[(int)Mark.X];
+         else if (result == Mark.O) Winner = _players[(int)Mark.O];
+         else if (result == Mark.Empty) Winner = null;
+      }
       _turnIndex ^= 1;
       return true;
    }

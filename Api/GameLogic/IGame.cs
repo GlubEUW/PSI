@@ -10,6 +10,7 @@ public interface IGame
 {
    public User? Winner { get; }
    public GameType GameType { get; }
+   public bool GameOver { get; }
    public object GetState();
    public bool MakeMove(JsonElement moveData);
 }
