@@ -183,9 +183,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
             return;
          }
 
-         // This LINq potentially slow but makeMove needs to be as fast as humanly possible,
-         // consider just having players from IGame I really dont want to open another Game branch rn
-         var targetGroup = session.GamesByPlayers.Keys.Where(u => session.GamesByPlayers[u] == game) ?? throw new PlayerNotFoundException(user.Id, session.Code);
+         var targetGroup = session.GamesByPlayers[user].Players ?? throw new InvalidOperationException("Players not found in game");
 
          var notifyTasks = targetGroup.Select(p =>
              Clients.Group(p.Id.ToString()).SendAsync("GameUpdate", game.GetState())
@@ -214,28 +212,6 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          await Clients.Caller.SendAsync("Error", "An unexpected error occurred");
       }
    }
-
-
-   // public async Task EndGame(string gameId)
-   // {
-   //    var code = Context.Items[ContextKeys.Code] as string
-   //        ?? throw new InvalidOperationException("Match code not found in context");
-
-   //    _gameService.RemoveGame(gameId);
-   //    _tournamentService.MarkGameAsEnded(code, gameId);
-
-   //    if (_tournamentService.AreAllGamesEnded(code))
-   //    {
-   //       var roundInfo = _tournamentService.GetTournamentRoundInfo(code);
-   //       await Clients.Group(code).SendAsync("PlayersUpdated", roundInfo);
-   //       await Clients.Group(code).SendAsync("RoundEnded", new { roundInfo });
-   //    }
-   //    else
-   //    {
-   //       await Clients.Group(gameId).SendAsync("GameEnded", new { gameId });
-   //    }
-   // }
-
 
    public Task<object> GetGameState()
    {
