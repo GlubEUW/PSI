@@ -71,15 +71,11 @@ function LobbyPage() {
             setMessage(errorMessage);
          });
 
-         conn.on("MatchStarted", (data) => {
-            console.log("Match started!", data);
+         conn.on("GameStarted", (data) => {
+            console.log("Round started!", data);
             navigate("game", {
                state: {
                   gameType: data.gameType,
-                  gameId: data.gameId,
-                  playerIds: data.playerIds,
-                  initialState: data.initialState,
-                  round: data.round
                },
                replace: false
             });
@@ -106,10 +102,19 @@ function LobbyPage() {
       };
    }, [code, navigate, token]);
 
-   const startMatch = async () => {
+   const startRound = async () => {
       if (!connection) return;
       try {
-         await connection.invoke("StartMatch");
+         await connection.invoke("StartRound");
+      } catch (err) {
+         console.error(err);
+      }
+   };
+
+   const startTournament = async () => {
+      if (!connection) return;
+      try {
+         await connection.invoke("StartTournament");
       } catch (err) {
          console.error(err);
       }
@@ -133,7 +138,8 @@ function LobbyPage() {
                <p>Your name is: {user.name}</p>
                <p>{message}</p>
 
-               <button onClick={() => startMatch()} className="normal-button">Start Match</button>
+               <button onClick={() => startRound()} className="normal-button">Start Round</button>
+               <button onClick={() => startTournament()} className="normal-button">Start Tournament</button>
 
                <p>Round {currentRound}/{totalRounds}</p>
                <h3>Players in Lobby:</h3>

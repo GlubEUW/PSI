@@ -11,27 +11,26 @@ public class TicTacToeGame : IGame
    public User? Winner { get; private set; }
    public GameType GameType => GameType.TicTacToe;
    public bool GameOver { get; private set; } = false;
+   public List<User> Players { get; private set; }
+
    private enum Mark
    {
-      X = 0,
-      O = 1,
-      Empty = 2
+      X = 1,
+      O = 2,
+      Empty = 0
    }
    private record struct TicTacToeMove
    {
-      public required User Player { get; set; }
       public int X { get; set; }
       public int Y { get; set; }
    }
-   private readonly User[] _players = new User[2];
    private int _turnIndex;
    private Mark[][] _board = new Mark[3][];
 
    public TicTacToeGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("TicTacToe requires exactly 2 players.");
-      _players[(int)Mark.X] = players[0];
-      _players[(int)Mark.O] = players[1];
+      Players = players;
       _turnIndex = 0;
       for (var r = 0; r < 3; r++)
       {
@@ -50,17 +49,17 @@ public class TicTacToeGame : IGame
          for (var c = 0; c < 3; c++) row[c] = (int)_board[r][c];
          boardOut[r] = row;
       }
-      return new { Board = boardOut, PlayerTurn = _players[_turnIndex], Winner, GameOver };
+      return new { Board = boardOut, PlayerTurn = Players[_turnIndex], Winner, GameOver };
    }
 
-   public bool MakeMove(JsonElement moveData)
+   public bool MakeMove(JsonElement moveData, User player)
    {
       if (Winner is not null) return false;
       TicTacToeMove move;
-      try { move = JsonSerializer.Deserialize<TicTacToeMove>(moveData.GetRawText()); }
+      try { move = JsonSerializer.Deserialize<TicTacToeMove>(moveData); }
       catch (JsonException) { throw new MoveNotDeserialized(moveData); }
-      if (move.Player != _players[_turnIndex]) return false;
-      return ApplyMove(move.Player, move.X, move.Y);
+      if (player != Players[_turnIndex]) return false;
+      return ApplyMove(player, move.X, move.Y);
    }
 
    private bool ApplyMove(User player, int x, int y)
@@ -73,8 +72,8 @@ public class TicTacToeGame : IGame
       if (result.HasValue)
       {
          GameOver = true;
-         if (result == Mark.X) Winner = _players[(int)Mark.X];
-         else if (result == Mark.O) Winner = _players[(int)Mark.O];
+         if (result == Mark.X) Winner = Players[0];
+         else if (result == Mark.O) Winner = Players[1];
          else if (result == Mark.Empty) Winner = null;
       }
       _turnIndex ^= 1;

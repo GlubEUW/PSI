@@ -14,7 +14,7 @@ public interface IGame
    public List<User> Players { get; }
 
    public object GetState();
-   public bool MakeMove(JsonElement moveData);
+   public bool MakeMove(JsonElement moveData, User player);
 }
 
 public static class GameExtensions

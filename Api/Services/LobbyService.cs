@@ -8,7 +8,7 @@ namespace Api.Services;
 public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFactory) : ILobbyService
 {
    private readonly TournamentStore _store = tournamentStore;
-   private readonly IGameFactory _gameFactory;
+   private readonly IGameFactory _gameFactory = gameFactory;
 
    public List<User> GetPlayersInLobby(string code)
    {
@@ -126,5 +126,11 @@ public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFact
       while (_store.Sessions.ContainsKey(code));
 
       return code;
+   }
+
+   public List<PlayerInfoDto> GetPlayersInLobbyDTOs(string code)
+   {
+      var players = GetPlayersInLobby(code);
+      return players.Select(p => new PlayerInfoDto(p.Name, 0)).ToList();
    }
 }
