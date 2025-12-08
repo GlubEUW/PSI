@@ -11,6 +11,7 @@ public class ConnectFourGame : IGame
    public User? Winner { get; private set; }
    public GameType GameType => GameType.ConnectFour;
    public bool GameOver { get; private set; } = false;
+   public List<User> Players { get; private set; }
    private enum Color
    {
       Red = 0,
@@ -25,15 +26,12 @@ public class ConnectFourGame : IGame
 
    private static readonly int _rows = 6;
    private static readonly int _cols = 7;
-
-   private readonly User[] _players = new User[2];
    private int _turnIndex;
    private Color[][] _board = new Color[_rows][];
    public ConnectFourGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("ConnectFour requires exactly 2 players.");
-      _players[0] = players[0];
-      _players[1] = players[1];
+      Players = players;
       _turnIndex = 0;
       for (var r = 0; r < _rows; r++)
       {
@@ -45,7 +43,7 @@ public class ConnectFourGame : IGame
 
    public object GetState()
    {
-      return new { Board = _board, PlayerTurn = _players[_turnIndex], Winner, GameOver };
+      return new { Board = _board, PlayerTurn = Players[_turnIndex], Winner, GameOver };
    }
 
    public bool MakeMove(JsonElement moveData)
@@ -54,7 +52,7 @@ public class ConnectFourGame : IGame
       ConnectFourMove move;
       try { move = JsonSerializer.Deserialize<ConnectFourMove>(moveData.GetRawText()); }
       catch (JsonException) { throw new MoveNotDeserialized(moveData); }
-      if (move.Player != _players[_turnIndex]) return false;
+      if (move.Player != Players[_turnIndex]) return false;
       return ApplyMove(move.Player, move.Column);
    }
 
@@ -64,14 +62,14 @@ public class ConnectFourGame : IGame
       var row = _rows - 1;
       while (row >= 0 && _board[row][column] != Color.Empty) row--;
       if (row < 0) return false;
-      var color = player == _players[0] ? Color.Red : Color.Yellow;
+      var color = player == Players[0] ? Color.Red : Color.Yellow;
       _board[row][column] = color;
       var winnerColor = EvaluateWinner(row, column);
       if (winnerColor.HasValue)
       {
          GameOver = true;
-         if (winnerColor == Color.Red) Winner = _players[0];
-         else if (winnerColor == Color.Yellow) Winner = _players[1];
+         if (winnerColor == Color.Red) Winner = Players[0];
+         else if (winnerColor == Color.Yellow) Winner = Players[1];
          else if (winnerColor == Color.Empty) Winner = null;
       }
       _turnIndex ^= 1;

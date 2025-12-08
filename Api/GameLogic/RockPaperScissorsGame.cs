@@ -10,6 +10,7 @@ public class RockPaperScissorsGame : IGame
    public User? Winner { get; private set; }
    public bool GameOver { get; private set; } = false;
    private string? Result { get; set; }
+   public List<User> Players { get; private set; }
    private enum RockPaperScissorsChoice
    {
       Rock = 0,
@@ -22,13 +23,11 @@ public class RockPaperScissorsGame : IGame
       public RockPaperScissorsChoice Choice { get; set; }
    }
    public GameType GameType => GameType.RockPaperScissors;
-   private readonly User[] _players = new User[2];
    private RockPaperScissorsChoice?[] _choices = new RockPaperScissorsChoice?[2];
    public RockPaperScissorsGame(List<User> players)
    {
       if (players.Count != 2) throw new InvalidOperationException("RockPaperScissors requires exactly 2 players.");
-      _players[0] = players[0];
-      _players[1] = players[1];
+      Players = players;
       _choices[0] = null;
       _choices[1] = null;
    }
@@ -43,7 +42,7 @@ public class RockPaperScissorsGame : IGame
       RockPaperScissorsMove move;
       try { move = moveData.Deserialize<RockPaperScissorsMove>(); }
       catch (JsonException) { return false; }
-      var idx = move.Player == _players[0] ? 0 : (move.Player == _players[1] ? 1 : -1);
+      var idx = move.Player == Players[0] ? 0 : (move.Player == Players[1] ? 1 : -1);
       if (idx < 0) return false;
       _choices[idx] = move.Choice;
       if (_choices[0].HasValue && _choices[1].HasValue)
@@ -61,7 +60,7 @@ public class RockPaperScissorsGame : IGame
       if (c1 == c2) return "Draw!";
       if ((c1 == RockPaperScissorsChoice.Rock && c2 == RockPaperScissorsChoice.Scissors) ||
           (c1 == RockPaperScissorsChoice.Paper && c2 == RockPaperScissorsChoice.Rock) ||
-          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper)) return $"{_players[0]} wins!";
-      return $"{_players[1]} wins!";
+          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper)) return $"{Players[0]} wins!";
+      return $"{Players[1]} wins!";
    }
 }
