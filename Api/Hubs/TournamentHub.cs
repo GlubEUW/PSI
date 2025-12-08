@@ -126,7 +126,6 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       if (session.TournamentStarted)
       {
          await Clients.Caller.SendAsync("Error", "The tournament has already started.");
-         throw new InvalidOperationException("Tournament already started.");
       }
 
       var startResult = _tournamentService.StartTournament(code);
@@ -158,10 +157,10 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       // {
       //    Clients.Caller.SendAsync("WaitingForPlayers", _tournamentService.getReadyPlayerCount(code).ToString());
       // } not good enough need to think about the case where no players ready anymore
-
-      if (_tournamentService.StartNextRound(code) is not null)
+      var roundStartError = _tournamentService.StartNextRound(code);
+      if (roundStartError is not null)
       {
-         await Clients.Caller.SendAsync("Error", "Could not start the next round.");
+         await Clients.Caller.SendAsync("Error", roundStartError);
       }
 
       foreach (var game in _tournamentService.getGameListForCurrentRound(code).Values)
@@ -170,7 +169,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          {
             await Clients.Group(player.Id.ToString()).SendAsync("GameStarted", new
             {
-               gameType = game.GameType
+               gameType = game.GameType.ToString()
             });
          }
       }
@@ -189,7 +188,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
             throw new GameNotFoundException("unknown");
          }
 
-         game.MakeMove(moveData);
+         game.MakeMove(moveData, user);
 
          var targetGroup = game.Players;
          var notifyTasks = targetGroup.Select(p =>
@@ -208,6 +207,14 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          ExceptionLogger.LogException(ex, "MakeMove - Unexpected error");
          await Clients.Caller.SendAsync("Error", "An unexpected error occurred");
       }
+   }
+
+   public Task<object?> GetGameState()
+   {
+      var code = Context.Items[ContextKeys.Code] as string ?? throw new InvalidOperationException("Code not found in context");
+      var user = Context.Items[ContextKeys.User] as User ?? throw new InvalidOperationException("User not found in context");
+      _tournamentService.GetGame(code, user, out var game);
+      return Task.FromResult(game?.GetState());
    }
 
    // public Task<object?> GetGameState(string gameId)

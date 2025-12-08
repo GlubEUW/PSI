@@ -19,7 +19,6 @@ public class RockPaperScissorsGame : IGame
    }
    private struct RockPaperScissorsMove
    {
-      public required User Player { get; set; }
       public RockPaperScissorsChoice Choice { get; set; }
    }
    public GameType GameType => GameType.RockPaperScissors;
@@ -37,12 +36,12 @@ public class RockPaperScissorsGame : IGame
       return new { Winner, Result, GameOver };
    }
 
-   public bool MakeMove(JsonElement moveData)
+   public bool MakeMove(JsonElement moveData, User player)
    {
       RockPaperScissorsMove move;
       try { move = moveData.Deserialize<RockPaperScissorsMove>(); }
       catch (JsonException) { return false; }
-      var idx = move.Player == Players[0] ? 0 : (move.Player == Players[1] ? 1 : -1);
+      var idx = player == Players[0] ? 0 : (player == Players[1] ? 1 : -1);
       if (idx < 0) return false;
       _choices[idx] = move.Choice;
       if (_choices[0].HasValue && _choices[1].HasValue)

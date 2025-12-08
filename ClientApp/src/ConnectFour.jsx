@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 
-function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
+function ConnectFour({ player, connection, onReturnToLobby }) {
    const [board, setBoard] = useState([]);
    const [playerTurn, setPlayerTurn] = useState(null);
    const [winner, setWinner] = useState(null);
    const [hoveredColumn, setHoveredColumn] = useState(null);
+   const [gameOver, setGameOver] = useState(false);
 
    useEffect(() => {
       if (!connection) {
@@ -23,13 +24,14 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
 
       connection.on("GameUpdate", handleGameUpdate);
 
-      connection.invoke("GetGameState", gameId)
+      connection.invoke("GetGameState")
          .then(state => {
             console.log("Connect Four initial state:", state);
             if (state) {
                setBoard(state.board);
                setPlayerTurn(state.playerTurn);
                setWinner(state.winner);
+               setGameOver(state.GameOver)
             }
          })
          .catch(err => console.error("Failed to get Connect Four game state:", err));
@@ -37,7 +39,7 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
       return () => {
          connection.off("GameUpdate", handleGameUpdate);
       };
-   }, [connection, gameId]);
+   }, [connection]);
 
    useEffect(() => {
       if (!winner) return;
@@ -65,9 +67,9 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
          return;
       }
 
-      console.log("Sending move:", { PlayerId: playerId, Column: column });
+      console.log("Sending move:", { Column: column });
 
-      connection.invoke("MakeMove", { PlayerId: playerId, Column: column })
+      connection.invoke("MakeMove", { Column: column })
          .catch(err => console.error("Move failed:", err));
    };
 
@@ -103,13 +105,13 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
          <h2>Connect Four</h2>
 
-         {winner ? (
+         {gameOver === true ? (
             <div style={{ marginBottom: "20px" }}>
                <h3 style={{ color: "green" }}>Winner: {winner}!</h3>
                <p>You will return to the lobby shortly.</p>
             </div>
          ) : (
-            <h3>Current turn: {playerTurn}</h3>
+            <h3>Current turn: {playerTurn.name}</h3>
          )}
 
          <div

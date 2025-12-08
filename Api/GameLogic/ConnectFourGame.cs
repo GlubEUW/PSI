@@ -14,13 +14,12 @@ public class ConnectFourGame : IGame
    public List<User> Players { get; private set; }
    private enum Color
    {
-      Red = 0,
-      Yellow = 1,
-      Empty = 2
+      Red = 1,
+      Yellow = 2,
+      Empty = 0
    }
-   private record struct ConnectFourMove
+   private struct ConnectFourMove
    {
-      required public User Player { get; set; }
       public int Column { get; set; }
    }
 
@@ -46,14 +45,14 @@ public class ConnectFourGame : IGame
       return new { Board = _board, PlayerTurn = Players[_turnIndex], Winner, GameOver };
    }
 
-   public bool MakeMove(JsonElement moveData)
+   public bool MakeMove(JsonElement moveData, User player)
    {
       if (Winner is not null) return false;
       ConnectFourMove move;
-      try { move = JsonSerializer.Deserialize<ConnectFourMove>(moveData.GetRawText()); }
+      try { move = JsonSerializer.Deserialize<ConnectFourMove>(moveData); }
       catch (JsonException) { throw new MoveNotDeserialized(moveData); }
-      if (move.Player != Players[_turnIndex]) return false;
-      return ApplyMove(move.Player, move.Column);
+      if (player != Players[_turnIndex]) return false;
+      return ApplyMove(player, move.Column);
    }
 
    private bool ApplyMove(User player, int column)
