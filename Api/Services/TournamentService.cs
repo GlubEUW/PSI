@@ -58,26 +58,23 @@ public class TournamentService(IGameService gameService, TournamentStore tournam
 
       var players = session.Players;
       var (playerGroups, unmatchedPlayers) = CreateGroups(players, itemsPerGroup: 2);
-
       foreach (var group in playerGroups)
       {
-         if (!_gameFactory.StartGame(gameId, selectedGameType, group))
+         var game = _gameService.StartGame(session.GameTypesByRounds[session.CurrentRound], group);
+         if (game is null)
          {
-            foreach (var (createdGameId, _) in gameInfos)
-            {
-               _gameFactory.RemoveGame(createdGameId);
-            }
-            return;
+            session.GamesByPlayers.Clear();
+            return "Failed to start game for a player group.";
          }
-         gameInfos.Add((gameId, group));
-         i++;
+         foreach (var player in group)
+         {
+            session.GamesByPlayers[player] = game;
+         }
       }
 
-      session.GameType = selectedGameType;
-      session.PlayerGroups = playerGroups;
-      session.InGame = true;
-      _lobbyService.ResetRoundEndTracking(code);
-
+      session.CurrentRound++;
+      session.RoundStarted = true;
+      return null;
    }
 
    private (List<List<TItem>> groupedItems, List<TItem> ungroupedItems) CreateGroups<TItem>(

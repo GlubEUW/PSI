@@ -129,9 +129,10 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          throw new InvalidOperationException("Tournament already started.");
       }
 
-      if (!_tournamentService.StartTournament(code))
+      var startResult = _tournamentService.StartTournament(code);
+      if (startResult is not null)
       {
-         await Clients.Caller.SendAsync("Error", "Could not start the tournament.");
+         await Clients.Caller.SendAsync("Error", startResult);
          return;
       }
    }
