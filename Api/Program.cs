@@ -88,8 +88,11 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
+
 builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<ILobbyService, LobbyService>();
+builder.Services.AddSingleton<ITournamentService, TournamentService>();
 builder.Services.AddSingleton<IGameFactory, GameFactory>();
 builder.Services.AddSingleton<TournamentStore>();
 
