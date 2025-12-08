@@ -1,7 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using Api.GameLogic;
 using Api.Models;
 using Api.Tests.TestServer;
 
@@ -174,12 +173,12 @@ public class TournamentHubGameFlowIntegrationTests(CustomWebApplicationFactory f
       var msA = await startedA.Task;
       var gameId = msA.GetProperty("gameId").GetString()!;
 
-      var moveA = JsonSerializer.SerializeToElement(new RockPaperScissorsMove { PlayerId = Player1Id, Choice = RockPaperScissorsChoice.Rock });
+      var moveA = JsonSerializer.SerializeToElement(new { PlayerId = Player1Id, Choice = RockPaperScissorsChoice.Rock });
       await connA.InvokeAsync("MakeMove", moveA);
       await Task.WhenAny(updateA.Task, Task.Delay(TimeSpan.FromSeconds(5)));
       Assert.True(updateA.Task.IsCompleted, "Player1 should receive a GameUpdate after her move");
 
-      var moveB = JsonSerializer.SerializeToElement(new RockPaperScissorsMove { PlayerId = Player2Id, Choice = RockPaperScissorsChoice.Scissors });
+      var moveB = JsonSerializer.SerializeToElement(new { PlayerId = Player2Id, Choice = RockPaperScissorsChoice.Scissors });
       await connB.InvokeAsync("MakeMove", moveB);
       await Task.WhenAny(updateB.Task, Task.Delay(TimeSpan.FromSeconds(5)));
       Assert.True(updateB.Task.IsCompleted, "Player2 should receive a GameUpdate after his move");
