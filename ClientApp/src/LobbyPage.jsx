@@ -43,7 +43,7 @@ function LobbyPage() {
          setUser(userData);
 
          conn = new HubConnectionBuilder()
-            .withUrl(`http://localhost:5243/matchHub?code=${code}`, {
+            .withUrl(`http://localhost:5243/TournamentHub?code=${code}`, {
                accessTokenFactory: () => token
             })
             .withAutomaticReconnect()

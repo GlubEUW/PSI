@@ -72,7 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
          {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/matchHub"))
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/TournamentHub"))
             {
                context.Token = accessToken;
             }
@@ -91,6 +91,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<ILobbyService, LobbyService>();
 builder.Services.AddSingleton<IGameFactory, GameFactory>();
+builder.Services.AddSingleton<TournamentStore>();
 
 var app = builder.Build();
 
@@ -103,7 +104,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<MatchHub>("/matchHub");
+app.MapHub<TournamentHub>("/TournamentHub");
 
 if (app.Environment.IsDevelopment())
 {
