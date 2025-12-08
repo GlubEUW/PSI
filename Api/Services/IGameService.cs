@@ -6,5 +6,7 @@ namespace Api.Services;
 
 public interface IGameService
 {
+   public bool IsValidGameType(string gameName);
+   public bool IsValidGameType(GameType gameType);
    public IGame? StartGame(GameType gameType, List<User> players);
 }

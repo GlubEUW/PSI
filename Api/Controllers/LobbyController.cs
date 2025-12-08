@@ -2,20 +2,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Api.Services;
 using Api.Models;
-using Api.GameLogic;
 
 namespace Api.Controllers;
 
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
-public class LobbyController(ILobbyService lobbyService, IGameFactory gameFactory) : ControllerBase
+public class LobbyController(ILobbyService lobbyService, IGameService gameService) : ControllerBase
 {
    private readonly ILobbyService _lobbyService = lobbyService;
-   private readonly IGameFactory _gameFactory = gameFactory;
+   private readonly IGameService _gameService = gameService;
 
    [HttpPost("{code}/canjoin")]
-   public ActionResult CanJoinMatch(string code)
+   public ActionResult CanJoinLobby(string code)
    {
       var name = User.Identity?.Name;
       var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
@@ -24,24 +23,24 @@ public class LobbyController(ILobbyService lobbyService, IGameFactory gameFactor
 
       var error = _lobbyService.CanJoinLobby(code, id);
       if (error is null)
-         return Ok(new { Message = "Can join match." });
+         return Ok(new { Message = "Can join lobby." });
 
       return BadRequest(new { Message = error });
    }
 
    [HttpPost("{code}/leave")]
-   public async Task<ActionResult> LeaveMatch(string code)
+   public async Task<ActionResult> LeaveLobby(string code)
    {
       var name = User.Identity?.Name;
       var idClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
       if (name is null || idClaim is null || !Guid.TryParse(idClaim.Value, out var id))
          return Unauthorized();
 
-      var success = await _lobbyService.LeaveMatch(code, id);
+      var success = await _lobbyService.LeaveLobby(code, id);
       if (!success)
-         return BadRequest(new { Message = "Unable to leave match or match does not exist." });
+         return BadRequest(new { Message = "Unable to leave lobby or lobby does not exist." });
 
-      return Ok(new { Message = $"Left match {code} successfully." });
+      return Ok(new { Message = $"Left lobby {code} successfully." });
    }
 
    [HttpPost("create")]
@@ -63,7 +62,7 @@ public class LobbyController(ILobbyService lobbyService, IGameFactory gameFactor
             if (string.IsNullOrWhiteSpace(gameName))
                return BadRequest(new { Message = "Game name cannot be empty." });
 
-            if (!_gameFactory.ValidGameTypes.Contains(gameName))
+            if (!_gameService.IsValidGameType(gameName))
                return BadRequest(new { Message = $"Invalid game: {gameName}." });
          }
       }

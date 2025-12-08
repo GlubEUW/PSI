@@ -7,6 +7,15 @@ namespace Api.Services;
 public class GameService(IGameFactory gameFactory) : IGameService
 {
    private readonly IGameFactory _gameFactory = gameFactory;
+   public bool IsValidGameType(string gameName)
+   {
+      return Enum.TryParse<GameType>(gameName, ignoreCase: true, out var gameType)
+             && _gameFactory.ValidGameTypes.Contains(gameType);
+   }
+   public bool IsValidGameType(GameType gameType)
+   {
+      return _gameFactory.ValidGameTypes.Contains(gameType);
+   }
    public IGame? StartGame(GameType gameType, List<User> players)
    {
       if (players == null || players.Count < 2)
