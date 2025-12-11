@@ -1,0 +1,59 @@
+import { useState, useEffect } from 'react';
+import { Popup, Input, Button } from 'pixel-retroui';
+
+const RegisterPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
+   const [username, setUsername] = useState("");
+   const [password, setPassword] = useState("");
+   
+   useEffect(() => {
+      if (!isPopupOpen) {
+         setUsername("");
+         setPassword("");
+      }
+   }, [isPopupOpen]);
+
+   const onSubmit = (e) => {
+      e.preventDefault();
+      handleSubmit(username, password);
+   };
+
+   return (
+      <Popup
+         bg="#3a825eff"
+         baseBg="#2b5f45ff"
+         isOpen={isPopupOpen}
+         onClose={closePopup}
+         className="text-center"
+      >
+         <h1 className="text-3xl mb-4" style={{ color: "#d382abff" }}>Welcome!</h1>
+         <p className="mb-4" style={{ color: "#d382abff" }}>Please register to continue.</p>
+
+         <form onSubmit={onSubmit} className=" flex flex-col gap-4 items-center">
+            <Input 
+               bg="#f2f2f2" 
+               type="text"
+               placeholder="Username" 
+               value={username}
+               onChange={(e) => setUsername(e.target.value)}
+               required
+               autoComplete="username"
+            />
+            <Input
+               bg="#f2f2f2"
+               type="password"
+               placeholder="Password"
+               value={password}
+               onChange={(e) => setPassword(e.target.value)}
+               required
+               autoComplete="new-password"
+            />
+
+            <Button bg="#d382abff" type="submit" className="w-20">
+               Register
+            </Button>
+         </form>
+      </Popup>
+   );
+}
+
+export default RegisterPopup;
