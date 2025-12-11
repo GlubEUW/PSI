@@ -123,11 +123,11 @@ function Start() {
       >
          <h1>Arcade Mayhem</h1>
          <>
-            <RetroButton bg="#f53f45ff" onClick={openGuest}>Continue as Guest</RetroButton>
-            <GuestPopup handleSubmit={handleGuestLogin} isPopupOpen={isGuestOpen} closePopup={closePopup}/>
+            <RetroButton bg="#3fcef5ff" onClick={openGuest}>Continue as Guest</RetroButton>
+            <GuestPopup bg={"#3fcef5ff"} handleSubmit={handleGuestLogin} isPopupOpen={isGuestOpen} closePopup={closePopup}/>
          </>
          <>
-            <RetroButton bg="#ffff00ff" onClick={openLogin}>Login</RetroButton>
+            <RetroButton bg="#ff9d00ff" onClick={openLogin}>Login</RetroButton>
             <LoginPopup handleSubmit={handleLogin} isPopupOpen={isLoginOpen} closePopup={closePopup}/>
          </>
          <>

@@ -4,6 +4,5 @@
 }
 
 .retro-button:hover {
-   /* background-color: #317855 !important; */
    background-color: hsl(from var(--bg) h calc(s - 3) calc(l - 10)) !important;
 }
