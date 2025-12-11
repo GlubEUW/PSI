@@ -17,14 +17,14 @@ const GuestPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
 
    return (
       <Popup
-         bg="hsla(358, 90%, 50%, 1.00)"
-         baseBg="hsla(358, 90%, 40%, 1.00)"
+         bg="#0dc1f2ff"
+         baseBg="#0a9ac2ff"
          isOpen={isPopupOpen}
          onClose={closePopup}
          className="text-center"
       >
-         <h1 className="text-3xl mb-4" style={{ color: "#3df5efff" }}>Welcome!</h1>
-         <p className="mb-4" style={{ color: "#3df5efff" }}>Please enter a username to continue.</p>
+         <h1 className="text-3xl mb-4" style={{ color: "#f5653dff" }}>Welcome!</h1>
+         <p className="mb-4" style={{ color: "#f5653dff" }}>Please enter a username to continue.</p>
 
          <form onSubmit={onSubmit} className=" flex flex-col gap-4 items-center">
             <Input 
@@ -36,7 +36,7 @@ const GuestPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
                required
             />
 
-            <Button bg="#3df5efff" type="submit" className="w-20">
+            <Button bg="#f5653dff" type="submit" className="w-20">
                Login
             </Button>
          </form>

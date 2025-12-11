@@ -19,8 +19,8 @@ const LoginPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
 
    return (
       <Popup
-         bg="#cccc00ff"
-         baseBg="hsla(60, 100%, 30%, 1.00)"
+         bg="#cc7e00ff"
+         baseBg="#995e00ff"
          isOpen={isPopupOpen}
          onClose={closePopup}
          className="text-center"
