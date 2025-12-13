@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { GetUser } from "./api/user";
 import { useParams, useNavigate, Outlet } from "react-router-dom";
 import { HubConnectionBuilder } from "@microsoft/signalr";
+import { Card } from "pixel-retroui";
+import RetroButton from "./components/RetroButton";
 
 function LobbyPage() {
    const token = localStorage.getItem("userToken");
@@ -133,24 +135,42 @@ function LobbyPage() {
       <>
          <Outlet context={outletContext} />
          {!window.location.pathname.includes('/game') && (
-            <div>
-               <h2>Lobby {code}</h2>
-               <p>Your name is: {user.name}</p>
-               <p>{message}</p>
+            <div style={{ display: "flex", flexDirection: "column", fontSize: "20px", justifyContent: "center", justifyItems: "center", alignContent: "center", alignItems: "center" }}>
+               <div>
+                  <Card
+                     bg="#44b17bff"
+                     textColor="black"
+                     borderColor="#fff"
+                     shadowColor="#000"
+                     className="w-100 h-12 justify-center items-center"
+                     style={{ display: "flex", marginBottom: "16px", fontSize: "36px" }}
+                  >
+                     Lobby {code}
+                  </Card>
+                  <p style={{ fontSize: "24px" }}>Your name is: {user.name}</p>
+               </div>
+               <p style={{ marginBottom: "8px" }}>{message}</p>
+               <div>
+                  <RetroButton onClick={() => startMatch()} bg="#2aaac4ff" w={350} h={40}>Start Match</RetroButton>
 
-               <button onClick={() => startRound()} className="normal-button">Start Round</button>
-               <button onClick={() => startTournament()} className="normal-button">Start Tournament</button>
+                  <button onClick={() => startRound()} className="normal-button">Start Round</button>
+                  <button onClick={() => startTournament()} className="normal-button">Start Tournament</button>
+                  <hr style={{ marginTop: "32px", marginBottom: "16px" }} />
 
-               <p>Round {currentRound}/{totalRounds}</p>
-               <h3>Players in Lobby:</h3>
-               <ul>
-                  {players.map((player, idx) => (
-                     <li key={idx}>
-                        {player.name} - Wins: {player.wins ?? 0}
-                     </li>
-                  ))}
-               </ul>
-               <button onClick={() => quitLobby()} className="normal-button">Quit Lobby</button>
+                  <p>Round {currentRound}/{totalRounds}</p>
+                  <h3>Players in Lobby:</h3>
+                  <ul>
+                     {players.map((player, idx) => (
+                        <li key={idx}>
+                           {player.name} - Wins: {player.wins ?? 0}
+                        </li>
+                     ))}
+                  </ul>
+
+                  <hr style={{ marginTop: "16px", marginBottom: "32px" }} />
+
+                  <RetroButton onClick={() => quitLobby()} bg="#ff9d00ff" w={350} h={40}>Quit Lobby</RetroButton>
+               </div>
             </div>
          )}
       </>
