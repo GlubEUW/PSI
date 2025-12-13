@@ -1,5 +1,6 @@
 @import 'pixel-retroui/dist/index.css';
 @import 'pixel-retroui/dist/fonts.css'; /* optional — for the “Minecraft” / pixel font */
+@import "tailwindcss";
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
