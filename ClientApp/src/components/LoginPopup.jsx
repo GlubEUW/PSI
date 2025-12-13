@@ -26,8 +26,8 @@ const LoginPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
          onClose={closePopup}
          className="text-center"
       >
-         <h1 className="text-3xl mb-4" style={{ color: "#0000ffff" }}>Welcome!</h1>
-         <p className="mb-4" style={{ color: "#0000ffff" }}>Please login to continue.</p>
+         <h1 className="text-3xl mb-4" style={{ color: "#004eccff" }}>Welcome!</h1>
+         <p className="mb-4" style={{ color: "#004eccff" }}>Please login to continue.</p>
 
          <form onSubmit={onSubmit} className=" flex flex-col gap-4 items-center">
             <Input 
@@ -49,7 +49,7 @@ const LoginPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
                autoComplete="current-password"
             />
 
-            <RetroButton type="submit" bg="#0000ffff" borderColor="#000" textColor="#fff" w={120} h={34} font={16}>
+            <RetroButton type="submit" bg="#004eccff" borderColor="#000" textColor="#fff" w={120} h={34} font={16}>
                Login
             </RetroButton>
          </form>
