@@ -20,14 +20,14 @@ const RegisterPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
 
    return (
       <Popup
-         bg="#3a825eff"
-         baseBg="#2b5f45ff"
+         bg="hsla(150, 45%, 38%, 1.00)"
+         baseBg="#276847ff"
          isOpen={isPopupOpen}
          onClose={closePopup}
          className="text-center"
       >
-         <h1 className="text-3xl mb-4" style={{ color: "#d382abff" }}>Welcome!</h1>
-         <p className="mb-4" style={{ color: "#d382abff" }}>Please register to continue.</p>
+         <h1 className="text-3xl mb-4" style={{ color: "#973063ff" }}>Welcome!</h1>
+         <p className="mb-4" style={{ color: "#973063ff" }}>Please register to continue.</p>
 
          <form onSubmit={onSubmit} className=" flex flex-col gap-4 items-center">
             <Input 
@@ -48,7 +48,7 @@ const RegisterPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
                required
                autoComplete="new-password"
             />
-            <RetroButton type="submit" bg="#d382abff" borderColor="#000" w={120} h={34} font={16}>
+            <RetroButton type="submit" bg="#973063ff" borderColor="#000" w={120} h={34} font={16}>
                Register
             </RetroButton>
          </form>

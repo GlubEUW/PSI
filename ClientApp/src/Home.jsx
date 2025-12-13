@@ -112,7 +112,7 @@ function Home() {
    };
 
    return (
-      <div>
+      <div style={{ fontSize: "18px" }}>
          <h1>Home Page</h1>
 
          <div style={{ marginBlock: "16px" }}>
@@ -124,7 +124,7 @@ function Home() {
 
          <hr style={{ marginBlock: "16px" }}/>
 
-         <div style={{ fontSize: "18px" }}>
+         <div>
             <h2 style={{ fontSize: "24px" }}>Create New Lobby</h2>
             
             <div style={{ marginBottom: "16px", marginTop: "8px" }}>
@@ -167,7 +167,7 @@ function Home() {
             </div>
 
             {!randomGames && (
-               <div style={{ marginBlock: "8px" }}>
+               <div style={{ marginTop: "8px", marginBottom: "16px" }}>
                   <label style={{ display: "block", marginBottom: "4px" }}>
                      Select Games for Each Round:
                   </label>
@@ -202,7 +202,7 @@ function Home() {
                </div>
             )}
 
-            <RetroButton onClick={handleCreateLobby} bg="#49a476" w={350} h={40}>Create Lobby</RetroButton>
+            <RetroButton onClick={handleCreateLobby} bg="#44b17bff" w={350} h={40}>Create Lobby</RetroButton>
          </div>
 
          <hr style={{ marginBlock: "16px" }}/>
@@ -220,7 +220,7 @@ function Home() {
                onChange={e => setlobbyID(e.target.value.replace(/[^0-9]/g, ""))}
                style={{ marginBottom: "16px" }}
             />
-            <RetroButton onClick={handleLobbyJoin} bg="#3fcef5ff" w={350} h={40}>Join Lobby</RetroButton>
+            <RetroButton onClick={handleLobbyJoin} bg="#2aaac4ff" w={350} h={40}>Join Lobby</RetroButton>
          </div>
       </div>
    );

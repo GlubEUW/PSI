@@ -109,45 +109,45 @@ function Start() {
 
    return (
       <div style={{ display: "flex", width: "100vw", height: "100vh" }}> 
-      <div
-         style={{
-            width: "35%",
-            height: "100%",
-            padding: "10px",
-            color: "#0095ffff",
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-            justifyContent: "center",
-         }}
-      >
-         <h1>Arcade Mayhem</h1>
-         <>
-            <RetroButton onClick={openGuest} bg="#3fcef5ff">Continue as Guest</RetroButton>
-            <GuestPopup handleSubmit={handleGuestLogin} isPopupOpen={isGuestOpen} closePopup={closePopup}/>
-         </>
-         <>
-            <RetroButton onClick={openLogin} bg="#ff9d00ff">Login</RetroButton>
-            <LoginPopup handleSubmit={handleLogin} isPopupOpen={isLoginOpen} closePopup={closePopup}/>
-         </>
-         <>
-            <RetroButton onClick={openRegister} bg="#49a476">Register</RetroButton>
-            <RegisterPopup handleSubmit={handleRegister} isPopupOpen={isRegisterOpen} closePopup={closePopup}/>
-         </>
-      </div>
+         <div
+            style={{
+               width: "35%",
+               height: "100%",
+               padding: "10px",
+               color: "#0095ffff",
+               display: "flex",
+               flexDirection: "column",
+               gap: "20px",
+               justifyContent: "center",
+            }}
+         >
+            <h1>Arcade Mayhem</h1>
+            <>
+               <RetroButton onClick={openGuest} bg="#2aaac4ff">Continue as Guest</RetroButton>
+               <GuestPopup handleSubmit={handleGuestLogin} isPopupOpen={isGuestOpen} closePopup={closePopup}/>
+            </>
+            <>
+               <RetroButton onClick={openLogin} bg="#ff9d00ff">Login</RetroButton>
+               <LoginPopup handleSubmit={handleLogin} isPopupOpen={isLoginOpen} closePopup={closePopup}/>
+            </>
+            <>
+               <RetroButton onClick={openRegister} bg="#44b17bff">Register</RetroButton>
+               <RegisterPopup handleSubmit={handleRegister} isPopupOpen={isRegisterOpen} closePopup={closePopup}/>
+            </>
+         </div>
 
-      <div style={{ width: "65%", height: "100hv" }}>
-         <Canvas dpr={0.5} camera={{ position: [0, 2, 5], fov: 40 }}>
-            <Suspense fallback={null}>
-               <RotatingObject />
-               <EffectComposer>
-                  <Pixelation granularity={5} />
-               </EffectComposer>
-            </Suspense>
-            <OrbitControls enableZoom={false} enablePan={false} />
-         </Canvas>
+         <div style={{ width: "65%", height: "100%" }}>
+            <Canvas dpr={0.5} camera={{ position: [0, 2, 5], fov: 40 }}>
+               <Suspense fallback={null}>
+                  <RotatingObject />
+                  <EffectComposer>
+                     <Pixelation granularity={5} />
+                  </EffectComposer>
+               </Suspense>
+               <OrbitControls enableZoom={false} enablePan={false} />
+            </Canvas>
+         </div>
       </div>
-   </div>
    );
 }
 
