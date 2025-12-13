@@ -77,29 +77,29 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
    };
 
    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "10px", fontSize: "32px"}}>
          <h2>Tic Tac Toe</h2>
          {winner ? 
             (<div style={{ marginBottom: "20px" }}>
-               <h3>Winner: {winner}</h3>
+               <h3 style={{ color: "#54ff11ff" }}>Winner: {winner}</h3>
                <p>You will return to the lobby shortly.</p>
             </div>
          ) : (
             <h3>Current turn: {playerTurn}</h3>
          )}
-         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 60px)", gap: "5px" }}>
+         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 80px)", gap: "5px", marginTop: "20px"}}>
             {board.map((row, i) =>
                row.map((cell, j) => (
                   <div
                      key={`${i}-${j}`}
                      onClick={() => handleClick(i, j)}
                      style={{
-                        width: "60px",
-                        height: "60px",
+                        width: "80px",
+                        height: "80px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: "24px",
+                        fontSize: "32px",
                         border: "1px solid black",
                         cursor: cell || winner ? "default" : "pointer",
                         backgroundColor: cell ? "#eee" : "#fff",

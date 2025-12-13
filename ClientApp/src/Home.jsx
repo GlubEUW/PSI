@@ -2,6 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { CreateLobby, CanJoinLobby } from "./api/lobby";
 import { CanJoinQueue } from "./api/queue";
+import RetroButton from "./components/RetroButton";
+import Dropdown from "./components/DropDown";
+import { Input } from "pixel-retroui";
 
 function Home() {
    const navigate = useNavigate();
@@ -38,7 +41,7 @@ function Home() {
 
    const handleProfileNavigate = async () => {
       navigate("/profile");
-   }
+   };
 
    const handleLobbyJoin = async () => {
       const token = localStorage.getItem("userToken");
@@ -66,7 +69,8 @@ function Home() {
          return;
       }
       navigate(`/match/${lobbyID}`);
-   }
+   };
+
    const handleCreateLobby = async () => {
       const token = localStorage.getItem("userToken");
 
@@ -108,73 +112,63 @@ function Home() {
    };
 
    return (
-      <div style={{ padding: "20px" }}>
+      <div style={{ fontSize: "18px" }}>
          <h1>Home Page</h1>
 
-         <div style={{ marginBottom: "30px" }}>
-            <button onClick={handleProfileNavigate} className="normal-button">Profile</button>
+         <div style={{ marginBlock: "16px" }}>
+            <RetroButton onClick={handleProfileNavigate} bg="#ff9d00ff" w={350} h={40}>Profile</RetroButton>
          </div>
          {/* <div style={{ marginBottom: "30px" }}>
             <button onClick={handleQueueJoin} className="normal-button">Queue</button>
          </div> */}
 
-         <hr />
+         <hr style={{ marginBlock: "16px" }}/>
 
-         <div style={{ marginBottom: "30px" }}>
-            <h2>Create New Lobby</h2>
-
-            <div style={{ marginBottom: "10px" }}>
+         <div>
+            <h2 style={{ fontSize: "24px" }}>Create New Lobby</h2>
+            
+            <div style={{ marginBottom: "16px", marginTop: "8px" }}>
                <label>
                   Number of Players:
-                  <input
-                     type="number"
-                     min="2"
-                     max="10"
-                     value={numberOfPlayers}
-                     onChange={(e) => setNumberOfPlayers(parseInt(e.target.value) || 2)}
-                     style={{ marginLeft: "10px", width: "60px" }}
-                  />
+                  <span style={{ marginLeft: "13px" }}>
+                     <Dropdown 
+                        bg="#2aaac4ff" 
+                        options={[2,3,4,5,6,7,8,9,10]} 
+                        onSelect={(num) => setNumberOfPlayers(num)}
+                     ></Dropdown>
+                  </span>
                </label>
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div style={{ marginBottom: "8px" }}>
                <label>
-                  Number of Rounds:
-                  <input
-                     type="number"
-                     min="1"
-                     max="5"
-                     value={numberOfRounds}
-                     onChange={(e) => {
-                        const rounds = parseInt(e.target.value) || 1;
-                        setNumberOfRounds(rounds);
-                        if (!randomGames) {
-                           const currentGames = gamesInput.split(",").map(g => g.trim()).filter(g => g);
-                           if (currentGames.length > rounds) {
-                              setGamesInput(currentGames.slice(0, rounds).join(","));
-                           }
-                        }
-                     }}
-                     style={{ marginLeft: "10px", width: "60px" }}
-                  />
+                  Number of Rounds: 
+                  <span style={{ marginLeft: "20px" }}>
+                     <Dropdown 
+                        bg="#2aaac4ff" 
+                        options={[1,2,3,4,5]} 
+                        onSelect={(num) => setNumberOfRounds(num)}
+                     ></Dropdown>
+                  </span>
                </label>
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div style={{ marginBottom: "8px" }}>
                <label>
                   <input
                      type="checkbox"
                      checked={randomGames}
                      onChange={(e) => setRandomGames(e.target.checked)}
-                     style={{ marginRight: "5px" }}
+                     style={{ marginRight: "8px" }}
+                     className="w-4 h-4"
                   />
                   Random Games
                </label>
             </div>
 
             {!randomGames && (
-               <div style={{ marginBottom: "10px" }}>
-                  <label style={{ display: "block", marginBottom: "5px" }}>
+               <div style={{ marginTop: "8px", marginBottom: "16px" }}>
+                  <label style={{ display: "block", marginBottom: "4px" }}>
                      Select Games for Each Round:
                   </label>
                   {Array.from({ length: numberOfRounds }).map((_, index) => {
@@ -182,8 +176,8 @@ function Home() {
                      const selectedGame = currentGames[index] || "TicTacToe";
 
                      return (
-                        <div key={index} style={{ marginBottom: "5px" }}>
-                           <label style={{ marginRight: "10px" }}>
+                        <div key={index} style={{ marginBottom: "4px" }}>
+                           <label style={{ marginRight: "8px" }}>
                               Round {index + 1}:
                            </label>
                            <select
@@ -196,7 +190,7 @@ function Home() {
                                  }
                                  setGamesInput(games.slice(0, numberOfRounds).join(","));
                               }}
-                              style={{ padding: "5px", width: "200px" }}
+                              style={{ padding: "4px", width: "256px" }}
                            >
                               <option value="TicTacToe">Tic Tac Toe</option>
                               <option value="RockPaperScissors">Rock Paper Scissors</option>
@@ -208,23 +202,25 @@ function Home() {
                </div>
             )}
 
-            <button onClick={handleCreateLobby} className="normal-button">Create Lobby</button>
+            <RetroButton onClick={handleCreateLobby} bg="#44b17bff" w={350} h={40}>Create Lobby</RetroButton>
          </div>
 
-         <hr />
+         <hr style={{ marginBlock: "16px" }}/>
 
          <div>
-            <h2>Join Existing Lobby</h2>
-            <input
-               className="input-field"
+            <h2 style={{ fontSize: "24px", marginBlock: "8px" }}>Join Existing Lobby</h2>
+            <Input 
+               bg="#0e081d" 
+               borderColor="#fff"
+               textColor="#fff"
                type="text"
                inputMode="numeric"
                placeholder="Lobby Code"
                value={lobbyID}
                onChange={e => setlobbyID(e.target.value.replace(/[^0-9]/g, ""))}
-               style={{ marginRight: "10px" }}
+               style={{ marginBottom: "16px" }}
             />
-            <button onClick={handleLobbyJoin} className="normal-button">Join Lobby</button>
+            <RetroButton onClick={handleLobbyJoin} bg="#2aaac4ff" w={350} h={40}>Join Lobby</RetroButton>
          </div>
       </div>
    );

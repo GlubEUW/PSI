@@ -1,0 +1,8 @@
+.retro-button {
+   transition: background-color 0.2s;
+   background-color: var(--bg);
+}
+
+.retro-button:hover {
+   background-color: hsl(from var(--bg) h calc(s - 3) calc(l - 10)) !important;
+}
