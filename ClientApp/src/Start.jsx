@@ -123,15 +123,15 @@ function Start() {
       >
          <h1>Arcade Mayhem</h1>
          <>
-            <RetroButton bg="#3fcef5ff" onClick={openGuest}>Continue as Guest</RetroButton>
-            <GuestPopup bg={"#3fcef5ff"} handleSubmit={handleGuestLogin} isPopupOpen={isGuestOpen} closePopup={closePopup}/>
+            <RetroButton onClick={openGuest} bg="#3fcef5ff">Continue as Guest</RetroButton>
+            <GuestPopup handleSubmit={handleGuestLogin} isPopupOpen={isGuestOpen} closePopup={closePopup}/>
          </>
          <>
-            <RetroButton bg="#ff9d00ff" onClick={openLogin}>Login</RetroButton>
+            <RetroButton onClick={openLogin} bg="#ff9d00ff">Login</RetroButton>
             <LoginPopup handleSubmit={handleLogin} isPopupOpen={isLoginOpen} closePopup={closePopup}/>
          </>
          <>
-            <RetroButton bg="#49a476" onClick={openRegister}>Register</RetroButton>
+            <RetroButton onClick={openRegister} bg="#49a476">Register</RetroButton>
             <RegisterPopup handleSubmit={handleRegister} isPopupOpen={isRegisterOpen} closePopup={closePopup}/>
          </>
       </div>
