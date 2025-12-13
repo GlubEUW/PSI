@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Popup, Input, Button } from 'pixel-retroui';
+import RetroButton from './RetroButton';
 
 const GuestPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
    const [username, setUsername] = useState("");
@@ -36,9 +37,9 @@ const GuestPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
                required
             />
 
-            <Button bg="#f5653dff" type="submit" className="w-20">
-               Login
-            </Button>
+            <RetroButton type="submit" bg="#f5653dff" borderColor="#000" w={120} h={34} font={16}>
+               Continue
+            </RetroButton>
          </form>
       </Popup>
    );

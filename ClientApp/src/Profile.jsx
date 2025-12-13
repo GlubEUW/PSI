@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GetGameStats } from "./api/user";
+import RetroButton from "./components/RetroButton";
 
 function Profile() {
    const [username, setUsername] = useState("");
@@ -49,12 +50,12 @@ function Profile() {
          { !authorized ? (
             <div>
                <h2>You must be registered to view this page.</h2>
-               <button onClick={() => navigate("/home")} className="normal-button">Go to Home</button>
+               <RetroButton onClick={() => navigate("/home")} bg="#ff9d00ff" w={350} h={40}>Go to Home</RetroButton>
             </div>
          ) : (
             <div>
                <h3>Welcome, {username}!</h3>
-               <button onClick={() => navigate("/home")} className="normal-button">Go to Home</button>
+               <RetroButton onClick={() => navigate("/home")} bg="#ff9d00ff" w={350} h={40}>Go to Home</RetroButton>
 
                <h3>Statistics</h3>
                <p>Total Games Played: {gameStats.totalGamesPlayed || 0}</p>

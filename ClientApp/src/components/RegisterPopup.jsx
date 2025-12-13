@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Popup, Input, Button } from 'pixel-retroui';
+import RetroButton from './RetroButton';
 
 const RegisterPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
    const [username, setUsername] = useState("");
@@ -47,10 +48,9 @@ const RegisterPopup = ({ handleSubmit, isPopupOpen, closePopup}) => {
                required
                autoComplete="new-password"
             />
-
-            <Button bg="#d382abff" type="submit" className="w-20">
+            <RetroButton type="submit" bg="#d382abff" borderColor="#000" w={120} h={34} font={16}>
                Register
-            </Button>
+            </RetroButton>
          </form>
       </Popup>
    );
