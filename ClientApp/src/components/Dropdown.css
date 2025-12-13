@@ -1,0 +1,13 @@
+.dropdown {
+   transition: background-color 0.2s;
+   background: var(--bg);
+}
+
+.dropdown-min-width {
+   min-width: 0 !important;
+}
+
+.dropdown:hover {
+   background: hsl(from var(--bg) h calc(s - 3) calc(l - 10)) !important;
+}
+
