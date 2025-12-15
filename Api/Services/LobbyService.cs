@@ -87,6 +87,7 @@ public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFact
       _store.Sessions[code] = new TournamentSession
       {
          Code = code,
+         TournamentId = Guid.NewGuid(),
          Players = new List<User>(numberOfPlayers),
          GameTypesByRounds = finalGamesTypes,
          NumberOfRounds = numberOfRounds,

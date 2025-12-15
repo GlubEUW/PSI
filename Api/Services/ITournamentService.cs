@@ -14,6 +14,8 @@ public interface ITournamentService
    public bool AreAllGamesEnded(string code);
    public ConcurrentDictionary<User, IGame> getGameListForCurrentRound(string code);
    public string? StartNextRound(string code);
+   public Task LogRoundStartAsync(string code);
+   public Task SaveGameResultsAsync(string code);
    public bool HalfPlayersReadyForNextRound(string code);
    public List<User>? getTargetGroup(User user, string code);
    public bool RoundStarted(string code);

@@ -149,17 +149,26 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          return;
       }
 
-
       if (!_tournamentService.AreAllGamesEnded(code))
       {
          await Clients.Caller.SendAsync("Error", "Not all games have ended.");
          return;
       }
 
+      if (_tournamentService.RoundStarted(code) && _tournamentService.AreAllGamesEnded(code))
+      {
+         await _tournamentService.SaveGameResultsAsync(code);
+         Console.WriteLine("Saved game results for previous round");
+      }
+
       // while (_tournamentService.HalfPlayersReadyForNextRound(code) && !_tournamentService.AllPlayersReadyForNextRound(code))
       // {
       //    Clients.Caller.SendAsync("WaitingForPlayers", _tournamentService.getReadyPlayerCount(code).ToString());
       // } not good enough need to think about the case where no players ready anymore
+
+      await _tournamentService.LogRoundStartAsync(code);
+      Console.WriteLine("Logged new round start");
+
       var roundStartError = _tournamentService.StartNextRound(code);
       if (roundStartError is not null)
       {

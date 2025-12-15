@@ -2,13 +2,19 @@ using Api.Models;
 using Api.GameLogic;
 using System.Collections.Concurrent;
 using Api.Entities;
+using Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
-public class TournamentService(IGameService gameService, TournamentStore tournamentStore) : ITournamentService
+public class TournamentService(
+   IGameService gameService,
+   TournamentStore tournamentStore,
+   IDbContextFactory<DatabaseContext> contextFactory) : ITournamentService
 {
    private readonly TournamentStore _store = tournamentStore;
    private readonly IGameService _gameService = gameService;
+   private readonly IDbContextFactory<DatabaseContext> _contextFactory = contextFactory;
 
    public TournamentSession? GetTournamentSession(string code)
    {
@@ -71,6 +77,7 @@ public class TournamentService(IGameService gameService, TournamentStore tournam
 
       var players = session.Players;
       var (playerGroups, unmatchedPlayers) = CreateGroups(players, itemsPerGroup: 2);
+
       foreach (var group in playerGroups)
       {
          var game = _gameService.StartGame(session.GameTypesByRounds[session.CurrentRound], group);
@@ -79,6 +86,7 @@ public class TournamentService(IGameService gameService, TournamentStore tournam
             session.GamesByPlayers.Clear();
             return "Failed to start game for a player group.";
          }
+
          foreach (var player in group)
          {
             session.GamesByPlayers[player] = game;
@@ -88,6 +96,126 @@ public class TournamentService(IGameService gameService, TournamentStore tournam
       session.CurrentRound++;
       session.RoundStarted = true;
       return null;
+   }
+
+   public async Task LogRoundStartAsync(string code)
+   {
+      if (!_store.Sessions.TryGetValue(code, out var session))
+      {
+         Console.WriteLine("Tournament session not found.");
+         return;
+      }
+
+      Console.WriteLine($"Logging round start for tournament: {session.TournamentId}");
+      Console.WriteLine($"CurrentRound: {session.CurrentRound}");
+      Console.WriteLine($"GameTypesByRounds count: {session.GameTypesByRounds.Count}");
+      Console.WriteLine($"Trying to access index: {session.CurrentRound - 1}");
+
+      try
+      {
+         await using var context = await _contextFactory.CreateDbContextAsync();
+
+         // Fix: Use CurrentRound - 1 to get the game type that was just played
+         var gameTypeIndex = session.CurrentRound - 1;
+         if (gameTypeIndex < 0 || gameTypeIndex >= session.GameTypesByRounds.Count)
+         {
+            Console.WriteLine($"ERROR: Invalid game type index {gameTypeIndex} for list of size {session.GameTypesByRounds.Count}");
+            return;
+         }
+
+         var round = new Round
+         {
+            Id = Guid.NewGuid(),
+            TournamentId = session.TournamentId,
+            GameType = session.GameTypesByRounds[gameTypeIndex].ToString(),
+            RoundNumber = (short)session.CurrentRound
+         };
+
+         context.Rounds.Add(round);
+         Console.WriteLine($"Added round to context: Round {round.RoundNumber}, GameType: {round.GameType}");
+
+         var uniqueGames = session.GamesByPlayers.Values.Distinct().ToList();
+         Console.WriteLine($"Processing {uniqueGames.Count} unique games");
+
+         foreach (var game in uniqueGames)
+         {
+            var playersInGame = session.GamesByPlayers
+               .Where(kv => kv.Value == game)
+               .Select(kv => kv.Key)
+               .ToList();
+
+            for (var i = 0; i < playersInGame.Count; i++)
+            {
+               var userRound = new UserRound
+               {
+                  UserId = playersInGame[i].Id,
+                  RoundId = round.Id,
+                  PlayerTurn = (short)(i + 1),
+                  PlayerPlacement = 0
+               };
+               context.UserRound.Add(userRound);
+            }
+         }
+
+         var changes = await context.SaveChangesAsync();
+         Console.WriteLine($"Successfully saved {changes} changes to database");
+      }
+      catch (Exception ex)
+      {
+         Console.WriteLine($"ERROR in LogRoundStartAsync: {ex.Message}");
+         Console.WriteLine($"Stack trace: {ex.StackTrace}");
+         throw;
+      }
+   }
+
+   public async Task SaveGameResultsAsync(string code)
+   {
+      Console.WriteLine($"[SaveGameResultsAsync] Called with code: {code}");
+
+      if (!_store.Sessions.TryGetValue(code, out var session))
+         return;
+
+
+      await using var context = await _contextFactory.CreateDbContextAsync();
+      var latestRound = await context.Rounds
+         .Where(r => r.TournamentId == session.TournamentId)
+         .OrderByDescending(r => r.RoundNumber)
+         .FirstOrDefaultAsync();
+
+      if (latestRound == null)
+         return;
+
+      var uniqueGames = session.GamesByPlayers.Values.Distinct().ToList();
+
+      foreach (var game in uniqueGames)
+      {
+         if (!game.GameOver)
+            continue;
+
+         var winner = game.Winner;
+         var players = game.Players;
+
+         foreach (var player in players)
+         {
+            var userRound = await context.UserRound
+               .FirstOrDefaultAsync(ur => ur.UserId == player.Id && ur.RoundId == latestRound.Id);
+
+            if (userRound != null && userRound.PlayerPlacement == 0)
+            {
+               if (winner == null)
+               {
+                  userRound.PlayerPlacement = 1;
+               }
+               else
+               {
+                  userRound.PlayerPlacement = (short)(player.Id == winner.Id ? 1 : 2);
+               }
+               context.Update(userRound);
+            }
+         }
+      }
+
+      await context.SaveChangesAsync();
    }
 
    private (List<List<TItem>> groupedItems, List<TItem> ungroupedItems) CreateGroups<TItem>(

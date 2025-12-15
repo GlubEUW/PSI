@@ -15,31 +15,31 @@ public class UserService(DatabaseContext context) : IUserService
 
    public async Task<GameStatsDto> GetUserStatsAsync(Guid userId)
    {
-      var userRounds = await (from ur in context.UserRounds
-                              join r in context.Rounds on ur.RoundId equals r.Id
-                              where ur.UserId == userId
-                              select new
-                              {
-                                 ur.PlayerPlacement,
-                                 r.GameType
-                              }).ToListAsync();
+      var userRound = await (from ur in context.UserRound
+                             join r in context.Rounds on ur.RoundId equals r.Id
+                             where ur.UserId == userId
+                             select new
+                             {
+                                ur.PlayerPlacement,
+                                r.GameType
+                             }).ToListAsync();
 
       var stats = new GameStatsDto
       {
          UserId = userId,
-         TotalGamesPlayed = userRounds.Count,
-         TotalWins = userRounds.Count(ur => ur.PlayerPlacement == 1)
+         TotalGamesPlayed = userRound.Count,
+         TotalWins = userRound.Count(ur => ur.PlayerPlacement == 1)
       };
 
-      var ticTacToe = userRounds.Where(ur => ur.GameType == "TicTacToe").ToList();
+      var ticTacToe = userRound.Where(ur => ur.GameType == "TicTacToe").ToList();
       stats.TicTacToeGamesPlayed = ticTacToe.Count;
       stats.TicTacToeWins = ticTacToe.Count(ur => ur.PlayerPlacement == 1);
 
-      var rps = userRounds.Where(ur => ur.GameType == "RockPaperScissors").ToList();
+      var rps = userRound.Where(ur => ur.GameType == "RockPaperScissors").ToList();
       stats.RockPaperScissorsGamesPlayed = rps.Count;
       stats.RockPaperScissorsWins = rps.Count(ur => ur.PlayerPlacement == 1);
 
-      var connectFour = userRounds.Where(ur => ur.GameType == "ConnectFour").ToList();
+      var connectFour = userRound.Where(ur => ur.GameType == "ConnectFour").ToList();
       stats.ConnectFourGamesPlayed = connectFour.Count;
       stats.ConnectFourWins = connectFour.Count(ur => ur.PlayerPlacement == 1);
 

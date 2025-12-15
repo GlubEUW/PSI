@@ -9,7 +9,7 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
    public DbSet<User> Users { get; set; } = null!;
    public DbSet<Tournament> Tournaments { get; set; } = null!;
    public DbSet<Round> Rounds { get; set; } = null!;
-   public DbSet<UserRound> UserRounds { get; set; } = null!;
+   public DbSet<UserRound> UserRound { get; set; } = null!;
    protected override void OnModelCreating(ModelBuilder modelBuilder)
    {
       base.OnModelCreating(modelBuilder);
