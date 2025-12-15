@@ -9,7 +9,6 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
 {
    public Guid Id { get; set; } = Guid.Empty;
    public string Name { get; set; } = string.Empty;
-   public int Wins { get; set; } = 0;
    [NotMapped]
    public Dictionary<GameType, GameStats> PlayedAndWonGamesByType { get; set; }
       = Enum.GetValues<GameType>()
@@ -47,13 +46,14 @@ public abstract class User : IComparable<User> // Usage of standard DOTNET inter
       PlayedAndWonGamesByType[GameType.ConnectFour].GamesPlayed = data.ConnectFourGamesPlayed;
    }
 
-   public int CompareTo(User? other) // FIXME: Compare data from database, not saved in user during session
+   public int CompareTo(User? other) // FIX
    {
       if (other is null)
          return 1;
 
-      return Wins.CompareTo(other.Wins);
+      return string.Compare(Name, other.Name, StringComparison.Ordinal);
    }
+
 }
 
 public class Guest : User { }

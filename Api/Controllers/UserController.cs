@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 using Api.Models;
 using Api.Services;
 
@@ -10,13 +11,11 @@ namespace Api.Controllers;
 public class UserController(IAuthService authService, IUserService userService) : ControllerBase
 {
    [HttpPost("guest")]
-   public ActionResult<string> GuestCreate(UserDto request)
+   public async Task<ActionResult<string>> GuestCreate(UserDto request)
    {
-      var token = authService.GuestCreate(request);
-
+      var token = await authService.GuestCreateAsync(request);
       if (token is null)
          return BadRequest("Name is required.");
-
       return Ok(token);
    }
 
@@ -34,12 +33,19 @@ public class UserController(IAuthService authService, IUserService userService) 
    [HttpPost("register")]
    public async Task<ActionResult> Register(UserDto request)
    {
-      var user = await authService.RegisterAsync(request);
-
-      if (user is null)
-         return BadRequest("Name already exists.");
-
-      return Ok();
+      try
+      {
+         var user = await authService.RegisterAsync(request);
+         if (user is null)
+            return BadRequest("Name already exists.");
+         return Ok();
+      }
+      catch (Exception ex)
+      {
+         Console.WriteLine($"Registration error: {ex.Message}");
+         Console.WriteLine($"Stack trace: {ex.StackTrace}");
+         return StatusCode(500, new { error = ex.Message });
+      }
    }
 
    [Authorize]
