@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
+function TicTacToe({ playerId, connection, onReturnToLobby }) {
    const [board, setBoard] = useState([
       [0, 0, 0],
       [0, 0, 0],
@@ -26,7 +26,7 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
 
       connection.on("GameUpdate", handleGameUpdate);
 
-      connection.invoke("GetGameState", gameId)
+      connection.invoke("GetGameState")
          .then(state => {
             if (state) {
                setBoard(state.board);
@@ -39,7 +39,7 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
       return () => {
          connection.off("GameUpdate", handleGameUpdate);
       };
-   }, [connection, gameId]);
+   }, [connection]);
 
    useEffect(() => {
       if (!winner) return;
@@ -64,30 +64,26 @@ function TicTacToe({ gameId, playerId, connection, onReturnToLobby }) {
       }
 
       console.log("Sending move:", { PlayerId: playerId, X: row, Y: col });
-
       connection.invoke("MakeMove", { PlayerId: playerId, X: row, Y: col })
          .catch(err => console.error("Move failed:", err));
    };
-   const returnToLobby = () => {
-      if (connection)
-         connection.invoke("EndGame", gameId)
-            .catch(err => console.error("Failed to end game:", err));
 
+   const returnToLobby = () => {
       onReturnToLobby();
    };
 
    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "10px", fontSize: "32px"}}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "10px", fontSize: "32px" }}>
          <h2>Tic Tac Toe</h2>
-         {winner ? 
+         {winner ?
             (<div style={{ marginBottom: "20px" }}>
-               <h3 style={{ color: "#54ff11ff" }}>Winner: {winner}</h3>
+               <h3 style={{ color: "#54ff11ff" }}>Winner: {winner.Name}</h3>
                <p>You will return to the lobby shortly.</p>
             </div>
-         ) : (
-            <h3>Current turn: {playerTurn}</h3>
-         )}
-         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 80px)", gap: "5px", marginTop: "20px"}}>
+            ) : (
+               <h3>Current turn: {playerTurn}</h3>
+            )}
+         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 80px)", gap: "5px", marginTop: "20px" }}>
             {board.map((row, i) =>
                row.map((cell, j) => (
                   <div

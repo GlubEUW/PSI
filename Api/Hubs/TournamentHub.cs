@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
+
 using System.Text.Json;
+
 using Api.Entities;
 using Api.Exceptions;
 using Api.Utils;
@@ -141,11 +143,12 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       var code = Context.Items[ContextKeys.Code] as string
           ?? throw new InvalidOperationException("Match code not found in context");
 
-      if (_tournamentService.RoundStarted(code))
+      if (_tournamentService.RoundStarted(code) && !_tournamentService.AreAllGamesEnded(code))
       {
-         await Clients.Caller.SendAsync("Error", "Round has already been started.");
+         await Clients.Caller.SendAsync("Error", "Round is still in progress. Wait for all games to finish.");
          return;
       }
+
 
       if (!_tournamentService.AreAllGamesEnded(code))
       {
@@ -161,7 +164,10 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       if (roundStartError is not null)
       {
          await Clients.Caller.SendAsync("Error", roundStartError);
+         return;
       }
+
+      await Clients.Group(code).SendAsync("PlayersUpdated", _tournamentService.GetTournamentRoundInfo(code));
 
       foreach (var game in _tournamentService.getGameListForCurrentRound(code).Values)
       {

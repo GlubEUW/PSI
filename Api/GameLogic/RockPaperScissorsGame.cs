@@ -59,7 +59,7 @@ public class RockPaperScissorsGame : IGame
       if (c1 == c2) return "Draw!";
       if ((c1 == RockPaperScissorsChoice.Rock && c2 == RockPaperScissorsChoice.Scissors) ||
           (c1 == RockPaperScissorsChoice.Paper && c2 == RockPaperScissorsChoice.Rock) ||
-          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper)) return $"{Players[0]} wins!";
-      return $"{Players[1]} wins!";
+          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper)) return $"{Players[0].Name} wins!";
+      return $"{Players[1].Name} wins!";
    }
 }

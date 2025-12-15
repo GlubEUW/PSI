@@ -56,6 +56,19 @@ public class TournamentService(IGameService gameService, TournamentStore tournam
       if (!_store.Sessions.TryGetValue(code, out var session) || session is null)
          return "Tournament session not found.";
 
+      if (session.CurrentRound >= session.NumberOfRounds)
+      {
+         return "All tournament rounds have been completed.";
+      }
+
+      if (session.Players.Count < 2)
+      {
+         return "Not enough players to start the next round.";
+      }
+
+      session.RoundStarted = false;
+      session.GamesByPlayers.Clear();
+
       var players = session.Players;
       var (playerGroups, unmatchedPlayers) = CreateGroups(players, itemsPerGroup: 2);
       foreach (var group in playerGroups)

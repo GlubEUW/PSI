@@ -20,7 +20,7 @@ function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
 
       connection.on("GameUpdate", handleGameUpdate);
 
-      connection.invoke("GetGameState", gameId)
+      connection.invoke("GetGameState")
          .then(state => {
             if (state) {
                setGame({
@@ -56,9 +56,6 @@ function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
    };
 
    const returnToLobby = () => {
-      if (connection)
-         connection.invoke("EndGame", gameId).catch(console.error);
-
       onReturnToLobby();
    };
 
