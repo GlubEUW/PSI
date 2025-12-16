@@ -32,7 +32,7 @@ public class TournamentService(
       }
 
       var numberOfRounds = session.NumberOfRounds > 0 ? session.NumberOfRounds : 1;
-      var currentRound = session.CurrentRound + 1;
+      var currentRound = session.CurrentRound > 0 ? session.CurrentRound : 1;
       if (currentRound > numberOfRounds) currentRound = numberOfRounds;
 
       return new RoundInfoDto(currentRound, numberOfRounds);
@@ -72,6 +72,11 @@ public class TournamentService(
          return "Not enough players to start the next round.";
       }
 
+      if (session.CurrentRound >= session.GameTypesByRounds.Count)
+      {
+         return $"No game type configured for round {session.CurrentRound + 1}.";
+      }
+
       session.RoundStarted = false;
       session.GamesByPlayers.Clear();
 
@@ -109,36 +114,36 @@ public class TournamentService(
       Console.WriteLine($"Logging round start for tournament: {session.TournamentId}");
       Console.WriteLine($"CurrentRound: {session.CurrentRound}");
       Console.WriteLine($"GameTypesByRounds count: {session.GameTypesByRounds.Count}");
-      Console.WriteLine($"Trying to access index: {session.CurrentRound - 1}");
 
       try
       {
          await using var context = await _contextFactory.CreateDbContextAsync();
 
-         // Fix: Use CurrentRound - 1 to get the game type that was just played
          var gameTypeIndex = session.CurrentRound - 1;
+         Console.WriteLine($"Trying to access index: {gameTypeIndex}");
+
          if (gameTypeIndex < 0 || gameTypeIndex >= session.GameTypesByRounds.Count)
          {
             Console.WriteLine($"ERROR: Invalid game type index {gameTypeIndex} for list of size {session.GameTypesByRounds.Count}");
             return;
          }
 
-         var round = new Round
-         {
-            Id = Guid.NewGuid(),
-            TournamentId = session.TournamentId,
-            GameType = session.GameTypesByRounds[gameTypeIndex].ToString(),
-            RoundNumber = (short)session.CurrentRound
-         };
-
-         context.Rounds.Add(round);
-         Console.WriteLine($"Added round to context: Round {round.RoundNumber}, GameType: {round.GameType}");
-
          var uniqueGames = session.GamesByPlayers.Values.Distinct().ToList();
          Console.WriteLine($"Processing {uniqueGames.Count} unique games");
 
          foreach (var game in uniqueGames)
          {
+            var gameEntity = new Game
+            {
+               Id = Guid.NewGuid(),
+               TournamentId = session.TournamentId,
+               GameType = session.GameTypesByRounds[gameTypeIndex].ToString(),
+               RoundNumber = (short)session.CurrentRound
+            };
+
+            context.Games.Add(gameEntity);
+            Console.WriteLine($"Added game to context: Round {gameEntity.RoundNumber}, GameType: {gameEntity.GameType}");
+
             var playersInGame = session.GamesByPlayers
                .Where(kv => kv.Value == game)
                .Select(kv => kv.Key)
@@ -149,7 +154,7 @@ public class TournamentService(
                var userRound = new UserRound
                {
                   UserId = playersInGame[i].Id,
-                  RoundId = round.Id,
+                  GameId = gameEntity.Id,
                   PlayerTurn = (short)(i + 1),
                   PlayerPlacement = 0
                };
@@ -175,47 +180,80 @@ public class TournamentService(
       if (!_store.Sessions.TryGetValue(code, out var session))
          return;
 
-
-      await using var context = await _contextFactory.CreateDbContextAsync();
-      var latestRound = await context.Rounds
-         .Where(r => r.TournamentId == session.TournamentId)
-         .OrderByDescending(r => r.RoundNumber)
-         .FirstOrDefaultAsync();
-
-      if (latestRound == null)
-         return;
-
-      var uniqueGames = session.GamesByPlayers.Values.Distinct().ToList();
-
-      foreach (var game in uniqueGames)
+      try
       {
-         if (!game.GameOver)
-            continue;
+         await using var context = await _contextFactory.CreateDbContextAsync();
 
-         var winner = game.Winner;
-         var players = game.Players;
+         var gamesInCurrentRound = await context.Games
+            .Where(g => g.TournamentId == session.TournamentId && g.RoundNumber == session.CurrentRound)
+            .ToListAsync();
 
-         foreach (var player in players)
+         if (gamesInCurrentRound.Count == 0)
          {
-            var userRound = await context.UserRound
-               .FirstOrDefaultAsync(ur => ur.UserId == player.Id && ur.RoundId == latestRound.Id);
+            Console.WriteLine($"[SaveGameResultsAsync] No games found for round {session.CurrentRound}");
+            return;
+         }
 
-            if (userRound != null && userRound.PlayerPlacement == 0)
+         Console.WriteLine($"[SaveGameResultsAsync] Found {gamesInCurrentRound.Count} games in current round");
+
+         var uniqueGames = session.GamesByPlayers.Values.Distinct().ToList();
+
+         foreach (var memoryGame in uniqueGames)
+         {
+            if (!memoryGame.GameOver)
             {
-               if (winner == null)
+               Console.WriteLine($"[SaveGameResultsAsync] Game not over, skipping");
+               continue;
+            }
+
+            var winner = memoryGame.Winner;
+            var playersInMemoryGame = memoryGame.Players;
+
+            foreach (var dbGame in gamesInCurrentRound)
+            {
+               var userRoundsForGame = await context.UserRound
+                  .Where(ur => ur.GameId == dbGame.Id)
+                  .ToListAsync();
+
+               var dbGamePlayerIds = userRoundsForGame.Select(ur => ur.UserId).ToHashSet();
+               var memoryGamePlayerIds = playersInMemoryGame.Select(p => p.Id).ToHashSet();
+
+               if (dbGamePlayerIds.SetEquals(memoryGamePlayerIds))
                {
-                  userRound.PlayerPlacement = 1;
+                  Console.WriteLine($"[SaveGameResultsAsync] Found matching game in database");
+
+                  foreach (var player in playersInMemoryGame)
+                  {
+                     var userRound = userRoundsForGame.FirstOrDefault(ur => ur.UserId == player.Id);
+
+                     if (userRound != null && userRound.PlayerPlacement == 0)
+                     {
+                        if (winner == null)
+                        {
+                           userRound.PlayerPlacement = 1;
+                        }
+                        else
+                        {
+                           userRound.PlayerPlacement = (short)(player.Id == winner.Id ? 1 : 2);
+                        }
+                        context.UserRound.Update(userRound);
+                        Console.WriteLine($"[SaveGameResultsAsync] Set placement for user {player.Id}: {userRound.PlayerPlacement}");
+                     }
+                  }
+                  break;
                }
-               else
-               {
-                  userRound.PlayerPlacement = (short)(player.Id == winner.Id ? 1 : 2);
-               }
-               context.Update(userRound);
             }
          }
-      }
 
-      await context.SaveChangesAsync();
+         var changes = await context.SaveChangesAsync();
+         Console.WriteLine($"[SaveGameResultsAsync] Saved {changes} changes to database");
+      }
+      catch (Exception ex)
+      {
+         Console.WriteLine($"[SaveGameResultsAsync] ERROR: {ex.Message}");
+         Console.WriteLine($"[SaveGameResultsAsync] Stack trace: {ex.StackTrace}");
+         throw;
+      }
    }
 
    private (List<List<TItem>> groupedItems, List<TItem> ungroupedItems) CreateGroups<TItem>(
@@ -307,4 +345,14 @@ public class TournamentService(
       }
       return "Tournament session not found.";
    }
+
+   public async Task CheckAndSaveResultsIfAllGamesEndedAsync(string code)
+   {
+      if (RoundStarted(code) && AreAllGamesEnded(code))
+      {
+         Console.WriteLine($"All games ended for tournament {code}, saving results...");
+         await SaveGameResultsAsync(code);
+      }
+   }
+
 }

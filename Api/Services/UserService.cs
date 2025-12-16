@@ -15,31 +15,31 @@ public class UserService(DatabaseContext context) : IUserService
 
    public async Task<GameStatsDto> GetUserStatsAsync(Guid userId)
    {
-      var userRound = await (from ur in context.UserRound
-                             join r in context.Rounds on ur.RoundId equals r.Id
+      var userGames = await (from ur in context.UserRound
+                             join g in context.Games on ur.GameId equals g.Id
                              where ur.UserId == userId
                              select new
                              {
                                 ur.PlayerPlacement,
-                                r.GameType
+                                g.GameType
                              }).ToListAsync();
 
       var stats = new GameStatsDto
       {
          UserId = userId,
-         TotalGamesPlayed = userRound.Count,
-         TotalWins = userRound.Count(ur => ur.PlayerPlacement == 1)
+         TotalGamesPlayed = userGames.Count,
+         TotalWins = userGames.Count(ur => ur.PlayerPlacement == 1)
       };
 
-      var ticTacToe = userRound.Where(ur => ur.GameType == "TicTacToe").ToList();
+      var ticTacToe = userGames.Where(ur => ur.GameType == "TicTacToe").ToList();
       stats.TicTacToeGamesPlayed = ticTacToe.Count;
       stats.TicTacToeWins = ticTacToe.Count(ur => ur.PlayerPlacement == 1);
 
-      var rps = userRound.Where(ur => ur.GameType == "RockPaperScissors").ToList();
+      var rps = userGames.Where(ur => ur.GameType == "RockPaperScissors").ToList();
       stats.RockPaperScissorsGamesPlayed = rps.Count;
       stats.RockPaperScissorsWins = rps.Count(ur => ur.PlayerPlacement == 1);
 
-      var connectFour = userRound.Where(ur => ur.GameType == "ConnectFour").ToList();
+      var connectFour = userGames.Where(ur => ur.GameType == "ConnectFour").ToList();
       stats.ConnectFourGamesPlayed = connectFour.Count;
       stats.ConnectFourWins = connectFour.Count(ur => ur.PlayerPlacement == 1);
 

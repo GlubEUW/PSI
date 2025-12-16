@@ -17,6 +17,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       User,
       Code
    }
+
    private readonly ILobbyService _lobbyService = lobbyService;
    private readonly ITournamentService _tournamentService = tournamentService;
    private readonly IGameService _gameService = gameService;
@@ -40,7 +41,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          return;
       }
 
-      var user = _currentUserAccessor.GetCurrentUser(Context); ;
+      var user = _currentUserAccessor.GetCurrentUser(Context);
       if (user is null)
       {
          await Clients.Caller.SendAsync("Error", "User not authenticated.");
@@ -128,6 +129,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       if (session.TournamentStarted)
       {
          await Clients.Caller.SendAsync("Error", "The tournament has already started.");
+         return;
       }
 
       var startResult = _tournamentService.StartTournament(code);
@@ -149,32 +151,15 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          return;
       }
 
-      if (!_tournamentService.AreAllGamesEnded(code))
-      {
-         await Clients.Caller.SendAsync("Error", "Not all games have ended.");
-         return;
-      }
-
-      if (_tournamentService.RoundStarted(code) && _tournamentService.AreAllGamesEnded(code))
-      {
-         await _tournamentService.SaveGameResultsAsync(code);
-         Console.WriteLine("Saved game results for previous round");
-      }
-
-      // while (_tournamentService.HalfPlayersReadyForNextRound(code) && !_tournamentService.AllPlayersReadyForNextRound(code))
-      // {
-      //    Clients.Caller.SendAsync("WaitingForPlayers", _tournamentService.getReadyPlayerCount(code).ToString());
-      // } not good enough need to think about the case where no players ready anymore
-
-      await _tournamentService.LogRoundStartAsync(code);
-      Console.WriteLine("Logged new round start");
-
       var roundStartError = _tournamentService.StartNextRound(code);
       if (roundStartError is not null)
       {
          await Clients.Caller.SendAsync("Error", roundStartError);
          return;
       }
+
+      await _tournamentService.LogRoundStartAsync(code);
+      Console.WriteLine("Logged new round start");
 
       await Clients.Group(code).SendAsync("PlayersUpdated", _tournamentService.GetTournamentRoundInfo(code));
 
@@ -193,7 +178,6 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
    public async Task MakeMove(JsonElement moveData)
    {
       var code = Context.Items[ContextKeys.Code] as string ?? throw new InvalidOperationException("Code not found in context");
-
       var user = Context.Items[ContextKeys.User] as User ?? throw new InvalidOperationException("User not found in context");
 
       try
@@ -211,6 +195,8 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          );
 
          await Task.WhenAll(notifyTasks);
+
+         await _tournamentService.CheckAndSaveResultsIfAllGamesEndedAsync(code);
       }
       catch (InvalidMoveException ex)
       {
@@ -231,11 +217,4 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       _tournamentService.GetGame(code, user, out var game);
       return Task.FromResult(game?.GetState());
    }
-
-   // public Task<object?> GetGameState(string gameId)
-   // {
-   //    var code = Context.Items[ContextKeys.Code] as string ?? throw new InvalidOperationException("Code not found in context");
-
-   //    return Task.FromResult(_gameService.GetGameState(code, gameId));
-   // } This is very good to have for spectator mode lets remember it. for when we refactor db and have gameId for each game
 }

@@ -1,6 +1,6 @@
 namespace Api.Entities;
 
-public class Round
+public class Game
 {
     public Guid Id { get; set; }
     public Guid TournamentId { get; set; }
