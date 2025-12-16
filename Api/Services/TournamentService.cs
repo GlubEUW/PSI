@@ -340,11 +340,24 @@ public class TournamentService(
       {
          if (session.Players.Count < 2)
             return "Not enough players to start the tournament.";
+
          session.TournamentStarted = true;
+
+         using var context = _contextFactory.CreateDbContext();
+         if (!context.Tournaments.Any(t => t.Id == session.TournamentId))
+         {
+            context.Tournaments.Add(new Tournament
+            {
+               Id = session.TournamentId,
+            });
+            context.SaveChanges();
+         }
+
          return null;
       }
       return "Tournament session not found.";
    }
+
 
    public async Task CheckAndSaveResultsIfAllGamesEndedAsync(string code)
    {
