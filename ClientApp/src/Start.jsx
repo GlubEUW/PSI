@@ -119,6 +119,9 @@ function Start() {
                flexDirection: "column",
                gap: "20px",
                justifyContent: "center",
+               alignContent: "center",
+               justifyItems: "center",
+               alignItems: "center"
             }}
          >
             <h1>Arcade Mayhem</h1>

@@ -62,7 +62,7 @@ function LeaderBoard() {
     }, [page]);
 
     return (
-        <div style={{ fontSize: "18px" }}>
+        <div style={{ fontSize: "18px", justifyContent: "center", alignContent: "center", justifyItems: "center", alignItems: "center" }}>
             <h1>Leaderboard</h1>
 
             <div style={{ marginBlock: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
