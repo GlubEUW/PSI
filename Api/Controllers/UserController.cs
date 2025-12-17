@@ -82,7 +82,7 @@ public class UserController(IAuthService authService, IUserService userService) 
       if (user is null)
          return NotFound();
 
-      var statsDto = user.ToGameStatsDto();
+      var statsDto = await userService.GetUserStatsAsync(id);
       statsDto.Name = user.Name;
       return Ok(statsDto);
    }
