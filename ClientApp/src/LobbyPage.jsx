@@ -15,6 +15,7 @@ function LobbyPage() {
    const [connection, setConnection] = useState(null);
    const [players, setPlayers] = useState([{ name: "", wins: 0 }]);
    const [message, setMessage] = useState("");
+   const [tournamentStarted, setTournamentStarted] = useState(false);
 
    const connectedRef = useRef(false);
 
@@ -56,6 +57,9 @@ function LobbyPage() {
                if (roundInfo) {
                   setCurrentRound(roundInfo.currentRound);
                   setTotalRounds(roundInfo.totalRounds);
+                  if (roundInfo.currentRound > 0) {
+                     setTournamentStarted(true);
+                  }
                }
 
                const playerInfo = await conn.invoke("GetPlayers", code);
@@ -71,6 +75,7 @@ function LobbyPage() {
 
          conn.on("Error", (errorMessage) => {
             setMessage(errorMessage);
+            setTimeout(() => setMessage(""), 3000);
          });
 
          conn.on("GameStarted", (data) => {
@@ -104,19 +109,16 @@ function LobbyPage() {
       };
    }, [code, navigate, token]);
 
-   const startRound = async () => {
+   const handleStart = async () => {
       if (!connection) return;
       try {
-         await connection.invoke("StartRound");
-      } catch (err) {
-         console.error(err);
-      }
-   };
-
-   const startTournament = async () => {
-      if (!connection) return;
-      try {
-         await connection.invoke("StartTournament");
+         if (!tournamentStarted) {
+            await connection.invoke("StartTournament");
+            setTournamentStarted(true);
+            await connection.invoke("StartRound");
+         } else {
+            await connection.invoke("StartRound");
+         }
       } catch (err) {
          console.error(err);
       }
@@ -151,10 +153,9 @@ function LobbyPage() {
                </div>
                <p style={{ marginBottom: "8px" }}>{message}</p>
                <div>
-                  <RetroButton onClick={() => startMatch()} bg="#2aaac4ff" w={350} h={40}>Start Match</RetroButton>
-
-                  <button onClick={() => startRound()} className="normal-button">Start Round</button>
-                  <button onClick={() => startTournament()} className="normal-button">Start Tournament</button>
+                  <RetroButton onClick={handleStart} bg="#2aaac4ff" w={350} h={40}>
+                     {tournamentStarted ? "Start Round" : "Start"}
+                  </RetroButton>
                   <hr style={{ marginTop: "32px", marginBottom: "16px" }} />
 
                   <p>Round {currentRound}/{totalRounds}</p>
