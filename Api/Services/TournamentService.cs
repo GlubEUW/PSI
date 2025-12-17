@@ -151,7 +151,7 @@ public class TournamentService(
 
             for (var i = 0; i < playersInGame.Count; i++)
             {
-               var userRound = new UserRound
+               var userRound = new UserGame
                {
                   UserId = playersInGame[i].Id,
                   GameId = gameEntity.Id,
