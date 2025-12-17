@@ -24,4 +24,6 @@ public interface ITournamentService
    public string? StartTournament(string code);
 
    public Task CheckAndSaveResultsIfAllGamesEndedAsync(string code);
+
+   public bool IsTournamentFinished(string code);
 }

@@ -144,12 +144,6 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
       var code = Context.Items[ContextKeys.Code] as string
           ?? throw new InvalidOperationException("Match code not found in context");
 
-      if (!_tournamentService.TournamentStarted(code))
-      {
-         await Clients.Caller.SendAsync("Error", "Tournament has not started yet.");
-         return;
-      }
-
       if (_tournamentService.RoundStarted(code) && !_tournamentService.AreAllGamesEnded(code))
       {
          await Clients.Caller.SendAsync("Error", "Round is still in progress. Wait for all games to finish.");
@@ -202,6 +196,13 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          await Task.WhenAll(notifyTasks);
 
          await _tournamentService.CheckAndSaveResultsIfAllGamesEndedAsync(code);
+         if (_tournamentService.IsTournamentFinished(code))
+         {
+            var finalPlayers = await _lobbyService.GetPlayersInLobbyDTOs(code);
+
+            await Clients.Group(code).SendAsync("TournamentEnded", finalPlayers);
+            return;
+         }
          await Clients.Group(code).SendAsync("PlayersUpdated", _tournamentService.GetTournamentRoundInfo(code));
       }
       catch (InvalidMoveException ex)

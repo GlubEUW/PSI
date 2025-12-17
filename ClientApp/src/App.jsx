@@ -7,6 +7,7 @@ import Queue from "./Queue";
 import LobbyPage from "./LobbyPage";
 import GameContainer from "./GameContainer";
 import LeaderBoard from "./LeaderBoard";
+import EndTournamentPage from "./EndTournamentPage";
 
 function App() {
    return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/match/:code" element={<LobbyPage />}>
                <Route path="game" element={<GameContainer />} />
             </Route>
+            <Route path="tournament/end" element={<EndTournamentPage />} />
          </Routes>
       </Router>
    );
