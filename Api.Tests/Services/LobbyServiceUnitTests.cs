@@ -97,7 +97,7 @@ public class LobbyServiceUnitTests
    public async Task JoinMatch_ReturnsGameDoesNotExist_WhenNoSession()
    {
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
-      var res = await svc.JoinMatch("missing", new Guest { Id = Guid.NewGuid(), Name = "x" });
+      var res = await svc.JoinTournament("missing", new Guest { Id = Guid.NewGuid(), Name = "x" });
       Assert.Equal("Game does not exist.", res);
    }
 
@@ -107,9 +107,9 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(1, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = id, Name = "p1" });
+      await svc.JoinTournament(code, new Guest { Id = id, Name = "p1" });
 
-      var res = await svc.JoinMatch(code, new Guest { Id = Guid.NewGuid(), Name = "p2" });
+      var res = await svc.JoinTournament(code, new Guest { Id = Guid.NewGuid(), Name = "p2" });
       Assert.Equal("Lobby is full.", res);
    }
 
@@ -119,7 +119,7 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      var err = await svc.JoinMatch(code, new Guest { Id = id, Name = "p" });
+      var err = await svc.JoinTournament(code, new Guest { Id = id, Name = "p" });
       Assert.Null(err);
       Assert.Contains(svc.GetPlayersInLobby(code), u => u.Id == id);
 
@@ -143,8 +143,8 @@ public class LobbyServiceUnitTests
       var svc = (LobbyService)lobby;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = a, Name = "a" });
-      await svc.JoinMatch(code, new Guest { Id = b, Name = "b" });
+      await svc.JoinTournament(code, new Guest { Id = a, Name = "a" });
+      await svc.JoinTournament(code, new Guest { Id = b, Name = "b" });
 
       var other = Guid.NewGuid();
       var result = await svc.LeaveMatch(code, other);
@@ -160,10 +160,10 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(1, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = id, Name = "p" });
+      await svc.JoinTournament(code, new Guest { Id = id, Name = "p" });
       var result = await svc.LeaveMatch(code, id);
       Assert.True(result);
-      Assert.Null(svc.GetMatchSession(code));
+      Assert.Null(svc.GetTournamentSession(code));
    }
 
    [Fact]
@@ -179,7 +179,7 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(1, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.Players.Add(new Guest { Id = Guid.NewGuid(), Name = "p1" });
       var msg = svc.CanJoinLobby(code, Guid.NewGuid());
       Assert.Equal("Lobby is full.", msg);
@@ -190,8 +190,8 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
-      session.InGame = true;
+      var session = svc.GetTournamentSession(code)!;
+      session.TournamentStarted = true;
       var msg = svc.CanJoinLobby(code, Guid.NewGuid());
       Assert.Equal("Game already started.", msg);
    }
@@ -202,7 +202,7 @@ public class LobbyServiceUnitTests
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
       var id = Guid.NewGuid();
-      await svc.JoinMatch(code, new Guest { Id = id, Name = "p" });
+      await svc.JoinTournament(code, new Guest { Id = id, Name = "p" });
       var msg = svc.CanJoinLobby(code, id);
       Assert.Equal("Name already taken.", msg);
    }
@@ -214,8 +214,8 @@ public class LobbyServiceUnitTests
       var games = new List<string> { "TicTacToe", "RockPaperScissors" };
       var code = await svc.CreateLobbyWithSettings(2, 2, false, games);
 
-      var session = svc.GetMatchSession(code)!;
-      Assert.Equal(games, session.GamesList);
+      var session = svc.GetTournamentSession(code)!;
+      Assert.Equal(games, session.GameTypesByRounds);
    }
 
    [Fact]
@@ -223,26 +223,26 @@ public class LobbyServiceUnitTests
    {
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
       var code = await svc.CreateLobbyWithSettings(2, 3, true, null);
-      var session = svc.GetMatchSession(code)!;
-      Assert.Equal(3, session.GamesList.Count);
-      Assert.All(session.GamesList, g => Assert.False(string.IsNullOrWhiteSpace(g)));
+      var session = svc.GetTournamentSession(code)!;
+      Assert.Equal(3, session.GameTypesByRounds.Count);
+      Assert.All(session.GameTypesByRounds, g => Assert.False(string.IsNullOrWhiteSpace(g)));
    }
 
    [Fact]
    public async Task GetMatchRoundInfo_Defaults_WhenSessionMissing_And_ClampsCurrentRound()
    {
       var svc = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
-      var info = svc.GetMatchRoundInfo("missing");
+      var info = svc.GetTournamentRoundInfo("missing");
       Assert.Equal(1, info.CurrentRound);
       Assert.Equal(1, info.TotalRounds);
 
       var (lobby2, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc2 = (LobbyService)lobby2;
-      var session = svc2.GetMatchSession(code)!;
+      var session = svc2.GetTournamentSession(code)!;
       session.NumberOfRounds = 1;
       session.CurrentRound = 5;
 
-      var info2 = svc2.GetMatchRoundInfo(code);
+      var info2 = svc2.GetTournamentRoundInfo(code);
       Assert.Equal(1, info2.CurrentRound);
       Assert.Equal(1, info2.TotalRounds);
    }
@@ -252,11 +252,11 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.NumberOfRounds = 2;
       session.CurrentRound = 1;
 
-      var info = svc.GetMatchRoundInfo(code);
+      var info = svc.GetTournamentRoundInfo(code);
       Assert.Equal(2, info.CurrentRound);
       Assert.Equal(2, info.TotalRounds);
    }
@@ -266,11 +266,11 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.NumberOfRounds = 4;
       session.CurrentRound = 0;
 
-      var info = svc.GetMatchRoundInfo(code);
+      var info = svc.GetTournamentRoundInfo(code);
       Assert.Equal(1, info.CurrentRound);
       Assert.Equal(4, info.TotalRounds);
    }
@@ -287,12 +287,12 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.CurrentRound = 0;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
-      session._gameIdByUserId[a] = code + "_G0_R0";
-      session._gameIdByUserId[b] = code + "_G0_R0";
+      session.GamesByPlayers[a] = code + "_G0_R0";
+      session.GamesByPlayers[b] = code + "_G0_R0";
 
       svc.ResetRoundEndTracking(code);
       Assert.False(svc.AreAllGamesEnded(code));
@@ -306,12 +306,12 @@ public class LobbyServiceUnitTests
    {
       var (lobby, code) = await TestHelpers.CreateLobbyAsync(2, 1, true, null);
       var svc = (LobbyService)lobby;
-      var session = svc.GetMatchSession(code)!;
+      var session = svc.GetTournamentSession(code)!;
       session.CurrentRound = 0;
       var a = Guid.NewGuid();
       var b = Guid.NewGuid();
-      session._gameIdByUserId[a] = code + "_G0_R0";
-      session._gameIdByUserId[b] = code + "_G0_R0";
+      session.GamesByPlayers[a] = code + "_G0_R0";
+      session.GamesByPlayers[b] = code + "_G0_R0";
 
       Assert.False(svc.AreAllGamesEnded(code));
 

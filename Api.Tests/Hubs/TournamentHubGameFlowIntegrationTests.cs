@@ -1,7 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using Api.GameLogic;
 using Api.Models;
 using Api.Tests.TestServer;
 
@@ -10,7 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Api.Tests.Hubs;
 
-public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
+public class TournamentHubGameFlowIntegrationTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
    private readonly CustomWebApplicationFactory _factory = factory;
 
@@ -61,7 +60,7 @@ public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factor
    public async Task StartMatch_HappyPath_SendsMatchStarted_ToBothPlayers()
    {
       var (code, _) = await CreateLobbyAsync(_factory);
-      var url = _factory.Server.BaseAddress + $"matchHub?code={code}";
+      var url = _factory.Server.BaseAddress + $"TournamentHub?code={code}";
 
       var Player1Id = Guid.NewGuid();
       var Player2Id = Guid.NewGuid();
@@ -99,7 +98,7 @@ public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factor
    public async Task MakeMove_Then_EndGame_SendsGameUpdate_And_RoundEnded()
    {
       var (code, _) = await CreateLobbyAsync(_factory);
-      var url = _factory.Server.BaseAddress + $"matchHub?code={code}";
+      var url = _factory.Server.BaseAddress + $"TournamentHub?code={code}";
 
       var Player1Id = Guid.NewGuid();
       var Player2Id = Guid.NewGuid();
@@ -174,12 +173,12 @@ public class MatchHubGameFlowIntegrationTests(CustomWebApplicationFactory factor
       var msA = await startedA.Task;
       var gameId = msA.GetProperty("gameId").GetString()!;
 
-      var moveA = JsonSerializer.SerializeToElement(new RockPaperScissorsMove { PlayerId = Player1Id, Choice = RockPaperScissorsChoice.Rock });
+      var moveA = JsonSerializer.SerializeToElement(new { PlayerId = Player1Id, Choice = RockPaperScissorsChoice.Rock });
       await connA.InvokeAsync("MakeMove", moveA);
       await Task.WhenAny(updateA.Task, Task.Delay(TimeSpan.FromSeconds(5)));
       Assert.True(updateA.Task.IsCompleted, "Player1 should receive a GameUpdate after her move");
 
-      var moveB = JsonSerializer.SerializeToElement(new RockPaperScissorsMove { PlayerId = Player2Id, Choice = RockPaperScissorsChoice.Scissors });
+      var moveB = JsonSerializer.SerializeToElement(new { PlayerId = Player2Id, Choice = RockPaperScissorsChoice.Scissors });
       await connB.InvokeAsync("MakeMove", moveB);
       await Task.WhenAny(updateB.Task, Task.Delay(TimeSpan.FromSeconds(5)));
       Assert.True(updateB.Task.IsCompleted, "Player2 should receive a GameUpdate after his move");

@@ -8,9 +8,9 @@ namespace Api.Tests.GameLogic;
 
 public class ConnectFourGameUnitTests
 {
-   private static JsonElement Move(Guid playerId, int column)
+   private static JsonElement Move(User player, int column)
    {
-      var payload = new ConnectFourMove { PlayerId = playerId, Column = column };
+      var payload = new { PlayerId = player, Column = column };
       return JsonSerializer.SerializeToElement(payload);
    }
 
@@ -26,10 +26,10 @@ public class ConnectFourGameUnitTests
    public void Rejects_Invalid_Column_And_Wrong_Turn()
    {
       var (game, p1, p2) = CreateGame();
-      Assert.False(game.MakeMove(Move(p2.Id, 0)));
-      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1.Id, -1)));
-      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1.Id, 7)));
-      Assert.True(game.MakeMove(Move(p1.Id, 0)));
+      Assert.False(game.MakeMove(Move(p2, 0)));
+      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1, -1)));
+      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1, 7)));
+      Assert.True(game.MakeMove(Move(p1, 0)));
    }
 
    [Fact]
@@ -38,47 +38,46 @@ public class ConnectFourGameUnitTests
       var (game, p1, p2) = CreateGame();
       for (var i = 0; i < 3; i++)
       {
-         Assert.True(game.MakeMove(Move(p1.Id, 0)));
-         Assert.True(game.MakeMove(Move(p2.Id, 0)));
+         Assert.True(game.MakeMove(Move(p1, 0)));
+         Assert.True(game.MakeMove(Move(p2, 0)));
       }
-      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p1.Id, 0)));
+      Assert.False(game.MakeMove(Move(p1, 0)));
    }
 
    [Fact]
    public void Vertical_Win_For_First_Player()
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1.Id, 0)));
-      Assert.True(game.MakeMove(Move(p2.Id, 1)));
-      Assert.True(game.MakeMove(Move(p1.Id, 0)));
-      Assert.True(game.MakeMove(Move(p2.Id, 1)));
-      Assert.True(game.MakeMove(Move(p1.Id, 0)));
-      Assert.True(game.MakeMove(Move(p2.Id, 1)));
-      Assert.True(game.MakeMove(Move(p1.Id, 0)));
+      Assert.True(game.MakeMove(Move(p1, 0)));
+      Assert.True(game.MakeMove(Move(p2, 1)));
+      Assert.True(game.MakeMove(Move(p1, 0)));
+      Assert.True(game.MakeMove(Move(p2, 1)));
+      Assert.True(game.MakeMove(Move(p1, 0)));
+      Assert.True(game.MakeMove(Move(p2, 1)));
+      Assert.True(game.MakeMove(Move(p1, 0)));
 
       var state = game.GetState();
-      var winner = (string?)state.GetType().GetProperty("Winner")!.GetValue(state);
-      Assert.Equal("Player1", winner);
-      Assert.Equal(1, game.Players[0].Wins);
-      Assert.False(game.MakeMove(Move(p2.Id, 2)));
+      var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);
+      Assert.Equal(p1, winner);
+      Assert.False(game.MakeMove(Move(p2, 2)));
    }
 
    [Fact]
    public void Horizontal_Win_For_First_Player()
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1.Id, 0)));
-      Assert.True(game.MakeMove(Move(p2.Id, 6)));
-      Assert.True(game.MakeMove(Move(p1.Id, 1)));
-      Assert.True(game.MakeMove(Move(p2.Id, 6)));
-      Assert.True(game.MakeMove(Move(p1.Id, 2)));
-      Assert.True(game.MakeMove(Move(p2.Id, 6)));
-      Assert.True(game.MakeMove(Move(p1.Id, 3)));
+
+      Assert.True(game.MakeMove(Move(p1, 0)));
+      Assert.True(game.MakeMove(Move(p2, 6)));
+      Assert.True(game.MakeMove(Move(p1, 1)));
+      Assert.True(game.MakeMove(Move(p2, 6)));
+      Assert.True(game.MakeMove(Move(p1, 2)));
+      Assert.True(game.MakeMove(Move(p2, 6)));
+      Assert.True(game.MakeMove(Move(p1, 3)));
 
       var state = game.GetState();
-      var winner = (string?)state.GetType().GetProperty("Winner")!.GetValue(state);
-      Assert.Equal("Player1", winner);
-      Assert.Equal(1, game.Players[0].Wins);
+      var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);
+      Assert.Equal(p1, winner);
    }
 
    [Fact]
@@ -86,74 +85,77 @@ public class ConnectFourGameUnitTests
    {
       var (game, p1, p2) = CreateGame();
 
-      var R = (int)DiscColor.Red;
-      var Y = (int)DiscColor.Yellow;
+      Assert.True(game.MakeMove(Move(p1, 0))); // R (5,0)
+      Assert.True(game.MakeMove(Move(p2, 1))); // Y (5,1)
 
+      Assert.True(game.MakeMove(Move(p1, 1))); // R (4,1)
+      Assert.True(game.MakeMove(Move(p2, 2))); // Y (5,2)
 
+      Assert.True(game.MakeMove(Move(p1, 2))); // R (4,2)
+      Assert.True(game.MakeMove(Move(p2, 3))); // Y (5,3)
 
+      Assert.True(game.MakeMove(Move(p1, 2))); // R (3,2)
+      Assert.True(game.MakeMove(Move(p2, 3))); // Y (4,3)
 
-      game.Board[5][0] = R;
-      game.Board[5][1] = Y; game.Board[4][1] = R;
-      game.Board[5][2] = Y; game.Board[4][2] = Y; game.Board[3][2] = R;
-      game.Board[5][3] = Y; game.Board[4][3] = Y; game.Board[3][3] = Y; // below (2,3)
+      Assert.True(game.MakeMove(Move(p1, 3))); // R (3,3)
+      Assert.True(game.MakeMove(Move(p2, 4))); // filler
 
-
-      game.PlayerTurn = p1.Id;
-      Assert.True(game.MakeMove(Move(p1.Id, 3)));
+      Assert.True(game.MakeMove(Move(p1, 3))); // R (2,3) completes diagonal
 
       var state = game.GetState();
-      var winner = (string?)state.GetType().GetProperty("Winner")!.GetValue(state);
-      Assert.Equal("Player1", winner);
-      Assert.Equal(1, game.Players[0].Wins);
+      var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);
+      Assert.Equal(p1, winner);
+      Assert.False(game.MakeMove(Move(p2, 0)));
    }
 
    [Fact]
    public void Diagonal_NegativeSlope_Win_For_First_Player()
    {
       var (game, p1, p2) = CreateGame();
-      var R = (int)DiscColor.Red;
-      var Y = (int)DiscColor.Yellow;
 
+      Assert.True(game.MakeMove(Move(p1, 3))); // R (5,3)
+      Assert.True(game.MakeMove(Move(p2, 4))); // Y (5,4)
 
+      Assert.True(game.MakeMove(Move(p1, 4))); // R (4,4)
+      Assert.True(game.MakeMove(Move(p2, 5))); // Y (5,5)
 
+      Assert.True(game.MakeMove(Move(p1, 5))); // R (4,5)
+      Assert.True(game.MakeMove(Move(p2, 6))); // Y (5,6)
 
-      game.Board[5][6] = R;
-      game.Board[5][5] = Y; game.Board[4][5] = R;
-      game.Board[5][4] = Y; game.Board[4][4] = Y; game.Board[3][4] = R;
-      game.Board[5][3] = Y; game.Board[4][3] = Y; game.Board[3][3] = Y; // below (2,3)
+      Assert.True(game.MakeMove(Move(p1, 5))); // R (3,5)
+      Assert.True(game.MakeMove(Move(p2, 6))); // Y (4,6)
 
-      game.PlayerTurn = p1.Id;
-      Assert.True(game.MakeMove(Move(p1.Id, 3)));
+      Assert.True(game.MakeMove(Move(p1, 6))); // R (3,6)
+      Assert.True(game.MakeMove(Move(p2, 2))); // filler
+
+      Assert.True(game.MakeMove(Move(p1, 6))); // R (2,6) completes diagonal
 
       var state = game.GetState();
-      var winner = (string?)state.GetType().GetProperty("Winner")!.GetValue(state);
-      Assert.Equal("Player1", winner);
-      Assert.Equal(1, game.Players[0].Wins);
+      var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);
+      Assert.Equal(p1, winner);
+      Assert.False(game.MakeMove(Move(p2, 0)));
    }
 
    [Fact]
    public void Draw_When_Board_Filled_No_Four_Aligned()
    {
       var (game, p1, p2) = CreateGame();
-      var R = (int)DiscColor.Red;
-      var Y = (int)DiscColor.Yellow;
 
-
-      for (var r = 0; r < 6; r++)
+      var sequence = new (User player, int column)[]
       {
-         for (var c = 0; c < 7; c++)
-         {
-            if (r == 0 && c == 0) continue; // leave top-left empty for the last move
-            game.Board[r][c] = ((r + c) % 2 == 0) ? Y : R;
-         }
-      }
+      (p1,0),(p2,1),(p1,2),(p2,3),(p1,4),(p2,5),(p1,6),
+      (p2,0),(p1,1),(p2,2),(p1,3),(p2,4),(p1,5),(p2,6),
+      (p1,0),(p2,1),(p1,2),(p2,3),(p1,4),(p2,5),(p1,6),
+      (p2,0),(p1,1),(p2,2),(p1,3),(p2,4),(p1,5),(p2,6),
+      (p1,0),(p2,1),(p1,2),(p2,3),(p1,4),(p2,5),(p1,6),
+      (p2,0),(p1,1),(p2,2),(p1,3),(p2,4),(p1,5),(p2,6)
+      };
 
-
-      game.PlayerTurn = p1.Id;
-      Assert.True(game.MakeMove(Move(p1.Id, 0)));
+      foreach (var (player, column) in sequence)
+         Assert.True(game.MakeMove(Move(player, column)));
 
       var state = game.GetState();
-      var winner = (string?)state.GetType().GetProperty("Winner")!.GetValue(state);
-      Assert.Equal("Draw", winner);
+      var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);
+      Assert.Null(winner);
    }
 }

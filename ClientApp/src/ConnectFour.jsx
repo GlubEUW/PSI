@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import RetroButton from "./components/RetroButton";
 
-function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
+function ConnectFour({ player, connection, onReturnToLobby }) {
    const [board, setBoard] = useState([]);
    const [playerTurn, setPlayerTurn] = useState(null);
    const [winner, setWinner] = useState(null);
    const [hoveredColumn, setHoveredColumn] = useState(null);
+   const [gameOver, setGameOver] = useState(false);
 
    useEffect(() => {
       if (!connection) {
@@ -23,13 +25,14 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
 
       connection.on("GameUpdate", handleGameUpdate);
 
-      connection.invoke("GetGameState", gameId)
+      connection.invoke("GetGameState")
          .then(state => {
             console.log("Connect Four initial state:", state);
             if (state) {
                setBoard(state.board);
                setPlayerTurn(state.playerTurn);
                setWinner(state.winner);
+               setGameOver(state.GameOver)
             }
          })
          .catch(err => console.error("Failed to get Connect Four game state:", err));
@@ -37,7 +40,7 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
       return () => {
          connection.off("GameUpdate", handleGameUpdate);
       };
-   }, [connection, gameId]);
+   }, [connection]);
 
    useEffect(() => {
       if (!winner) return;
@@ -65,17 +68,13 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
          return;
       }
 
-      console.log("Sending move:", { PlayerId: playerId, Column: column });
+      console.log("Sending move:", { Column: column });
 
-      connection.invoke("MakeMove", { PlayerId: playerId, Column: column })
+      connection.invoke("MakeMove", { Column: column })
          .catch(err => console.error("Move failed:", err));
    };
 
    const returnToLobby = () => {
-      if (connection)
-         connection.invoke("EndGame", gameId)
-            .catch(err => console.error("Failed to end game:", err));
-
       onReturnToLobby();
    };
 
@@ -92,7 +91,7 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
 
    if (!board || board.length === 0) {
       return (
-         <div style={{ padding: "20px", textAlign: "center" }}>
+         <div style={{ padding: "20px", textAlign: "center", fontSize: "32px" }}>
             <h2>Connect Four</h2>
             <p>Loading game board...</p>
          </div>
@@ -100,16 +99,20 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
    }
 
    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "10px", fontSize: "32px" }}>
          <h2>Connect Four</h2>
 
-         {winner ? (
-            <div style={{ marginBottom: "20px" }}>
-               <h3 style={{ color: "green" }}>Winner: {winner}!</h3>
-               <p>You will return to the lobby shortly.</p>
-            </div>
+         {gameOver ? (
+            winner ? (
+               <div style={{ marginBottom: "20px" }} >
+                  <h3 style={{ color: "green" }}>Winner: {winner}!</h3>
+                  <p>You will return to the lobby shortly.</p>
+               </div>)
+               : (<h3 style={{ color: "orange" }}>It's a draw!</h3>
+               )
+
          ) : (
-            <h3>Current turn: {playerTurn}</h3>
+            <h3>Current turn: {playerTurn.name}</h3>
          )}
 
          <div
@@ -119,7 +122,7 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
                padding: "20px",
                borderRadius: "12px",
                boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-               marginBottom: "20px"
+               marginBlock: "20px"
             }}
          >
             <div
@@ -133,17 +136,6 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
                   row.map((cell, colIndex) => (
                      <div
                         key={`${rowIndex}-${colIndex}`}
-                        onClick={() => {
-                           if (rowIndex === 0) {
-                              handleColumnClick(colIndex);
-                           }
-                        }}
-                        onMouseEnter={() => {
-                           if (rowIndex === 0) {
-                              setHoveredColumn(colIndex);
-                           }
-                        }}
-                        onMouseLeave={() => setHoveredColumn(null)}
                         style={{
                            width: "60px",
                            height: "60px",
@@ -177,44 +169,23 @@ function ConnectFour({ gameId, playerId, connection, onReturnToLobby }) {
             </div>
          </div>
 
-         <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+         <div style={{ display: "flex", gap: "0px", marginBottom: "20px" }}>
             {[0, 1, 2, 3, 4, 5, 6].map((col) => (
-               <button
+               <RetroButton
                   key={col}
                   onClick={() => handleColumnClick(col)}
                   disabled={winner || !canDropInColumn(col)}
-                  style={{
-                     width: "60px",
-                     height: "40px",
-                     fontSize: "18px",
-                     border: "none",
-                     borderRadius: "8px",
-                     color: "white",
-                     backgroundColor:
-                        winner || !canDropInColumn(col) ? "#9ca3af" : "#3b82f6",
-                     cursor: winner || !canDropInColumn(col) ? "not-allowed" : "pointer",
-                     fontWeight: "bold",
-                     transition: "all 0.2s",
-                     opacity: winner || !canDropInColumn(col) ? 0.5 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                     if (!winner && canDropInColumn(col)) {
-                        e.target.style.backgroundColor = "#1e40af";
-                        e.target.style.transform = "scale(1.1)";
-                     }
-                  }}
-                  onMouseLeave={(e) => {
-                     if (!winner && canDropInColumn(col)) {
-                        e.target.style.backgroundColor = "#3b82f6";
-                        e.target.style.transform = "scale(1)";
-                     }
-                  }}
+                  className={winner || !canDropInColumn(col) ? "opacity-50" : "opacity-100"}
+                  bg={winner || !canDropInColumn(col) ? "#9ca3af" : "#3b82f6"}
+                  w={45}
+                  h={35}
+                  borderColor="#fff"
                >
                   ↓
-               </button>
+               </RetroButton>
             ))}
          </div>
-      </div>
+      </div >
    );
 }
 

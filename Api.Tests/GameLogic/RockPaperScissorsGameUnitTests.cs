@@ -7,9 +7,16 @@ namespace Api.Tests.GameLogic;
 
 public class RockPaperScissorsGameUnitTests
 {
-   private static JsonElement Move(Guid playerId, RockPaperScissorsChoice choice)
+   public enum RockPaperScissorsChoice
    {
-      var payload = new RockPaperScissorsMove { PlayerId = playerId, Choice = choice };
+      Rock = 0,
+      Paper = 1,
+      Scissors = 2
+   }
+
+   private static JsonElement Move(User player, RockPaperScissorsChoice choice)
+   {
+      var payload = new { Player = player, Choice = choice };
       return JsonSerializer.SerializeToElement(payload);
    }
 
@@ -25,7 +32,7 @@ public class RockPaperScissorsGameUnitTests
    public void Result_Remains_Null_Until_Both_Move()
    {
       var (game, p1, _) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1.Id, RockPaperScissorsChoice.Rock)));
+      Assert.True(game.MakeMove(Move(p1, RockPaperScissorsChoice.Rock)));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
@@ -36,28 +43,24 @@ public class RockPaperScissorsGameUnitTests
    public void Determines_Draw()
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1.Id, RockPaperScissorsChoice.Rock)));
-      Assert.True(game.MakeMove(Move(p2.Id, RockPaperScissorsChoice.Rock)));
+      Assert.True(game.MakeMove(Move(p1, RockPaperScissorsChoice.Rock)));
+      Assert.True(game.MakeMove(Move(p2, RockPaperScissorsChoice.Rock)));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
       Assert.Equal("Draw!", result);
-      Assert.Equal(0, game.Players[0].Wins);
-      Assert.Equal(0, game.Players[1].Wins);
    }
 
    [Fact]
    public void Determines_Winner_And_Increments_Wins()
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1.Id, RockPaperScissorsChoice.Rock)));
-      Assert.True(game.MakeMove(Move(p2.Id, RockPaperScissorsChoice.Scissors)));
+      Assert.True(game.MakeMove(Move(p1, RockPaperScissorsChoice.Rock)));
+      Assert.True(game.MakeMove(Move(p2, RockPaperScissorsChoice.Scissors)));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
-      Assert.Equal("Player1 wins!", result);
-      Assert.Equal(1, game.Players[0].Wins);
-      Assert.Equal(0, game.Players[1].Wins);
+      Assert.Equal($"{p1} wins!", result);
    }
 
    [Theory]
@@ -67,14 +70,12 @@ public class RockPaperScissorsGameUnitTests
    public void Player1_Wins_For_All_Winning_Combinations(RockPaperScissorsChoice c1, RockPaperScissorsChoice c2)
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1.Id, c1)));
-      Assert.True(game.MakeMove(Move(p2.Id, c2)));
+      Assert.True(game.MakeMove(Move(p1, c1)));
+      Assert.True(game.MakeMove(Move(p2, c2)));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
-      Assert.Equal("Player1 wins!", result);
-      Assert.Equal(1, game.Players[0].Wins);
-      Assert.Equal(0, game.Players[1].Wins);
+      Assert.Equal($"{p1} wins!", result);
    }
 
    [Fact]

@@ -1,83 +1,48 @@
 using Api.Entities;
 using Api.Data;
+using Api.Models;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
 public class UserService(DatabaseContext context) : IUserService
 {
-   public User CreateUser(string name, Guid id, string role)
-   {
-      return (role == "Guest") ?
-      new Guest()
-      {
-         Name = name,
-         Id = id
-      }
-      : new RegisteredUser()
-      {
-         Name = name,
-         Id = id
-      };
-   }
-   public async Task LoadUserStatsAsync(User user)
-   {
-      if (user is not RegisteredUser)
-         return;
-
-      var statsData = await context.GameStats
-         .FirstOrDefaultAsync(gs => gs.UserId == user.Id);
-
-      if (statsData is not null)
-         user.LoadFromGameStatsDto(statsData);
-      else
-      {
-         var newStats = user.ToGameStatsDto();
-         context.GameStats.Add(newStats);
-         await context.SaveChangesAsync();
-      }
-   }
-   public async Task SaveUserStatsAsync(User user)
-   {
-      if (user is not RegisteredUser)
-         return;
-
-      var statsData = user.ToGameStatsDto();
-
-      var existing = await context.GameStats
-         .FirstOrDefaultAsync(gs => gs.UserId == user.Id);
-
-      if (existing is not null)
-      {
-         existing.TotalWins = statsData.TotalWins;
-         existing.TotalGamesPlayed = statsData.TotalGamesPlayed;
-         existing.TicTacToeWins = statsData.TicTacToeWins;
-         existing.TicTacToeGamesPlayed = statsData.TicTacToeGamesPlayed;
-         existing.RockPaperScissorsWins = statsData.RockPaperScissorsWins;
-         existing.RockPaperScissorsGamesPlayed = statsData.RockPaperScissorsGamesPlayed;
-         existing.ConnectFourWins = statsData.ConnectFourWins;
-         existing.ConnectFourGamesPlayed = statsData.ConnectFourGamesPlayed;
-      }
-      else
-         context.GameStats.Add(statsData);
-
-      await context.SaveChangesAsync();
-   }
-
    public async Task<User?> GetUserByIdAsync(Guid id)
    {
-      var user = await context.Users
-         .FirstOrDefaultAsync(u => u.Id == id);
+      return await context.Users.FirstOrDefaultAsync(u => u.Id == id);
+   }
 
-      if (user is not null)
+   public async Task<GameStatsDto> GetUserStatsAsync(Guid userId)
+   {
+      var userGames = await (from ur in context.UserRound
+                             join g in context.Games on ur.GameId equals g.Id
+                             where ur.UserId == userId
+                             select new
+                             {
+                                ur.PlayerPlacement,
+                                g.GameType
+                             }).ToListAsync();
+
+      var stats = new GameStatsDto
       {
-         var stats = await context.GameStats
-            .FirstOrDefaultAsync(gs => gs.UserId == id);
+         UserId = userId,
+         TotalGamesPlayed = userGames.Count,
+         TotalWins = userGames.Count(ur => ur.PlayerPlacement == 1)
+      };
 
-         if (stats is not null)
-            user.LoadFromGameStatsDto(stats);
-      }
+      var ticTacToe = userGames.Where(ur => ur.GameType == "TicTacToe").ToList();
+      stats.TicTacToeGamesPlayed = ticTacToe.Count;
+      stats.TicTacToeWins = ticTacToe.Count(ur => ur.PlayerPlacement == 1);
 
-      return user;
+      var rps = userGames.Where(ur => ur.GameType == "RockPaperScissors").ToList();
+      stats.RockPaperScissorsGamesPlayed = rps.Count;
+      stats.RockPaperScissorsWins = rps.Count(ur => ur.PlayerPlacement == 1);
+
+      var connectFour = userGames.Where(ur => ur.GameType == "ConnectFour").ToList();
+      stats.ConnectFourGamesPlayed = connectFour.Count;
+      stats.ConnectFourWins = connectFour.Count(ur => ur.PlayerPlacement == 1);
+
+      return stats;
    }
 }

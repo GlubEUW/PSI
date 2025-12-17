@@ -1,9 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
 using Api.Entities;
 using Api.Models;
 using Api.Data;
@@ -12,7 +14,7 @@ namespace Api.Services;
 
 public class AuthService(DatabaseContext context, IConfiguration configuration) : IAuthService
 {
-   public string? GuestCreate(UserDto request)
+   public async Task<string?> GuestCreateAsync(UserDto request)
    {
       var guest = new Guest();
       if (string.IsNullOrWhiteSpace(request.Name))
@@ -21,12 +23,16 @@ public class AuthService(DatabaseContext context, IConfiguration configuration) 
       guest.Id = Guid.NewGuid();
       guest.Name = request.Name;
 
+      context.Users.Add(guest);
+      await context.SaveChangesAsync();
+
       return CreateToken(guest);
    }
 
    public async Task<string?> LoginAsync(UserDto request)
    {
-      var user = await context.Users.FirstOrDefaultAsync(u => u.Name == request.Name);
+      var user = await context.Users.OfType<RegisteredUser>()
+         .FirstOrDefaultAsync(u => u.Name == request.Name);
 
       if (user is null)
          return null;

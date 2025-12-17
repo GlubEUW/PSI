@@ -72,7 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
          {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/matchHub"))
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/TournamentHub"))
             {
                context.Token = accessToken;
             }
@@ -81,16 +81,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
       };
    });
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<DatabaseContext>(options =>
+
+builder.Services.AddDbContextFactory<DatabaseContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
         npgsqlOptions.CommandTimeout(15)
     ));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
+
 builder.Services.AddSingleton<IGameService, GameService>();
 builder.Services.AddSingleton<ILobbyService, LobbyService>();
+builder.Services.AddSingleton<ITournamentService, TournamentService>();
 builder.Services.AddSingleton<IGameFactory, GameFactory>();
+builder.Services.AddSingleton<TournamentStore>();
 
 var app = builder.Build();
 
@@ -103,7 +108,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<MatchHub>("/matchHub");
+app.MapHub<TournamentHub>("/TournamentHub");
 
 if (app.Environment.IsDevelopment())
 {

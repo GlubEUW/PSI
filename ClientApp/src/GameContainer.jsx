@@ -21,9 +21,8 @@ function GameContainer() {
    }
 
    const gameType = state?.gameType;
-   const gameId = state?.gameId;
 
-   if (!gameType || !gameComponents[gameType] || !gameId) {
+   if (!gameType || !gameComponents[gameType]) {
       navigate("..", { replace: true });
       return null;
    }
@@ -36,8 +35,7 @@ function GameContainer() {
 
    return (
       <GameComponent
-         gameId={gameId}
-         playerId={user.id}
+         player={user}
          connection={connection}
          onReturnToLobby={handleReturnToLobby}
       />
