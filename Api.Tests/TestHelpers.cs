@@ -69,7 +69,9 @@ public static class TestHelpers
 
    public static async Task<(ILobbyService lobby, string code)> CreateLobbyAsync(int numberOfPlayers = 2, int numberOfRounds = 1, bool randomGames = true, List<string>? gamesList = null)
    {
-      var lobby = new LobbyService(new Api.Tests.TestDoubles.TestGameFactory());
+      var store = new TournamentStore();
+      var gameFactory = new Api.Tests.TestDoubles.TestGameFactory();
+      var lobby = new LobbyService(store, gameFactory);
       var code = await lobby.CreateLobbyWithSettings(numberOfPlayers, numberOfRounds, randomGames, gamesList);
       return (lobby, code);
    }
