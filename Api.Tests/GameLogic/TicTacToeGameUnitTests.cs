@@ -8,9 +8,9 @@ namespace Api.Tests.GameLogic;
 
 public class TicTacToeGameUnitTests
 {
-   private static JsonElement Move(User player, int x, int y)
+   private static JsonElement Move(int x, int y)
    {
-      var payload = new { Player = player, X = x, Y = y };
+      var payload = new { X = x, Y = y };
       return JsonSerializer.SerializeToElement(payload);
    }
 
@@ -32,7 +32,7 @@ public class TicTacToeGameUnitTests
       var playerTurn = (User)state.GetType().GetProperty("PlayerTurn")!.GetValue(state)!;
       var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);
 
-      Assert.All(board.SelectMany(r => r), cell => Assert.Equal(2, cell));
+      Assert.All(board.SelectMany(r => r), cell => Assert.Equal(0, cell));
       Assert.Equal(p1, playerTurn);
       Assert.Null(winner);
    }
@@ -40,9 +40,9 @@ public class TicTacToeGameUnitTests
    [Fact]
    public void MakeMove_Rejects_InvalidJson()
    {
-      var (game, _, _) = CreateGame();
-      var invalid = JsonDocument.Parse("{\"foo\":1}").RootElement;
-      Assert.False(game.MakeMove(invalid));
+      var (game, p1, _) = CreateGame();
+      var invalid = JsonDocument.Parse("\"oops\"").RootElement;
+      Assert.Throws<MoveNotDeserialized>(() => game.MakeMove(invalid, p1));
    }
 
    [Fact]
@@ -50,13 +50,13 @@ public class TicTacToeGameUnitTests
    {
       var (game, p1, p2) = CreateGame();
 
-      Assert.False(game.MakeMove(Move(p2, 0, 0)));
+      Assert.False(game.MakeMove(Move(0, 0), p2));
 
-      Assert.True(game.MakeMove(Move(p1, 0, 0)));
+      Assert.True(game.MakeMove(Move(0, 0), p1));
 
-      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(p2, 0, 0)));
+      Assert.Throws<InvalidMoveException>(() => game.MakeMove(Move(0, 0), p2));
 
-      Assert.True(game.MakeMove(Move(p2, 1, 1)));
+      Assert.True(game.MakeMove(Move(1, 1), p2));
    }
 
    [Fact]
@@ -64,17 +64,17 @@ public class TicTacToeGameUnitTests
    {
       var (game, p1, p2) = CreateGame();
 
-      Assert.True(game.MakeMove(Move(p1, 0, 0)));
-      Assert.True(game.MakeMove(Move(p2, 1, 0)));
-      Assert.True(game.MakeMove(Move(p1, 0, 1)));
-      Assert.True(game.MakeMove(Move(p2, 1, 1)));
-      Assert.True(game.MakeMove(Move(p1, 0, 2)));
+      Assert.True(game.MakeMove(Move(0, 0), p1));
+      Assert.True(game.MakeMove(Move(1, 0), p2));
+      Assert.True(game.MakeMove(Move(0, 1), p1));
+      Assert.True(game.MakeMove(Move(1, 1), p2));
+      Assert.True(game.MakeMove(Move(0, 2), p1));
 
       var state = game.GetState();
       var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);
       Assert.Equal(p1, winner);
 
-      Assert.False(game.MakeMove(Move(p2, 2, 2)));
+      Assert.False(game.MakeMove(Move(2, 2), p2));
    }
 
    [Fact]
@@ -90,7 +90,7 @@ public class TicTacToeGameUnitTests
       };
 
       foreach (var (pl, x, y) in seq)
-         Assert.True(game.MakeMove(Move(pl, x, y)));
+         Assert.True(game.MakeMove(Move(x, y), pl));
 
       var state = game.GetState();
       var winner = (User?)state.GetType().GetProperty("Winner")!.GetValue(state);

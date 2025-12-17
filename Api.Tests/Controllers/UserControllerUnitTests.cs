@@ -1,9 +1,12 @@
 using System.Security.Claims;
+
 using Api.Controllers;
 using Api.Models;
 using Api.Services;
 using Api.Entities;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Moq;
 
 namespace Api.Tests.Controllers;
@@ -30,6 +33,11 @@ public class UserControllerUnitTests
       return TestHelpers.BuildControllerContext(TestHelpers.CreateClaimsPrincipal(userName, "Guest", userId));
    }
 
+   private static ControllerContext RegisteredContext(Guid userId, string userName = "registered")
+   {
+      return TestHelpers.BuildControllerContext(TestHelpers.CreateClaimsPrincipal(userName, "RegisteredUser", userId));
+   }
+
    public static IEnumerable<object[]> UnauthorizedContexts()
    {
       yield return new object[] { UnauthenticatedContext() };
@@ -37,30 +45,30 @@ public class UserControllerUnitTests
    }
 
    [Fact]
-   public void GuestCreate_ReturnsBadRequest_WhenNameMissing()
+   public async Task GuestCreate_ReturnsBadRequest_WhenNameMissing()
    {
       var mockAuth = new Mock<IAuthService>();
-      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns((string?)null);
+      mockAuth.Setup(a => a.GuestCreateAsync(It.IsAny<UserDto>())).ReturnsAsync((string?)null);
       var controller = CreateController(mockAuth.Object);
 
       var dto = new UserDto("", Guid.Empty);
 
-      var result = controller.GuestCreate(dto);
+      var result = await controller.GuestCreate(dto);
 
       var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
       Assert.Equal("Name is required.", bad.Value);
    }
 
    [Fact]
-   public void GuestCreate_ReturnsOkWithToken_WhenServiceReturnsToken()
+   public async Task GuestCreate_ReturnsOkWithToken_WhenServiceReturnsToken()
    {
       var mockAuth = new Mock<IAuthService>();
-      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns("token-123");
+      mockAuth.Setup(a => a.GuestCreateAsync(It.IsAny<UserDto>())).ReturnsAsync("token-123");
       var controller = CreateController(mockAuth.Object);
 
       var dto = new UserDto("player", Guid.Empty);
 
-      var result = controller.GuestCreate(dto);
+      var result = await controller.GuestCreate(dto);
 
       var ok = Assert.IsType<OkObjectResult>(result.Result);
       Assert.Equal("token-123", ok.Value);
@@ -126,6 +134,24 @@ public class UserControllerUnitTests
       Assert.IsType<OkResult>(result);
    }
 
+   [Fact]
+   public async Task Register_Returns500_WhenServiceThrows()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      mockAuth.Setup(a => a.RegisterAsync(It.IsAny<UserDto>())).ThrowsAsync(new Exception("boom"));
+      var controller = CreateController(mockAuth.Object);
+
+      var dto = new UserDto("new-user", Guid.Empty);
+
+      var result = await controller.Register(dto);
+
+      var obj = Assert.IsType<ObjectResult>(result);
+      Assert.Equal(500, obj.StatusCode);
+      Assert.NotNull(obj.Value);
+      var error = (string?)obj.Value!.GetType().GetProperty("error")?.GetValue(obj.Value);
+      Assert.Equal("boom", error);
+   }
+
    private static ControllerContext UnauthenticatedContext()
    {
       return TestHelpers.BuildControllerContext(TestHelpers.CreateUnauthenticatedPrincipal());
@@ -168,5 +194,92 @@ public class UserControllerUnitTests
       var dto = Assert.IsType<UserDto>(ok.Value);
       Assert.Equal(userName, dto.Name);
       Assert.Equal(userId, dto.Id);
+   }
+
+   [Fact]
+   public void GetGuestInfo_InvalidIdClaim_ReturnsUnauthorized()
+   {
+      var identity = new ClaimsIdentity(new[]
+      {
+         new Claim(ClaimTypes.NameIdentifier, "not-a-guid"),
+         new Claim(ClaimTypes.Name, "user"),
+         new Claim(ClaimTypes.Role, "Guest")
+      }, "TestAuth");
+      var ctx = TestHelpers.BuildControllerContext(new ClaimsPrincipal(identity));
+
+      var mockAuth = new Mock<IAuthService>();
+      var controller = CreateController(mockAuth.Object, null, ctx);
+
+      var result = controller.GetUserInfo();
+
+      Assert.IsType<UnauthorizedResult>(result.Result);
+   }
+
+   [Theory]
+   [MemberData(nameof(UnauthorizedContexts))]
+   public async Task GetGameStats_Unauthorized_ReturnsUnauthorized(ControllerContext ctx)
+   {
+      var mockAuth = new Mock<IAuthService>();
+      var mockUsers = new Mock<IUserService>();
+      var controller = CreateController(mockAuth.Object, mockUsers.Object, ctx);
+
+      var result = await controller.GetGameStats();
+
+      Assert.IsType<UnauthorizedResult>(result.Result);
+   }
+
+   [Fact]
+   public async Task GetGameStats_Unauthorized_WhenRoleNotRegisteredUser()
+   {
+      var mockAuth = new Mock<IAuthService>();
+      var mockUsers = new Mock<IUserService>();
+      var controller = CreateController(mockAuth.Object, mockUsers.Object, AuthenticatedContext(Guid.NewGuid()));
+
+      var result = await controller.GetGameStats();
+
+      Assert.IsType<UnauthorizedResult>(result.Result);
+   }
+
+   [Fact]
+   public async Task GetGameStats_NotFound_WhenUserDoesNotExist()
+   {
+      var userId = Guid.NewGuid();
+      var mockAuth = new Mock<IAuthService>();
+      var mockUsers = new Mock<IUserService>();
+      mockUsers.Setup(s => s.GetUserByIdAsync(userId)).ReturnsAsync((User?)null);
+      var controller = CreateController(mockAuth.Object, mockUsers.Object, RegisteredContext(userId, "reg"));
+
+      var result = await controller.GetGameStats();
+
+      Assert.IsType<NotFoundResult>(result.Result);
+   }
+
+   [Fact]
+   public async Task GetGameStats_ReturnsStats_WithNameFromUser()
+   {
+      var userId = Guid.NewGuid();
+      var mockAuth = new Mock<IAuthService>();
+      var mockUsers = new Mock<IUserService>();
+      var user = new RegisteredUser { Id = userId, Name = "RealName", PasswordHash = "hash" };
+      mockUsers.Setup(s => s.GetUserByIdAsync(userId)).ReturnsAsync(user);
+      mockUsers.Setup(s => s.GetUserStatsAsync(userId)).ReturnsAsync(new GameStatsDto
+      {
+         UserId = userId,
+         Name = "OldName",
+         TotalWins = 2,
+         TotalGamesPlayed = 10
+      });
+
+      var controller = CreateController(mockAuth.Object, mockUsers.Object, RegisteredContext(userId, "ClaimName"));
+
+      var result = await controller.GetGameStats();
+
+      var ok = Assert.IsType<OkObjectResult>(result.Result);
+      var dto = Assert.IsType<GameStatsDto>(ok.Value);
+      Assert.Equal("RealName", dto.Name);
+      Assert.Equal(2, dto.TotalWins);
+      Assert.Equal(10, dto.TotalGamesPlayed);
+      mockUsers.Verify(s => s.GetUserByIdAsync(userId), Times.Once);
+      mockUsers.Verify(s => s.GetUserStatsAsync(userId), Times.Once);
    }
 }

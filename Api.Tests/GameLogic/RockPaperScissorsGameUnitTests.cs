@@ -14,9 +14,9 @@ public class RockPaperScissorsGameUnitTests
       Scissors = 2
    }
 
-   private static JsonElement Move(User player, RockPaperScissorsChoice choice)
+   private static JsonElement Move(RockPaperScissorsChoice choice)
    {
-      var payload = new { Player = player, Choice = choice };
+      var payload = new { Choice = choice };
       return JsonSerializer.SerializeToElement(payload);
    }
 
@@ -32,7 +32,7 @@ public class RockPaperScissorsGameUnitTests
    public void Result_Remains_Null_Until_Both_Move()
    {
       var (game, p1, _) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1, RockPaperScissorsChoice.Rock)));
+      Assert.True(game.MakeMove(Move(RockPaperScissorsChoice.Rock), p1));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
@@ -43,8 +43,8 @@ public class RockPaperScissorsGameUnitTests
    public void Determines_Draw()
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1, RockPaperScissorsChoice.Rock)));
-      Assert.True(game.MakeMove(Move(p2, RockPaperScissorsChoice.Rock)));
+      Assert.True(game.MakeMove(Move(RockPaperScissorsChoice.Rock), p1));
+      Assert.True(game.MakeMove(Move(RockPaperScissorsChoice.Rock), p2));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
@@ -55,12 +55,12 @@ public class RockPaperScissorsGameUnitTests
    public void Determines_Winner_And_Increments_Wins()
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1, RockPaperScissorsChoice.Rock)));
-      Assert.True(game.MakeMove(Move(p2, RockPaperScissorsChoice.Scissors)));
+      Assert.True(game.MakeMove(Move(RockPaperScissorsChoice.Rock), p1));
+      Assert.True(game.MakeMove(Move(RockPaperScissorsChoice.Scissors), p2));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
-      Assert.Equal($"{p1} wins!", result);
+      Assert.Equal($"{p1.Name} wins!", result);
    }
 
    [Theory]
@@ -70,19 +70,19 @@ public class RockPaperScissorsGameUnitTests
    public void Player1_Wins_For_All_Winning_Combinations(RockPaperScissorsChoice c1, RockPaperScissorsChoice c2)
    {
       var (game, p1, p2) = CreateGame();
-      Assert.True(game.MakeMove(Move(p1, c1)));
-      Assert.True(game.MakeMove(Move(p2, c2)));
+      Assert.True(game.MakeMove(Move(c1), p1));
+      Assert.True(game.MakeMove(Move(c2), p2));
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
-      Assert.Equal($"{p1} wins!", result);
+      Assert.Equal($"{p1.Name} wins!", result);
    }
 
    [Fact]
    public void Invalid_Json_Returns_False()
    {
       var (game, _, _) = CreateGame();
-      var invalid = JsonDocument.Parse("{\"bogus\":true}").RootElement;
-      Assert.False(game.MakeMove(invalid));
+      var invalid = JsonDocument.Parse("[]").RootElement;
+      Assert.False(game.MakeMove(invalid, TestHelpers.BuildGuest("Player1")));
    }
 }
