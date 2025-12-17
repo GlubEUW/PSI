@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GetGameStats } from "./api/user";
+import RetroButton from "./components/RetroButton";
 
 function Profile() {
    const [username, setUsername] = useState("");
-   const [authorized, setAuthorized] = useState(false);   
+   const [authorized, setAuthorized] = useState(false); 
+   const [loading, setLoading] = useState(true);  
    const [gameStats, setGameStats] = useState({});
    const navigate = useNavigate();
 
@@ -13,57 +15,78 @@ function Profile() {
       const fetchStats = async () => {
          const token = localStorage.getItem("userToken");
          
-         if (token) {
+         if (!token) {
+            alert("Please login.");
+            navigate("/");
+            return;
+         }
+         try {
             const response = await GetGameStats(token);
             if(response.ok) {
                const stats = await response.json();
                setAuthorized(true);
                setGameStats(stats);
                setUsername(stats.name || "");
-               console.log(gameStats);
             }
             else {
                setAuthorized(false);
-               console.log("Error status: " + response.status);
             }
-         }
-         else {
-            alert("Please login.");
-            navigate("/login");
-            return;
+         } catch (err) {
+            setAuthorized(false);
+            console.log(err);
+         } finally {
+            setLoading(false);
          }
       };
 
       fetchStats();
    }, [navigate]);
 
+   const formatGameType = (str) => {
+      const withSpaces = str.replace(/([A-Z])/g, ' $1');
+      return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+   };
+   
    const getWinRate = (wins, played) => (played > 0 ? ((wins / played) * 100).toFixed(1) + "%" : "0%");
+   
+   if (loading) {
+      return (
+         <div className="h-screen flex items-center justify-center text-2xl">
+            Loading profile…
+         </div>
+	   );
+   }
 
    const gameTypes = Object.keys(gameStats)
       .filter(key => key.endsWith("Wins") && !key.toLowerCase().startsWith("total"))
       .map(key => key.replace("Wins", ""))
 
    return (
-      <div>
+      <div style={{ display: "flex", flexDirection: "column", fontSize: "24px", padding: "10px", justifyItems: "center", justifyContent: "center", alignItems: "center"}}>
          <h1>Profile page</h1>
          { !authorized ? (
-            <div>
-               <h2>You must be registered to view this page.</h2>
-               <button onClick={() => navigate("/home")} className="normal-button">Go to Home</button>
+            <div style={{ justifyItems: "center"}}>
+                  <h2>You must be registered to view this page.</h2>
+                  <div style={{ marginTop: "16px"}}>
+                     <RetroButton onClick={() => navigate("/home")} bg="#2aaac4ff" w={350} h={40}>Go to Home</RetroButton>
+                  </div>
             </div>
          ) : (
             <div>
-               <h3>Welcome, {username}!</h3>
-               <button onClick={() => navigate("/home")} className="normal-button">Go to Home</button>
+               <h3 style={{ marginBottom: "16px", fontSize: "28px" }}>Welcome, {username}!</h3>
+               <RetroButton onClick={() => navigate("/home")} bg="#2aaac4ff" w={350} h={40}>Go to Home</RetroButton>
 
-               <h3>Statistics</h3>
+               <hr style={{ marginTop: "32px", marginBottom: "16px" }}/>
+
+               <h3 style={{ fontSize: "28px" }}>Statistics</h3>
                <p>Total Games Played: {gameStats.totalGamesPlayed || 0}</p>
                <p>Total Games Won: {gameStats.totalWins || 0}</p>
                <p>Win Rate: {getWinRate(gameStats.totalWins, gameStats.totalGamesPlayed)}</p>
 
                {gameTypes.map(gt => (
                   <div key={gt}>
-                     <h4>{gt.charAt(0).toUpperCase() + gt.slice(1)}</h4>
+                     <hr style={{ marginBlock: "16px" }}/>
+                     <h4 style={{ fontSize: "28px" }}>{formatGameType(gt)}</h4>
                      <p>Games Played: {gameStats[`${gt}GamesPlayed`] || 0}</p>
                      <p>Games Won: {gameStats[`${gt}Wins`] || 0}</p>
                      <p>Win Rate: {getWinRate(gameStats[`${gt}Wins`], gameStats[`${gt}GamesPlayed`])}</p>

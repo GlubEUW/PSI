@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import RetroButton from "./components/RetroButton";
 
 const choices = ["Rock", "Paper", "Scissors"];
 
@@ -66,36 +67,31 @@ function RockPaperScissors({ gameId, playerId, connection, onReturnToLobby }) {
    const canPlay = hasNotChosen && gameNotOver;
 
    return (
-      <div style={{ padding: "20px" }}>
+      <div style={{ padding: "10px", fontSize: "32px" }}>
          <h2>Rock Paper Scissors</h2>
          {game.result ? (
             <div>
-               <h3 style={{ color: "green" }}>{game.result}</h3>
+               <h3 style={{ color: "#54ff11ff" }}>{game.result}</h3>
                <p>You will return to the lobby shortly.</p>
             </div>
          ) : (
             <h3>Your choice: {myChoice || "None"}</h3>
          )}
 
-         <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+         <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "center", justifyItems: "center", alignContent: "center", alignItems: "center"}}>
             {choices.map((c) => (
-               <button
+               <RetroButton
                   key={c}
                   onClick={() => makeMove(c)}
                   disabled={!canPlay}
-                  style={{
-                     padding: "15px 30px",
-                     fontSize: "18px",
-                     cursor: canPlay ? "pointer" : "not-allowed",
-                     opacity: canPlay ? 1 : 0.5,
-                     backgroundColor: myChoice === c ? "#4CAF50" : "#fff",
-                     color: myChoice === c ? "#fff" : "#000",
-                     border: "2px solid #333",
-                     borderRadius: "8px"
-                  }}
+                  className={canPlay ? "opacity-100" : "opacity-50"}
+                  bg={myChoice === c ? "#48bb4cff" : "#6d6d6dff"}
+                  textColor="#fff"
+                  w={150}
+                  h={50}
                >
                   {c}
-               </button>
+               </RetroButton>
             ))}
          </div>
       </div>
