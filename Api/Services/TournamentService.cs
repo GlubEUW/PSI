@@ -368,4 +368,14 @@ public class TournamentService(
       }
    }
 
+   public bool IsTournamentFinished(string code)
+   {
+      if (!_store.Sessions.TryGetValue(code, out var session))
+         return false;
+
+      return session.CurrentRound >= session.NumberOfRounds
+             && AreAllGamesEnded(code);
+   }
+
+
 }

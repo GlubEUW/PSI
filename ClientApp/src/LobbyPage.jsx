@@ -78,6 +78,17 @@ function LobbyPage() {
             setTimeout(() => setMessage(""), 3000);
          });
 
+         conn.on("TournamentEnded", async () => {
+            const finalPlayers = await conn.invoke("GetPlayers", code);
+
+            navigate("/tournament/end", {
+               state: {
+                  players: [...finalPlayers].sort((a, b) => b.wins - a.wins)
+               }
+            });
+         });
+
+
          conn.on("GameStarted", (data) => {
             console.log("Round started!", data);
             navigate("game", {

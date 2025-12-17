@@ -196,6 +196,13 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          await Task.WhenAll(notifyTasks);
 
          await _tournamentService.CheckAndSaveResultsIfAllGamesEndedAsync(code);
+         if (_tournamentService.IsTournamentFinished(code))
+         {
+            var finalPlayers = await _lobbyService.GetPlayersInLobbyDTOs(code);
+
+            await Clients.Group(code).SendAsync("TournamentEnded", finalPlayers);
+            return;
+         }
          await Clients.Group(code).SendAsync("PlayersUpdated", _tournamentService.GetTournamentRoundInfo(code));
       }
       catch (InvalidMoveException ex)
