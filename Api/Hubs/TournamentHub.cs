@@ -202,6 +202,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
          await Task.WhenAll(notifyTasks);
 
          await _tournamentService.CheckAndSaveResultsIfAllGamesEndedAsync(code);
+         await Clients.Group(code).SendAsync("PlayersUpdated", _tournamentService.GetTournamentRoundInfo(code));
       }
       catch (InvalidMoveException ex)
       {
