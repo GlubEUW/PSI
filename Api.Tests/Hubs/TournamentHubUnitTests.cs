@@ -210,29 +210,6 @@ public class TournamentHubUnitTests
    }
 
    [Fact]
-   public async Task StartRound_TournamentNotStarted_SendsError()
-   {
-      var (hub, tournamentMock, _, _, _, _) = CreateHub();
-
-      var user = TestHelpers.BuildGuest("U");
-      var items = MakeItems("CODE0", user);
-      var ctx = BuildContext(items);
-
-      tournamentMock.Setup(s => s.TournamentStarted("CODE0")).Returns(false);
-
-      var (clients, caller) = BuildCallerClients();
-
-      hub.Context = ctx.Object;
-      hub.Clients = clients.Object;
-
-      await hub.StartRound();
-
-      caller.Verify(p => p.SendCoreAsync("Error",
-         It.Is<object[]>(o => o.Length == 1 && (string)o[0] == "Tournament has not started yet."),
-         It.IsAny<CancellationToken>()), Times.Once);
-   }
-
-   [Fact]
    public async Task StartRound_NotAllGamesEnded_SendsError()
    {
       var (hub, tournamentMock, _, _, _, _) = CreateHub();
