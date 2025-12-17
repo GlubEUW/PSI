@@ -1,4 +1,3 @@
-
 namespace Api.Entities;
 
 public abstract class User : IComparable<User>
