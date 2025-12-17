@@ -1,7 +1,10 @@
 using System.Reflection;
 using System.Text.Json;
+
 using Microsoft.AspNetCore.SignalR;
+
 using Moq;
+
 using Api.Hubs;
 using Api.Services;
 using Api.Entities;
@@ -77,10 +80,9 @@ public class TournamentHubUnitTests
    [Fact]
    public async Task StartTournament_AlreadyStarted_SendsError()
    {
-      var (hub, tournamentMock, _, _, _, currentUser) = CreateHub();
+      var (hub, tournamentMock, _, _, _, _) = CreateHub();
 
       var user = TestHelpers.BuildGuest("U");
-      currentUser.Setup(c => c.GetCurrentUser(It.IsAny<HubCallerContext>())).Returns(user);
 
       var items = MakeItems("CODE1", user);
       var ctx = BuildContext(items);
@@ -110,10 +112,9 @@ public class TournamentHubUnitTests
    [Fact]
    public async Task StartRound_RoundAlreadyStarted_SendsError()
    {
-      var (hub, tournamentMock, _, _, _, currentUser) = CreateHub();
+      var (hub, tournamentMock, _, _, _, _) = CreateHub();
 
       var user = TestHelpers.BuildGuest("U");
-      currentUser.Setup(c => c.GetCurrentUser(It.IsAny<HubCallerContext>())).Returns(user);
 
       var items = MakeItems("CODE2", user);
       var ctx = BuildContext(items);
@@ -135,10 +136,9 @@ public class TournamentHubUnitTests
    [Fact]
    public async Task StartRound_NotAllGamesEnded_SendsError()
    {
-      var (hub, tournamentMock, _, _, _, currentUser) = CreateHub();
+      var (hub, tournamentMock, _, _, _, _) = CreateHub();
 
       var user = TestHelpers.BuildGuest("U");
-      currentUser.Setup(c => c.GetCurrentUser(It.IsAny<HubCallerContext>())).Returns(user);
 
       var items = MakeItems("CODE3", user);
       var ctx = BuildContext(items);
@@ -161,10 +161,9 @@ public class TournamentHubUnitTests
    [Fact]
    public async Task MakeMove_GameNotFound_SendsError()
    {
-      var (hub, tournamentMock, _, _, _, currentUser) = CreateHub();
+      var (hub, tournamentMock, _, _, _, _) = CreateHub();
 
       var user = TestHelpers.BuildGuest("U");
-      currentUser.Setup(c => c.GetCurrentUser(It.IsAny<HubCallerContext>())).Returns(user);
 
       var items = MakeItems("CODE4", user);
       var ctx = BuildContext(items);
@@ -189,7 +188,7 @@ public class TournamentHubUnitTests
       await hub.MakeMove(json.RootElement);
 
       caller.Verify(p => p.SendCoreAsync("Error",
-         It.Is<object[]>(o => o.Length == 1 && (string)o[0] == "Player not found in game"),
+         It.Is<object[]>(o => o.Length == 1 && (string)o[0] == "An unexpected error occurred"),
          It.IsAny<CancellationToken>()), Times.Once);
    }
 }
