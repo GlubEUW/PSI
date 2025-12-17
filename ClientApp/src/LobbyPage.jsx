@@ -31,7 +31,7 @@ function LobbyPage() {
       const connect = async () => {
          if (!token) {
             setMessage("You must be logged in to access the lobby.");
-            setTimeout(() => navigate("/start"), 3000);
+            setTimeout(() => navigate("/"), 3000);
             return;
          }
 
