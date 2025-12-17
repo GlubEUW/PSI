@@ -69,7 +69,7 @@ public class TournamentHubUnitTests
    {
       var (hub, _, lobbyMock, _, _, _) = CreateHub();
       lobbyMock.Setup(s => s.GetPlayersInLobbyDTOs("CODE"))
-               .Returns(new List<PlayerInfoDto> { new("A", 2), new("B", 5) });
+               .ReturnsAsync(new List<PlayerInfoDto> { new("A", 2), new("B", 5) });
 
       var players = await hub.GetPlayers("CODE");
       Assert.Equal(2, players.Count);
@@ -90,6 +90,7 @@ public class TournamentHubUnitTests
       var session = new TournamentSession
       {
          Code = "CODE1",
+         TournamentId = Guid.NewGuid(),
          NumberOfRounds = 1,
          CurrentRound = 0,
          TournamentStarted = true
@@ -119,7 +120,9 @@ public class TournamentHubUnitTests
       var items = MakeItems("CODE2", user);
       var ctx = BuildContext(items);
 
+      tournamentMock.Setup(s => s.TournamentStarted("CODE2")).Returns(true);
       tournamentMock.Setup(s => s.RoundStarted("CODE2")).Returns(true);
+      tournamentMock.Setup(s => s.AreAllGamesEnded("CODE2")).Returns(false);
 
       var (clients, caller) = BuildCallerClients();
 
@@ -129,7 +132,7 @@ public class TournamentHubUnitTests
       await hub.StartRound();
 
       caller.Verify(p => p.SendCoreAsync("Error",
-         It.Is<object[]>(o => o.Length == 1 && (string)o[0] == "Round has already been started."),
+         It.Is<object[]>(o => o.Length == 1 && (string)o[0] == "Round is still in progress. Wait for all games to finish."),
          It.IsAny<CancellationToken>()), Times.Once);
    }
 
@@ -143,8 +146,10 @@ public class TournamentHubUnitTests
       var items = MakeItems("CODE3", user);
       var ctx = BuildContext(items);
 
+      tournamentMock.Setup(s => s.TournamentStarted("CODE3")).Returns(true);
       tournamentMock.Setup(s => s.RoundStarted("CODE3")).Returns(false);
       tournamentMock.Setup(s => s.AreAllGamesEnded("CODE3")).Returns(false);
+      tournamentMock.Setup(s => s.StartNextRound("CODE3")).Returns("Not all games have ended.");
 
       var (clients, caller) = BuildCallerClients();
 
@@ -171,6 +176,7 @@ public class TournamentHubUnitTests
       var session = new TournamentSession
       {
          Code = "CODE4",
+         TournamentId = Guid.NewGuid(),
          NumberOfRounds = 1,
          CurrentRound = 0,
          TournamentStarted = true

@@ -60,7 +60,7 @@ public class RockPaperScissorsGameUnitTests
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
-      Assert.Equal($"{p1} wins!", result);
+      Assert.Equal($"{p1.Name} wins!", result);
    }
 
    [Theory]
@@ -75,7 +75,7 @@ public class RockPaperScissorsGameUnitTests
 
       var state = game.GetState();
       var result = (string?)state.GetType().GetProperty("Result")!.GetValue(state);
-      Assert.Equal($"{p1} wins!", result);
+      Assert.Equal($"{p1.Name} wins!", result);
    }
 
    [Fact]

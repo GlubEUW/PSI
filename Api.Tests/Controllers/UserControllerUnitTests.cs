@@ -1,9 +1,12 @@
 using System.Security.Claims;
+
 using Api.Controllers;
 using Api.Models;
 using Api.Services;
 using Api.Entities;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Moq;
 
 namespace Api.Tests.Controllers;
@@ -37,30 +40,30 @@ public class UserControllerUnitTests
    }
 
    [Fact]
-   public void GuestCreate_ReturnsBadRequest_WhenNameMissing()
+   public async Task GuestCreate_ReturnsBadRequest_WhenNameMissing()
    {
       var mockAuth = new Mock<IAuthService>();
-      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns((string?)null);
+      mockAuth.Setup(a => a.GuestCreateAsync(It.IsAny<UserDto>())).ReturnsAsync((string?)null);
       var controller = CreateController(mockAuth.Object);
 
       var dto = new UserDto("", Guid.Empty);
 
-      var result = controller.GuestCreate(dto);
+      var result = await controller.GuestCreate(dto);
 
       var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
       Assert.Equal("Name is required.", bad.Value);
    }
 
    [Fact]
-   public void GuestCreate_ReturnsOkWithToken_WhenServiceReturnsToken()
+   public async Task GuestCreate_ReturnsOkWithToken_WhenServiceReturnsToken()
    {
       var mockAuth = new Mock<IAuthService>();
-      mockAuth.Setup(a => a.GuestCreate(It.IsAny<UserDto>())).Returns("token-123");
+      mockAuth.Setup(a => a.GuestCreateAsync(It.IsAny<UserDto>())).ReturnsAsync("token-123");
       var controller = CreateController(mockAuth.Object);
 
       var dto = new UserDto("player", Guid.Empty);
 
-      var result = controller.GuestCreate(dto);
+      var result = await controller.GuestCreate(dto);
 
       var ok = Assert.IsType<OkObjectResult>(result.Result);
       Assert.Equal("token-123", ok.Value);

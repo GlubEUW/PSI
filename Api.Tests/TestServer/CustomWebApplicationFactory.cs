@@ -17,12 +17,25 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
       builder.ConfigureServices(services =>
       {
 
-         var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<DatabaseContext>));
-         if (dbContextDescriptor != null)
+         var dbContextOptionsDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<DatabaseContext>));
+         if (dbContextOptionsDescriptor is not null)
+         {
+            services.Remove(dbContextOptionsDescriptor);
+         }
+
+         var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DatabaseContext));
+         if (dbContextDescriptor is not null)
          {
             services.Remove(dbContextDescriptor);
          }
-         services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDatabase($"Tests_{Guid.NewGuid()}"));
+
+         var dbContextFactoryDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IDbContextFactory<DatabaseContext>));
+         if (dbContextFactoryDescriptor is not null)
+         {
+            services.Remove(dbContextFactoryDescriptor);
+         }
+
+         services.AddDbContextFactory<DatabaseContext>(options => options.UseInMemoryDatabase($"Tests_{Guid.NewGuid()}"));
 
 
          services.AddAuthentication(options =>

@@ -3,6 +3,7 @@ using Api.Enums;
 using Api.Models;
 using Api.Services;
 using Api.Tests.TestDoubles;
+using Api.Data;
 
 namespace Api.Tests.Services;
 
@@ -12,7 +13,8 @@ public class LobbyServiceUnitTests
    {
       var store = new TournamentStore();
       var factory = new TestGameFactory();
-      return new LobbyService(store, factory);
+      var contextFactory = TestHelpers.BuildInMemoryDbContextFactory($"LobbyService_{Guid.NewGuid()}");
+      return new LobbyService(store, factory, contextFactory);
    }
 
    [Fact]
@@ -118,7 +120,7 @@ public class LobbyServiceUnitTests
       await svc.JoinLobby(code, new Guest { Id = Guid.NewGuid(), Name = "a" });
       await svc.JoinLobby(code, new Guest { Id = Guid.NewGuid(), Name = "b" });
 
-      var dtos = svc.GetPlayersInLobbyDTOs(code);
+      var dtos = await svc.GetPlayersInLobbyDTOs(code);
       Assert.Equal(2, dtos.Count);
       Assert.All(dtos, p => Assert.Equal(0, p.Wins));
       Assert.Contains(dtos, p => p.Name == "a");

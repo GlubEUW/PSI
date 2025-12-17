@@ -20,6 +20,25 @@ public static class TestHelpers
       return new DatabaseContext(options);
    }
 
+   public static IDbContextFactory<DatabaseContext> BuildInMemoryDbContextFactory(string? dbName = null)
+   {
+      var name = string.IsNullOrWhiteSpace(dbName) ? $"Tests_{Guid.NewGuid()}" : dbName!;
+      var options = new DbContextOptionsBuilder<DatabaseContext>()
+         .UseInMemoryDatabase(name)
+         .Options;
+      return new TestDbContextFactory(options);
+   }
+
+   private sealed class TestDbContextFactory(DbContextOptions<DatabaseContext> options) : IDbContextFactory<DatabaseContext>
+   {
+      private readonly DbContextOptions<DatabaseContext> _options = options;
+
+      public DatabaseContext CreateDbContext()
+      {
+         return new DatabaseContext(_options);
+      }
+   }
+
    public static IConfiguration BuildConfiguration(
       string? token = null,
       string issuer = "TestIssuer",
@@ -71,7 +90,8 @@ public static class TestHelpers
    {
       var store = new TournamentStore();
       var gameFactory = new Api.Tests.TestDoubles.TestGameFactory();
-      var lobby = new LobbyService(store, gameFactory);
+      var contextFactory = BuildInMemoryDbContextFactory($"Lobby_{Guid.NewGuid()}");
+      var lobby = new LobbyService(store, gameFactory, contextFactory);
       var code = await lobby.CreateLobbyWithSettings(numberOfPlayers, numberOfRounds, randomGames, gamesList);
       return (lobby, code);
    }

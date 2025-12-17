@@ -7,18 +7,18 @@ public class AuthServiceUnitTests
 {
 
    [Fact]
-   public void GuestCreate_ReturnsNull_WhenNameMissing()
+   public async Task GuestCreate_ReturnsNull_WhenNameMissing()
    {
       var svc = (AuthService)TestHelpers.CreateAuthService();
-      var result = svc.GuestCreate(new UserDto(string.Empty, Guid.Empty));
+      var result = await svc.GuestCreateAsync(new UserDto(string.Empty, Guid.Empty));
       Assert.Null(result);
    }
 
    [Fact]
-   public void GuestCreate_ReturnsToken_WhenValidName()
+   public async Task GuestCreate_ReturnsToken_WhenValidName()
    {
       var svc = (AuthService)TestHelpers.CreateAuthService();
-      var result = svc.GuestCreate(new UserDto("guest", Guid.Empty));
+      var result = await svc.GuestCreateAsync(new UserDto("guest", Guid.Empty));
       Assert.False(string.IsNullOrWhiteSpace(result));
    }
 
