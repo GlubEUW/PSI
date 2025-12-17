@@ -6,6 +6,7 @@ import Home from "./Home";
 import Queue from "./Queue";
 import LobbyPage from "./LobbyPage";
 import GameContainer from "./GameContainer";
+import LeaderBoard from "./LeaderBoard";
 
 function App() {
    return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/home" element={<Home />} />
             <Route path="/queue" element={<Queue />} />
+            <Route path="/leaderboard" element={<LeaderBoard />} />
             <Route path="/match/:code" element={<LobbyPage />}>
                <Route path="game" element={<GameContainer />} />
             </Route>

@@ -43,6 +43,10 @@ function Home() {
       navigate("/profile");
    };
 
+   const handleLeaderBoardNavigate = async () => {
+      navigate("/leaderboard");
+   };
+
    const handleLobbyJoin = async () => {
       const token = localStorage.getItem("userToken");
 
@@ -118,22 +122,26 @@ function Home() {
          <div style={{ marginBlock: "16px" }}>
             <RetroButton onClick={handleProfileNavigate} bg="#ff9d00ff" w={350} h={40}>Profile</RetroButton>
          </div>
+
+         <div style={{ marginBlock: "16px" }}>
+            <RetroButton onClick={handleLeaderBoardNavigate} bg="#2aaac4ff" w={350} h={40}>Leaderboard</RetroButton>
+         </div>
          {/* <div style={{ marginBottom: "30px" }}>
             <button onClick={handleQueueJoin} className="normal-button">Queue</button>
          </div> */}
 
-         <hr style={{ marginBlock: "16px" }}/>
+         <hr style={{ marginBlock: "16px" }} />
 
          <div>
             <h2 style={{ fontSize: "24px" }}>Create New Lobby</h2>
-            
+
             <div style={{ marginBottom: "16px", marginTop: "8px" }}>
                <label>
                   Number of Players:
                   <span style={{ marginLeft: "13px" }}>
-                     <Dropdown 
-                        bg="#2aaac4ff" 
-                        options={[2,3,4,5,6,7,8,9,10]} 
+                     <Dropdown
+                        bg="#2aaac4ff"
+                        options={[2, 3, 4, 5, 6, 7, 8, 9, 10]}
                         onSelect={(num) => setNumberOfPlayers(num)}
                      ></Dropdown>
                   </span>
@@ -142,11 +150,11 @@ function Home() {
 
             <div style={{ marginBottom: "8px" }}>
                <label>
-                  Number of Rounds: 
+                  Number of Rounds:
                   <span style={{ marginLeft: "20px" }}>
-                     <Dropdown 
-                        bg="#2aaac4ff" 
-                        options={[1,2,3,4,5]} 
+                     <Dropdown
+                        bg="#2aaac4ff"
+                        options={[1, 2, 3, 4, 5]}
                         onSelect={(num) => setNumberOfRounds(num)}
                      ></Dropdown>
                   </span>
@@ -205,12 +213,12 @@ function Home() {
             <RetroButton onClick={handleCreateLobby} bg="#44b17bff" w={350} h={40}>Create Lobby</RetroButton>
          </div>
 
-         <hr style={{ marginBlock: "16px" }}/>
+         <hr style={{ marginBlock: "16px" }} />
 
          <div>
             <h2 style={{ fontSize: "24px", marginBlock: "8px" }}>Join Existing Lobby</h2>
-            <Input 
-               bg="#0e081d" 
+            <Input
+               bg="#0e081d"
                borderColor="#fff"
                textColor="#fff"
                type="text"
