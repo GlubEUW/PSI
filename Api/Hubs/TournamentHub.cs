@@ -117,8 +117,7 @@ public class TournamentHub(ITournamentService tournamentService, ILobbyService l
 
    public Task<List<PlayerInfoDto>> GetPlayers(string code)
    {
-      var players = _lobbyService.GetPlayersInLobbyDTOs(code);
-      return Task.FromResult(players);
+      return _lobbyService.GetPlayersInLobbyDTOs(code);
    }
 
    public async Task StartTournament()

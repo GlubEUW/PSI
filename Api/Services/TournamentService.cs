@@ -230,7 +230,7 @@ public class TournamentService(
                      {
                         if (winner == null)
                         {
-                           userRound.PlayerPlacement = 1;
+                           userRound.PlayerPlacement = 0;
                         }
                         else
                         {

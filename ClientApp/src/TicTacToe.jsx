@@ -8,6 +8,7 @@ function TicTacToe({ playerId, connection, onReturnToLobby }) {
    ]);
    const [playerTurn, setPlayerTurn] = useState(null);
    const [winner, setWinner] = useState(null);
+   const gameOver = winner !== null || board.every(row => row.every(cell => cell !== 0));
 
    useEffect(() => {
       if (!connection) {
@@ -42,23 +43,22 @@ function TicTacToe({ playerId, connection, onReturnToLobby }) {
    }, [connection]);
 
    useEffect(() => {
-      if (!winner) return;
+      if (!gameOver) return;
 
       const timer = setTimeout(() => {
          returnToLobby();
       }, 3000);
 
       return () => clearTimeout(timer);
-   }, [winner]);
+   }, [gameOver]);
 
    const handleClick = (row, col) => {
       console.log(`Clicked cell [${row}][${col}], current value:`, board[row][col]);
-
-      if (!connection || board[row][col] !== 0 || winner) {
+      if (!connection || board[row][col] !== 0 || gameOver) {
          console.log("Move blocked:", {
             hasConnection: !!connection,
             cellValue: board[row][col],
-            winner
+            gameOver
          });
          return;
       }
@@ -75,14 +75,19 @@ function TicTacToe({ playerId, connection, onReturnToLobby }) {
    return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "10px", fontSize: "32px" }}>
          <h2>Tic Tac Toe</h2>
-         {winner ?
-            (<div style={{ marginBottom: "20px" }}>
-               <h3 style={{ color: "#54ff11ff" }}>Winner: {winner.Name}</h3>
-               <p>You will return to the lobby shortly.</p>
-            </div>
+         {gameOver ? (
+            winner ? (
+               <div style={{ marginBottom: "20px" }}>
+                  <h3 style={{ color: "green" }}>Winner: {winner.name}!</h3>
+                  <p>You will return to the lobby shortly.</p>
+               </div>
             ) : (
-               <h3>Current turn: {playerTurn}</h3>
-            )}
+               <h3 style={{ color: "orange" }}>It's a draw!</h3>
+            )
+         ) : (
+            <h3>Current turn: {playerTurn?.name || "Waiting..."}</h3>
+         )}
+
          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 80px)", gap: "5px", marginTop: "20px" }}>
             {board.map((row, i) =>
                row.map((cell, j) => (
@@ -97,7 +102,7 @@ function TicTacToe({ playerId, connection, onReturnToLobby }) {
                         justifyContent: "center",
                         fontSize: "32px",
                         border: "1px solid black",
-                        cursor: cell || winner ? "default" : "pointer",
+                        cursor: cell || gameOver ? "default" : "pointer",
                         backgroundColor: cell ? "#eee" : "#fff",
                         color: cell === 1 ? "blue" : cell === 2 ? "red" : "black"
                      }}

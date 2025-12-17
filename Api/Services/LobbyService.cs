@@ -2,13 +2,20 @@ using Api.Models;
 using Api.Entities;
 using Api.GameLogic;
 using Api.Enums;
+using Api.Data;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
-public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFactory) : ILobbyService
+public class LobbyService(
+   TournamentStore tournamentStore,
+   IGameFactory gameFactory,
+   IDbContextFactory<DatabaseContext> contextFactory) : ILobbyService
 {
    private readonly TournamentStore _store = tournamentStore;
    private readonly IGameFactory _gameFactory = gameFactory;
+   private readonly IDbContextFactory<DatabaseContext> _contextFactory = contextFactory;
 
    public List<User> GetPlayersInLobby(string code)
    {
@@ -129,9 +136,37 @@ public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFact
       return code;
    }
 
-   public List<PlayerInfoDto> GetPlayersInLobbyDTOs(string code)
+   public async Task<List<PlayerInfoDto>> GetPlayersInLobbyDTOs(string code)
    {
       var players = GetPlayersInLobby(code);
-      return players.Select(p => new PlayerInfoDto(p.Name, 0)).ToList();
+
+      if (!_store.Sessions.TryGetValue(code, out var session) || session is null)
+         return players.Select(p => new PlayerInfoDto(p.Name, 0)).ToList();
+
+      try
+      {
+         await using var context = await _contextFactory.CreateDbContextAsync();
+
+         var tournamentGames = await context.Games
+            .Where(g => g.TournamentId == session.TournamentId)
+            .Select(g => g.Id)
+            .ToListAsync();
+
+         var winCounts = await context.UserRound
+            .Where(ur => tournamentGames.Contains(ur.GameId) && ur.PlayerPlacement == 1)
+            .GroupBy(ur => ur.UserId)
+            .Select(g => new { UserId = g.Key, Wins = g.Count() })
+            .ToDictionaryAsync(x => x.UserId, x => x.Wins);
+
+         return [.. players.Select(p => new PlayerInfoDto(
+            p.Name,
+            winCounts.TryGetValue(p.Id, out var wins) ? wins : 0
+         ))];
+      }
+      catch (Exception ex)
+      {
+         Console.WriteLine($"Error calculating wins: {ex.Message}");
+         return players.Select(p => new PlayerInfoDto(p.Name, 0)).ToList();
+      }
    }
 }
