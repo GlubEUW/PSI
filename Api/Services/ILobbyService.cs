@@ -10,5 +10,5 @@ public interface ILobbyService
    public Task<bool> LeaveLobby(string code, Guid userId);
    public Task<string> CreateLobbyWithSettings(int numberOfPlayers, int numberOfRounds, bool randomGames, List<string>? gamesList);
    public string? CanJoinLobby(string code, Guid userId);
-   public List<PlayerInfoDto> GetPlayersInLobbyDTOs(string code);
+   public Task<List<PlayerInfoDto>> GetPlayersInLobbyDTOs(string code);
 }
