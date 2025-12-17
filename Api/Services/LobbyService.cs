@@ -5,11 +5,10 @@ using Api.Enums;
 
 namespace Api.Services;
 
-public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFactory, IDatabaseService databaseService) : ILobbyService
+public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFactory) : ILobbyService
 {
    private readonly TournamentStore _store = tournamentStore;
    private readonly IGameFactory _gameFactory = gameFactory;
-   private readonly IDatabaseService _databaseService = databaseService;
 
    public List<User> GetPlayersInLobby(string code)
    {
@@ -132,18 +131,7 @@ public class LobbyService(TournamentStore tournamentStore, IGameFactory gameFact
 
    public List<PlayerInfoDto> GetPlayersInLobbyDTOs(string code)
    {
-      var tournamentSession = GetTournamentSession(code);
       var players = GetPlayersInLobby(code);
-      if (tournamentSession != null)
-      {
-         var tasks = players.Select(async p =>
-         {
-            var wins = await _databaseService.GetUserWinsInTournamentAsync(tournamentSession.TournamentId, p.Id);
-            return new PlayerInfoDto(p.Name, wins);
-         });
-
-         return Task.WhenAll(tasks).Result.ToList();
-      }
-      return new List<PlayerInfoDto>();
+      return players.Select(p => new PlayerInfoDto(p.Name, 0)).ToList();
    }
 }
