@@ -8,6 +8,7 @@ namespace Api.Models;
 public class TournamentSession
 {
    public required string Code { get; set; }
+   public required Guid TournamentId { get; set; }
    public required int NumberOfRounds { get; set; } = 1;
    public required int CurrentRound { get; set; } = 0;
    public required bool TournamentStarted { get; set; } = false;

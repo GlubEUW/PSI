@@ -56,10 +56,21 @@ public class RockPaperScissorsGame : IGame
    {
       var c1 = _choices[0];
       var c2 = _choices[1];
-      if (c1 == c2) return "Draw!";
+      if (c1 == c2)
+      {
+         Winner = null;
+         return "Draw!";
+      }
+
       if ((c1 == RockPaperScissorsChoice.Rock && c2 == RockPaperScissorsChoice.Scissors) ||
           (c1 == RockPaperScissorsChoice.Paper && c2 == RockPaperScissorsChoice.Rock) ||
-          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper)) return $"{Players[0]} wins!";
-      return $"{Players[1]} wins!";
+          (c1 == RockPaperScissorsChoice.Scissors && c2 == RockPaperScissorsChoice.Paper))
+      {
+         Winner = Players[0];
+         return $"{Players[0].Name} wins!";
+      }
+
+      Winner = Players[1];
+      return $"{Players[1].Name} wins!";
    }
 }

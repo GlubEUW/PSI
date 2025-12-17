@@ -75,10 +75,6 @@ function ConnectFour({ player, connection, onReturnToLobby }) {
    };
 
    const returnToLobby = () => {
-      if (connection)
-         connection.invoke("EndGame", gameId)
-            .catch(err => console.error("Failed to end game:", err));
-
       onReturnToLobby();
    };
 

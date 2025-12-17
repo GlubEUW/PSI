@@ -4,10 +4,8 @@ using Api.Entities;
 
 namespace Api.Services;
 
-public class CurrentUserAccessor(IUserService userService) : ICurrentUserAccessor
+public class CurrentUserAccessor : ICurrentUserAccessor
 {
-   private readonly IUserService _userService = userService;
-
    public User? GetCurrentUser(ClaimsPrincipal principal)
    {
       var name = principal.Identity?.Name;
@@ -17,6 +15,22 @@ public class CurrentUserAccessor(IUserService userService) : ICurrentUserAccesso
       if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(id) || string.IsNullOrEmpty(role))
          return null;
 
-      return _userService.CreateUser(name, Guid.Parse(id), role);
+      if (role == "Guest")
+      {
+         return new Guest
+         {
+            Id = Guid.Parse(id),
+            Name = name
+         };
+      }
+      else
+      {
+         return new RegisteredUser
+         {
+            Id = Guid.Parse(id),
+            Name = name,
+            PasswordHash = string.Empty
+         };
+      }
    }
 }
